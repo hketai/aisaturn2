@@ -16,7 +16,7 @@
       "ERROR": "There was an error connecting to Shopify. Please try again or contact support if the issue persists."
     },
     "HEADER": "Integrations",
-    "DESCRIPTION": "Chatwoot integrates with multiple tools and services to improve your team's efficiency. Explore the list below to configure your favorite apps.",
+    "DESCRIPTION": "Integrate with multiple tools and services to improve your team's efficiency. Explore the list below to configure your favorite apps.",
     "LEARN_MORE": "Learn more about integrations",
     "LOADING": "Fetching integrations",
     "CAPTAIN": {
@@ -30,7 +30,7 @@
       "LEARN_MORE": "Learn more about webhooks",
       "FORM": {
         "CANCEL": "Cancel",
-        "DESC": "Webhook events provide you the realtime information about what's happening in your Chatwoot account. Please enter a valid URL to configure a callback.",
+        "DESC": "Webhook events provide you the realtime information about what's happening in your account. Please enter a valid URL to configure a callback.",
         "SUBSCRIPTIONS": {
           "LABEL": "Events",
           "EVENTS": {
@@ -974,6 +974,406 @@
         "TITLE": "No Connected Inboxes",
         "SUBTITLE": "Connecting an inbox allows the assistant to handle initial questions from your customers before transferring them to you."
       }
+    }
+  },
+  "SATURN": {
+    "NAME": "Saturn",
+    "HEADER_KNOW_MORE": "Know more",
+    "ASSISTANTS": {
+      "HEADER": "Assistants",
+      "ADD_NEW": "New Assistant",
+      "STATUS": {
+        "ACTIVE": "Active"
+      },
+      "DOCUMENTS": "Documents",
+      "RESPONSES": "FAQs",
+      "CONNECTED_CHANNELS": "Connected Channels",
+      "OPTIONS": {
+        "VIEW_LINKED_INBOXES": "View Linked Inboxes",
+        "CHANNEL": "Channel",
+        "CONNECT_CHANNEL": "Connect Channel",
+        "WORKING_HOURS": "Working Hours",
+        "HANDOFF_SETTINGS": "Handoff Settings",
+        "MODIFY_ASSISTANT": "Modify Assistant",
+        "REMOVE_ASSISTANT": "Remove Assistant"
+      },
+      "WORKING_HOURS": {
+        "DESCRIPTION": "Configure your assistant's working hours. The assistant will be automatically disabled outside these hours."
+      },
+      "HANDOFF": {
+        "DESCRIPTION": "Configure how your assistant hands off customers to a human agent."
+      },
+      "CREATE": {
+        "TITLE": "Create Assistant",
+        "SUCCESS_MESSAGE": "Assistant created successfully",
+        "ERROR_MESSAGE": "Failed to create assistant"
+      },
+      "MODIFY": {
+        "TITLE": "Modify Assistant",
+        "SUCCESS_MESSAGE": "Assistant updated successfully",
+        "ERROR_MESSAGE": "Failed to update assistant"
+      },
+      "FORM_DESCRIPTION": "Configure your assistant to provide accurate and helpful responses to your customers.",
+      "FORM": {
+        "NAME": {
+          "LABEL": "Assistant Name",
+          "PLACEHOLDER": "Enter assistant name",
+          "ERROR": "Assistant name is required"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Description",
+          "PLACEHOLDER": "Enter assistant description",
+          "ERROR": "Description is required"
+        },
+        "PRODUCT_NAME": {
+          "LABEL": "Product Name",
+          "PLACEHOLDER": "Enter product name",
+          "ERROR": "Product name is required"
+        },
+        "TEMPERATURE": {
+          "LABEL": "Response Temperature",
+          "DESCRIPTION": "Adjust how creative or restrictive the assistant's responses should be. Lower values produce more focused and deterministic responses, while higher values allow for more creative and varied outputs."
+        },
+        "FEATURES": {
+          "TITLE": "Features",
+          "ALLOW_CONVERSATION_FAQS": "Allow conversation FAQs",
+          "ALLOW_MEMORIES": "Allow memories",
+          "ALLOW_CITATIONS": "Allow citations"
+        }
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No assistants available",
+        "SUBTITLE": "Create an assistant to provide quick and accurate responses to your users.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Assistant",
+          "NOTE": "Saturn Assistant engages directly with customers and delivers instant, accurate responses."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Remove Assistant",
+        "DESCRIPTION": "Are you sure you want to remove this assistant?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Assistant removed successfully",
+        "ERROR_MESSAGE": "Failed to remove assistant"
+      },
+      "EDIT": {
+        "HEADER": "Edit Assistant",
+        "NOT_FOUND": "Assistant not found"
+      },
+      "SCENARIOS": {
+        "HEADER": "Scenarios"
+      },
+      "GUIDELINES": {
+        "HEADER": "Guidelines"
+      },
+      "GUARDRAILS": {
+        "HEADER": "Guardrails"
+      },
+      "INBOXES": {
+        "HEADER": "Connected Inboxes"
+      }
+    },
+    "TEST_INTERFACE": {
+      "HEADER": "Test Interface",
+      "DESCRIPTION": "Use this interface to send messages to your assistant and check if it responds accurately, quickly, and in the tone you expect.",
+      "MESSAGE_PLACEHOLDER": "Type your message...",
+      "CREDIT_NOTE": "Messages sent here will count toward your Saturn credits.",
+      "ERROR_GENERIC": "Failed to generate response. Please try again.",
+      "ERROR_NO_RESPONSE": "No response received from assistant."
+    },
+    "DOCUMENTS": {
+      "HEADER": "Documents",
+      "ADD_NEW": "New Document",
+      "SELECT_ASSISTANT": "Select Assistant",
+      "FORM_DESCRIPTION": "Upload documents or add URLs to provide context for your assistants.",
+      "CREATE": {
+        "TITLE": "Create Document",
+        "SUCCESS_MESSAGE": "Document created successfully",
+        "ERROR_MESSAGE": "Failed to create document"
+      },
+      "FORM": {
+        "TYPE": {
+          "LABEL": "Document Type",
+          "URL": "URL",
+          "PDF": "PDF"
+        },
+        "URL": {
+          "LABEL": "Document URL",
+          "PLACEHOLDER": "https://example.com/document.pdf",
+          "ERROR": "Valid URL is required"
+        },
+        "PDF_FILE": {
+          "LABEL": "PDF File",
+          "CHOOSE_FILE": "Choose PDF file",
+          "HELP_TEXT": "Max 10MB",
+          "INVALID_TYPE": "Only PDF files are allowed",
+          "TOO_LARGE": "File size must be less than 10MB",
+          "ERROR": "PDF file is required"
+        },
+        "NAME": {
+          "LABEL": "Document Name",
+          "PLACEHOLDER": "Enter document name"
+        },
+        "ASSISTANT": {
+          "LABEL": "Assistant",
+          "PLACEHOLDER": "Select assistant",
+          "ERROR": "Assistant is required"
+        }
+      },
+      "OPTIONS": {
+        "DELETE_DOCUMENT": "Delete Document"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No documents available",
+        "SUBTITLE": "Create a document to provide context for your assistants.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Documents",
+          "NOTE": "Upload documents to provide context for your Saturn assistants."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Remove Document",
+        "DESCRIPTION": "Are you sure you want to remove this document?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Document removed successfully",
+        "ERROR_MESSAGE": "Failed to remove document"
+      }
+    },
+    "RESPONSES": {
+      "HEADER": "FAQs",
+      "ADD_NEW": "New FAQ",
+      "SELECT_ASSISTANT": "Select Assistant",
+      "SELECT_STATUS": "Select Status",
+      "FORM_DESCRIPTION": "Create FAQs to help your assistants respond accurately to common questions.",
+      "STATUS": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved"
+      },
+      "CREATE": {
+        "TITLE": "Create FAQ",
+        "SUCCESS_MESSAGE": "FAQ created successfully",
+        "ERROR_MESSAGE": "Failed to create FAQ"
+      },
+      "EDIT": {
+        "TITLE": "Edit FAQ",
+        "SUCCESS_MESSAGE": "FAQ updated successfully",
+        "ERROR_MESSAGE": "Failed to update FAQ"
+      },
+      "FORM": {
+        "QUESTION": {
+          "LABEL": "Question",
+          "PLACEHOLDER": "Enter question",
+          "ERROR": "Question is required"
+        },
+        "ANSWER": {
+          "LABEL": "Answer",
+          "PLACEHOLDER": "Enter answer",
+          "ERROR": "Answer is required"
+        },
+        "ASSISTANT": {
+          "LABEL": "Assistant",
+          "PLACEHOLDER": "Select assistant",
+          "ERROR": "Assistant is required"
+        },
+        "STATUS": {
+          "LABEL": "Status"
+        }
+      },
+      "OPTIONS": {
+        "APPROVE": "Approve",
+        "EDIT_RESPONSE": "Edit FAQ",
+        "DELETE_RESPONSE": "Delete FAQ"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No FAQs available",
+        "SUBTITLE": "Create FAQs to help your assistants respond accurately.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn FAQs",
+          "NOTE": "Create FAQs to provide quick and accurate responses to common questions."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Remove FAQ",
+        "DESCRIPTION": "Are you sure you want to remove this FAQ?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "FAQ removed successfully",
+        "ERROR_MESSAGE": "Failed to remove FAQ"
+      }
+    },
+    "TOOLS": {
+      "HEADER": "Custom Tools",
+      "ADD_NEW": "New Tool",
+      "STATUS": {
+        "ENABLED": "Enabled"
+      },
+      "CREATE": {
+        "TITLE": "Create Tool",
+        "SUCCESS_MESSAGE": "Tool created successfully",
+        "ERROR_MESSAGE": "Failed to create tool"
+      },
+      "EDIT": {
+        "TITLE": "Edit Tool",
+        "SUCCESS_MESSAGE": "Tool updated successfully",
+        "ERROR_MESSAGE": "Failed to update tool"
+      },
+      "FORM": {
+        "SLUG": {
+          "LABEL": "Slug",
+          "PLACEHOLDER": "Enter tool slug",
+          "ERROR": "Slug is required"
+        },
+        "TITLE": {
+          "LABEL": "Title",
+          "PLACEHOLDER": "Enter tool title",
+          "ERROR": "Title is required"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Description",
+          "PLACEHOLDER": "Enter tool description"
+        },
+        "HTTP_METHOD": {
+          "LABEL": "HTTP Method"
+        },
+        "ENDPOINT_URL": {
+          "LABEL": "Endpoint URL",
+          "PLACEHOLDER": "https://api.example.com/endpoint",
+          "ERROR": "Endpoint URL is required"
+        },
+        "AUTH_TYPE": {
+          "LABEL": "Authentication Type"
+        },
+        "AUTH_TYPES": {
+          "NONE": "None",
+          "BEARER": "Bearer Token",
+          "API_KEY": "API Key"
+        },
+        "ENABLED": {
+          "LABEL": "Enable Tool"
+        }
+      },
+      "OPTIONS": {
+        "EDIT_TOOL": "Edit Tool",
+        "DELETE_TOOL": "Delete Tool"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No custom tools available",
+        "SUBTITLE": "Create custom tools to extend your assistant's capabilities.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Custom Tools",
+          "NOTE": "Create custom tools to integrate external APIs and services with your assistants."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Remove Tool",
+        "DESCRIPTION": "Are you sure you want to remove this tool?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Tool removed successfully",
+        "ERROR_MESSAGE": "Failed to remove tool"
+      }
+    },
+    "SCENARIOS": {
+      "HEADER": "Scenarios",
+      "ADD_NEW": "New Scenario",
+      "SEARCH_PLACEHOLDER": "Search scenarios...",
+      "EMPTY_MESSAGE": "No scenarios available. Create a scenario to define specific behaviors for your assistant.",
+      "CREATE": {
+        "TITLE": "Create Scenario",
+        "SUCCESS_MESSAGE": "Scenario created successfully",
+        "ERROR_MESSAGE": "Failed to create scenario"
+      },
+      "UPDATE": "Update",
+      "FORM": {
+        "TITLE": {
+          "LABEL": "Title",
+          "PLACEHOLDER": "Enter scenario title",
+          "ERROR": "Title is required"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Description",
+          "PLACEHOLDER": "Enter scenario description",
+          "ERROR": "Description is required"
+        },
+        "INSTRUCTION": {
+          "LABEL": "Instruction",
+          "PLACEHOLDER": "Enter scenario instruction",
+          "ERROR": "Instruction is required"
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Remove Scenario",
+        "DESCRIPTION": "Are you sure you want to remove this scenario?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Scenario removed successfully",
+        "ERROR_MESSAGE": "Failed to remove scenario"
+      }
+    },
+    "INBOXES": {
+      "HEADER": "Connected Inboxes",
+      "ADD_NEW": "Connect Inbox",
+      "FORM_DESCRIPTION": "Connect inboxes to your assistant to enable automated responses.",
+      "CREATE": {
+        "TITLE": "Connect Inbox",
+        "SUCCESS_MESSAGE": "Inbox connected successfully",
+        "ERROR_MESSAGE": "Failed to connect inbox"
+      },
+      "FORM": {
+        "INBOX": {
+          "LABEL": "Inbox",
+          "PLACEHOLDER": "Select inbox",
+          "ERROR": "Inbox is required"
+        }
+      },
+      "OPTIONS": {
+        "DISCONNECT": "Disconnect"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "No inboxes connected",
+        "SUBTITLE": "Connect an inbox to enable your assistant to respond automatically."
+      },
+      "REMOVE": {
+        "TITLE": "Disconnect Inbox",
+        "DESCRIPTION": "Are you sure you want to disconnect this inbox?",
+        "CONFIRM": "Yes, disconnect",
+        "SUCCESS_MESSAGE": "Inbox disconnected successfully",
+        "ERROR_MESSAGE": "Failed to disconnect inbox"
+      }
+    },
+    "GUIDELINES": {
+      "HEADER": "Response Guidelines",
+      "SEARCH_PLACEHOLDER": "Search guidelines...",
+      "EMPTY_MESSAGE": "No guidelines available. Add guidelines to define how your assistant should respond.",
+      "ADD": {
+        "PLACEHOLDER": "Add a new guideline...",
+        "SAVE": "Save"
+      },
+      "REMOVE": {
+        "TITLE": "Remove Guideline",
+        "DESCRIPTION": "Are you sure you want to remove this guideline?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Guideline removed successfully",
+        "ERROR_MESSAGE": "Failed to remove guideline"
+      }
+    },
+    "GUARDRAILS": {
+      "HEADER": "Guardrails",
+      "SEARCH_PLACEHOLDER": "Search guardrails...",
+      "EMPTY_MESSAGE": "No guardrails available. Add guardrails to define what your assistant should not do.",
+      "ADD": {
+        "PLACEHOLDER": "Add a new guardrail...",
+        "SAVE": "Save"
+      },
+      "REMOVE": {
+        "TITLE": "Remove Guardrail",
+        "DESCRIPTION": "Are you sure you want to remove this guardrail?",
+        "CONFIRM": "Yes, remove",
+        "SUCCESS_MESSAGE": "Guardrail removed successfully",
+        "ERROR_MESSAGE": "Failed to remove guardrail"
+      }
+    },
+    "FORM": {
+      "CANCEL": "Cancel",
+      "CREATE": "Create",
+      "MODIFY": "Update"
     }
   }
 }

@@ -11,6 +11,7 @@
 #  limits                :jsonb
 #  locale                :integer          default("en")
 #  name                  :string           not null
+#  openai_api_key        :string
 #  settings              :jsonb
 #  status                :integer          default("active")
 #  support_email         :string(100)
@@ -97,6 +98,10 @@ class Account < ApplicationRecord
   has_many :webhooks, dependent: :destroy_async
   has_many :whatsapp_channels, dependent: :destroy_async, class_name: '::Channel::Whatsapp'
   has_many :working_hours, dependent: :destroy_async
+  has_many :saturn_assistants, dependent: :destroy_async, class_name: 'Saturn::Assistant'
+  has_many :saturn_assistant_responses, dependent: :destroy_async, class_name: 'Saturn::AssistantResponse'
+  has_many :saturn_documents, dependent: :destroy_async, class_name: 'Saturn::Document'
+  has_many :saturn_custom_tools, dependent: :destroy_async, class_name: 'Saturn::CustomTool'
 
   has_one_attached :contacts_export
 
@@ -105,6 +110,7 @@ class Account < ApplicationRecord
 
   scope :with_auto_resolve, -> { where("(settings ->> 'auto_resolve_after')::int IS NOT NULL") }
 
+  before_validation :set_default_locale
   before_validation :validate_limit_keys
   after_create_commit :notify_creation
   after_destroy :remove_account_sequences
@@ -159,6 +165,10 @@ class Account < ApplicationRecord
   end
 
   private
+
+  def set_default_locale
+    self.locale = 'tr' if locale.blank?
+  end
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(ACCOUNT_CREATED, Time.zone.now, account: self)

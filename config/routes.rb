@@ -70,6 +70,20 @@ Rails.application.routes.draw do
             resources :custom_tools
             resources :documents, only: [:index, :show, :create, :destroy]
           end
+          namespace :saturn do
+            resources :assistants do
+              member do
+                post :playground
+              end
+              resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
+              resources :scenarios
+              resources :responses, only: [:index, :create]
+              resources :documents, only: [:index, :show, :create, :update, :destroy]
+            end
+            resources :responses, only: [:index, :show, :update, :destroy], param: :id
+            resources :documents, only: [:index], param: :id
+            resources :custom_tools
+          end
           resource :saml_settings, only: [:show, :create, :update, :destroy]
           resources :agent_bots, only: [:index, :create, :show, :update, :destroy] do
             delete :avatar, on: :member

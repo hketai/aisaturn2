@@ -16,7 +16,7 @@
       "ERROR": "There was an error connecting to Shopify. Please try again or contact support if the issue persists."
     },
     "HEADER": "Entegrasyonlar",
-    "DESCRIPTION": "Chatwoot integrates with multiple tools and services to improve your team's efficiency. Explore the list below to configure your favorite apps.",
+    "DESCRIPTION": "AISATURN, ekibinizin verimliliğini artırmak için birden fazla araç ve hizmetle entegre olur. Favori uygulamalarınızı yapılandırmak için aşağıdaki listeyi keşfedin.",
     "LEARN_MORE": "Learn more about integrations",
     "LOADING": "Fetching integrations",
     "CAPTAIN": {
@@ -30,7 +30,7 @@
       "LEARN_MORE": "Learn more about webhooks",
       "FORM": {
         "CANCEL": "İptal Et",
-        "DESC": "Web kancası etkinlikleri, Chatwoot hesabınızdaki olaylar hakkında gerçek zamanlı bilgi sağlar. Bir geri aramayı yapılandırmak için lütfen geçerli bir URL girin.",
+        "DESC": "Web kancası etkinlikleri, AISATURN hesabınızdaki olaylar hakkında gerçek zamanlı bilgi sağlar. Bir geri aramayı yapılandırmak için lütfen geçerli bir URL girin.",
         "SUBSCRIPTIONS": {
           "LABEL": "Olaylar",
           "EVENTS": {
@@ -60,7 +60,7 @@
       "HEADER_BTN_TXT": "Yeni Web Kancası Ekle",
       "LOADING": "Ekli web kancaları getiriliyor",
       "SEARCH_404": "Bu sorgu ile eşleşen öğe yok",
-      "SIDEBAR_TXT": "<p> <b> Web Kancaları </b> </p> <p> Web Kancaları, her hesap için tanımlanabilen HTTP geri aramalarıdır. Chatwoot'ta mesaj oluşturma gibi olaylar tarafından tetiklenirler. Bu hesap için birden fazla web kancası oluşturabilirsiniz. <br /> <br /> Bir <b> web kancası </b> oluşturmak için, <b> Yeni Web Kancası Ekle </b> düğmesini tıklayın. Ayrıca, Sil düğmesini tıklayarak mevcut herhangi bir web kancasını kaldırabilirsiniz. </p>",
+      "SIDEBAR_TXT": "<p> <b> Web Kancaları </b> </p> <p> Web Kancaları, her hesap için tanımlanabilen HTTP geri aramalarıdır. AISATURN'da mesaj oluşturma gibi olaylar tarafından tetiklenirler. Bu hesap için birden fazla web kancası oluşturabilirsiniz. <br /> <br /> Bir <b> web kancası </b> oluşturmak için, <b> Yeni Web Kancası Ekle </b> düğmesini tıklayın. Ayrıca, Sil düğmesini tıklayarak mevcut herhangi bir web kancasını kaldırabilirsiniz. </p>",
       "LIST": {
         "404": "Bu hesap için yapılandırılmış web kancası yok.",
         "TITLE": "Web Kancalarını Yönet",
@@ -107,14 +107,14 @@
       },
       "HELP_TEXT": {
         "TITLE": "Slack Entegrasyonu Kullanımı",
-        "BODY": "With this integration, all of your incoming conversations will be synced to the ***{selectedChannelName}*** channel in your Slack workspace. You can manage all your customer conversations right within the channel and never miss a message.\n\nHere are the main features of the integration:\n\n**Respond to conversations from within Slack:** To respond to a conversation in the ***{selectedChannelName}*** Slack channel, simply type out your message and send it as a thread. This will create a response back to the customer through Chatwoot. It's that simple!\n\n **Create private notes:** If you want to create private notes instead of replies, start your message with ***`note:`***. This ensures that your message is kept private and won't be visible to the customer.\n\n**Associate an agent profile:** If the person who replied on Slack has an agent profile in Chatwoot under the same email, the replies will be associated with that agent profile automatically. This means you can easily track who said what and when. On the other hand, when the replier doesn't have an associated agent profile, the replies will appear from the bot profile to the customer.",
+        "BODY": "Bu entegrasyon ile, tüm gelen konuşmalarınız Slack çalışma alanınızdaki ***{selectedChannelName}*** kanalına senkronize edilecektir. Tüm müşteri konuşmalarınızı kanal içinde yönetebilir ve hiçbir mesajı kaçırmazsınız.\n\nEntegrasyonun ana özellikleri:\n\n**Slack içinden konuşmalara yanıt verin:** ***{selectedChannelName}*** Slack kanalındaki bir konuşmaya yanıt vermek için, mesajınızı yazın ve bir thread olarak gönderin. Bu, müşteriye AISATURN üzerinden bir yanıt oluşturacaktır. Bu kadar basit!\n\n **Özel notlar oluşturun:** Yanıtlar yerine özel notlar oluşturmak istiyorsanız, mesajınıza ***`note:`*** ile başlayın. Bu, mesajınızın özel kalmasını ve müşteriye görünmemesini sağlar.\n\n**Temsilci profili ilişkilendirin:** Slack'te yanıt veren kişinin aynı e-posta altında AISATURN'da bir temsilci profili varsa, yanıtlar otomatik olarak o temsilci profiliyle ilişkilendirilir. Bu, kimin ne zaman ne söylediğini kolayca takip edebileceğiniz anlamına gelir. Öte yandan, yanıtlayanın ilişkili bir temsilci profili yoksa, yanıtlar bot profili olarak müşteriye görünecektir.",
         "SELECTED": "seçili"
       },
       "SELECT_CHANNEL": {
         "OPTION_LABEL": "Bir kanal seçin",
         "UPDATE": "Güncelleme",
         "BUTTON_TEXT": "Kanalı Bağla",
-        "DESCRIPTION": "Slack iş alanınız şimdi Chatwoot ile bağlantılı. Ancak entegrasyon şu anda etkin değil. Entegrasyonu etkinleştirmek ve bir kanalı Chatwoot'a bağlamak için lütfen aşağıdaki düğmeye tıklayın.\n\n**Not:** Eğer özel bir kanal bağlamaya çalışıyorsanız, bu adımdan önce Slack kanalına Chatwoot uygulamasını ekleyin.",
+        "DESCRIPTION": "Slack iş alanınız şimdi AISATURN ile bağlantılı. Ancak entegrasyon şu anda etkin değil. Entegrasyonu etkinleştirmek ve bir kanalı AISATURN'a bağlamak için lütfen aşağıdaki düğmeye tıklayın.\n\n**Not:** Eğer özel bir kanal bağlamaya çalışıyorsanız, bu adımdan önce Slack kanalına AISATURN uygulamasını ekleyin.",
         "ATTENTION_REQUIRED": "Dikkat gerekiyor",
         "EXPIRED": "Slack entegrasyonunuz süresi dolmuştur. Slack üzerinde mesaj almaya devam etmek için lütfen entegrasyonu silip iş alanınızı tekrar bağlayın."
       },
@@ -194,7 +194,7 @@
     "DASHBOARD_APPS": {
       "TITLE": "Panel Uygulamaları",
       "HEADER_BTN_TXT": "Yeni bir panel uygulaması ekle",
-      "SIDEBAR_TXT": "<p><b>Panel Uygulamaları</b></p><p>Panel Uygulamaları, organizasyonlara destek uzmanları için bağlam sağlamak amacıyla bir uygulamayı Chatwoot paneli içine yerleştirmelerine izin verir. Bu özellik, bağımsız bir uygulama oluşturmanıza ve bunu panel içine yerleştirmenize olanak tanır, böylece kullanıcı bilgilerini, siparişlerini veya önceki ödeme geçmişini sağlayabilirsiniz.</p><p>Chatwoot'taki panel üzerine uygulamanızı yerleştirdiğinizde, uygulamanız konuşma ve iletişim bağlamını pencere olayı olarak alır. Bağlamı almak için sayfanızda bir message olayı için bir dinleyici uygulayın.</p><p>Yeni bir panel uygulaması eklemek için 'Yeni bir panel uygulaması ekle' düğmesine tıklayın.</p>",
+      "SIDEBAR_TXT": "<p><b>Panel Uygulamaları</b></p><p>Panel Uygulamaları, organizasyonlara destek uzmanları için bağlam sağlamak amacıyla bir uygulamayı AISATURN paneli içine yerleştirmelerine izin verir. Bu özellik, bağımsız bir uygulama oluşturmanıza ve bunu panel içine yerleştirmenize olanak tanır, böylece kullanıcı bilgilerini, siparişlerini veya önceki ödeme geçmişini sağlayabilirsiniz.</p><p>AISATURN'daki panel üzerine uygulamanızı yerleştirdiğinizde, uygulamanız konuşma ve iletişim bağlamını pencere olayı olarak alır. Bağlamı almak için sayfanızda bir message olayı için bir dinleyici uygulayın.</p><p>Yeni bir panel uygulaması eklemek için 'Yeni bir panel uygulaması ekle' düğmesine tıklayın.</p>",
       "DESCRIPTION": "Panel Uygulamaları, organizasyonlara destek uzmanları için bağlam sağlamak amacıyla bir uygulamayı panel içine yerleştirmelerine izin verir. Bu özellik, bağımsız bir uygulama oluşturmanıza ve bunu panel içine yerleştirmenize olanak tanır, böylece kullanıcı bilgilerini, siparişlerini veya önceki ödeme geçmişini sağlayabilirsiniz.",
       "LEARN_MORE": "Learn more about Dashboard Apps",
       "LIST": {
@@ -975,6 +975,406 @@
         "TITLE": "No Connected Inboxes",
         "SUBTITLE": "Connecting an inbox allows the assistant to handle initial questions from your customers before transferring them to you."
       }
+    }
+  },
+  "SATURN": {
+    "NAME": "Saturn",
+    "HEADER_KNOW_MORE": "Daha fazla bilgi",
+    "ASSISTANTS": {
+      "HEADER": "Asistanlar",
+      "ADD_NEW": "Yeni Asistan",
+      "STATUS": {
+        "ACTIVE": "Aktif"
+      },
+      "DOCUMENTS": "Belgeler",
+      "RESPONSES": "SSS",
+      "CONNECTED_CHANNELS": "Bağlı Kanallar",
+      "OPTIONS": {
+        "VIEW_LINKED_INBOXES": "Bağlı Gelen Kutularını Görüntüle",
+        "CHANNEL": "Kanal",
+        "CONNECT_CHANNEL": "Kanala Bağla",
+        "WORKING_HOURS": "Çalışma Saatleri",
+        "HANDOFF_SETTINGS": "Devretme Ayarları",
+        "MODIFY_ASSISTANT": "Asistanı Düzenle",
+        "REMOVE_ASSISTANT": "Asistanı Kaldır"
+      },
+      "WORKING_HOURS": {
+        "DESCRIPTION": "Asistanınızın çalışma saatlerini yapılandırın. Bu saatler dışında asistan otomatik olarak devre dışı kalacaktır."
+      },
+      "HANDOFF": {
+        "DESCRIPTION": "Asistanınızın müşterileri bir insan temsilciye nasıl devredeceğini yapılandırın."
+      },
+      "CREATE": {
+        "TITLE": "Asistan Oluştur",
+        "SUCCESS_MESSAGE": "Asistan başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "Asistan oluşturulamadı"
+      },
+      "MODIFY": {
+        "TITLE": "Asistanı Düzenle",
+        "SUCCESS_MESSAGE": "Asistan başarıyla güncellendi",
+        "ERROR_MESSAGE": "Asistan güncellenemedi"
+      },
+      "FORM_DESCRIPTION": "Asistanınızı müşterilerinize doğru ve yardımcı yanıtlar sağlamak için yapılandırın.",
+      "FORM": {
+        "NAME": {
+          "LABEL": "Asistan Adı",
+          "PLACEHOLDER": "Asistan adını girin",
+          "ERROR": "Asistan adı gereklidir"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Açıklama",
+          "PLACEHOLDER": "Asistan açıklamasını girin",
+          "ERROR": "Açıklama gereklidir"
+        },
+        "PRODUCT_NAME": {
+          "LABEL": "Ürün Adı",
+          "PLACEHOLDER": "Ürün adını girin",
+          "ERROR": "Ürün adı gereklidir"
+        },
+        "TEMPERATURE": {
+          "LABEL": "Yanıt Sıcaklığı",
+          "DESCRIPTION": "Asistanın yanıtlarının ne kadar yaratıcı veya kısıtlayıcı olması gerektiğini ayarlayın. Düşük değerler daha odaklı ve deterministik yanıtlar üretir, yüksek değerler ise daha yaratıcı ve çeşitli yanıtlar sağlar."
+        },
+        "FEATURES": {
+          "TITLE": "Özellikler",
+          "ALLOW_CONVERSATION_FAQS": "Konuşma SSS'lerine izin ver",
+          "ALLOW_MEMORIES": "Anılara izin ver",
+          "ALLOW_CITATIONS": "Alıntılara izin ver"
+        }
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Asistan bulunamadı",
+        "SUBTITLE": "Kullanıcılarınıza hızlı ve doğru yanıtlar sağlamak için bir asistan oluşturun.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Asistanı",
+          "NOTE": "Saturn Asistanı müşterilerle doğrudan etkileşime girer ve anında, doğru yanıtlar sunar."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Asistanı Kaldır",
+        "DESCRIPTION": "Bu asistanı kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Asistan başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Asistan kaldırılamadı"
+      },
+      "EDIT": {
+        "HEADER": "Asistanı Düzenle",
+        "NOT_FOUND": "Asistan bulunamadı"
+      },
+      "SCENARIOS": {
+        "HEADER": "Senaryolar"
+      },
+      "GUIDELINES": {
+        "HEADER": "Yönergeler"
+      },
+      "GUARDRAILS": {
+        "HEADER": "Koruma Kuralları"
+      },
+      "INBOXES": {
+        "HEADER": "Bağlı Gelen Kutuları"
+      }
+    },
+    "TEST_INTERFACE": {
+      "HEADER": "Test Arayüzü",
+      "DESCRIPTION": "Asistanınıza mesaj göndermek ve yanıtlarının doğru, hızlı ve beklediğiniz tonda olup olmadığını kontrol etmek için bu arayüzü kullanın.",
+      "MESSAGE_PLACEHOLDER": "Mesajınızı yazın...",
+      "CREDIT_NOTE": "Buradan gönderilen mesajlar Saturn kredilerinize sayılacaktır.",
+      "ERROR_GENERIC": "Yanıt oluşturulamadı. Lütfen tekrar deneyin.",
+      "ERROR_NO_RESPONSE": "Asistan'dan yanıt alınamadı."
+    },
+    "DOCUMENTS": {
+      "HEADER": "Belgeler",
+      "ADD_NEW": "Yeni Belge",
+      "SELECT_ASSISTANT": "Asistan Seç",
+      "FORM_DESCRIPTION": "Asistanlarınıza bağlam sağlamak için belgeler yükleyin veya URL'ler ekleyin.",
+      "CREATE": {
+        "TITLE": "Belge Oluştur",
+        "SUCCESS_MESSAGE": "Belge başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "Belge oluşturulamadı"
+      },
+      "FORM": {
+        "TYPE": {
+          "LABEL": "Belge Türü",
+          "URL": "URL",
+          "PDF": "PDF"
+        },
+        "URL": {
+          "LABEL": "Belge URL'si",
+          "PLACEHOLDER": "https://example.com/document.pdf",
+          "ERROR": "Geçerli URL gereklidir"
+        },
+        "PDF_FILE": {
+          "LABEL": "PDF Dosyası",
+          "CHOOSE_FILE": "PDF dosyası seçin",
+          "HELP_TEXT": "Maks. 10MB",
+          "INVALID_TYPE": "Sadece PDF dosyalarına izin verilir",
+          "TOO_LARGE": "Dosya boyutu 10MB'dan küçük olmalıdır",
+          "ERROR": "PDF dosyası gereklidir"
+        },
+        "NAME": {
+          "LABEL": "Belge Adı",
+          "PLACEHOLDER": "Belge adını girin"
+        },
+        "ASSISTANT": {
+          "LABEL": "Asistan",
+          "PLACEHOLDER": "Asistan seçin",
+          "ERROR": "Asistan gereklidir"
+        }
+      },
+      "OPTIONS": {
+        "DELETE_DOCUMENT": "Belgeyi Sil"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Belge bulunamadı",
+        "SUBTITLE": "Asistanlarınıza bağlam sağlamak için bir belge oluşturun.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Belgeleri",
+          "NOTE": "Saturn asistanlarınıza bağlam sağlamak için belgeler yükleyin."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Belgeyi Kaldır",
+        "DESCRIPTION": "Bu belgeyi kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Belge başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Belge kaldırılamadı"
+      }
+    },
+    "RESPONSES": {
+      "HEADER": "SSS",
+      "ADD_NEW": "Yeni SSS",
+      "SELECT_ASSISTANT": "Asistan Seç",
+      "SELECT_STATUS": "Durum Seç",
+      "FORM_DESCRIPTION": "Asistanlarınızın yaygın sorulara doğru yanıt vermesine yardımcı olmak için SSS oluşturun.",
+      "STATUS": {
+        "PENDING": "Beklemede",
+        "APPROVED": "Onaylandı"
+      },
+      "CREATE": {
+        "TITLE": "SSS Oluştur",
+        "SUCCESS_MESSAGE": "SSS başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "SSS oluşturulamadı"
+      },
+      "EDIT": {
+        "TITLE": "SSS Düzenle",
+        "SUCCESS_MESSAGE": "SSS başarıyla güncellendi",
+        "ERROR_MESSAGE": "SSS güncellenemedi"
+      },
+      "FORM": {
+        "QUESTION": {
+          "LABEL": "Soru",
+          "PLACEHOLDER": "Soruyu girin",
+          "ERROR": "Soru gereklidir"
+        },
+        "ANSWER": {
+          "LABEL": "Cevap",
+          "PLACEHOLDER": "Cevabı girin",
+          "ERROR": "Cevap gereklidir"
+        },
+        "ASSISTANT": {
+          "LABEL": "Asistan",
+          "PLACEHOLDER": "Asistan seçin",
+          "ERROR": "Asistan gereklidir"
+        },
+        "STATUS": {
+          "LABEL": "Durum"
+        }
+      },
+      "OPTIONS": {
+        "APPROVE": "Onayla",
+        "EDIT_RESPONSE": "SSS Düzenle",
+        "DELETE_RESPONSE": "SSS Sil"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "SSS bulunamadı",
+        "SUBTITLE": "Asistanlarınızın doğru yanıt vermesine yardımcı olmak için SSS oluşturun.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn SSS",
+          "NOTE": "Yaygın sorulara hızlı ve doğru yanıtlar sağlamak için SSS oluşturun."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "SSS Kaldır",
+        "DESCRIPTION": "Bu SSS'yi kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "SSS başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "SSS kaldırılamadı"
+      }
+    },
+    "TOOLS": {
+      "HEADER": "Özel Araçlar",
+      "ADD_NEW": "Yeni Araç",
+      "STATUS": {
+        "ENABLED": "Etkin"
+      },
+      "CREATE": {
+        "TITLE": "Araç Oluştur",
+        "SUCCESS_MESSAGE": "Araç başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "Araç oluşturulamadı"
+      },
+      "EDIT": {
+        "TITLE": "Araç Düzenle",
+        "SUCCESS_MESSAGE": "Araç başarıyla güncellendi",
+        "ERROR_MESSAGE": "Araç güncellenemedi"
+      },
+      "FORM": {
+        "SLUG": {
+          "LABEL": "Slug",
+          "PLACEHOLDER": "Araç slug'ını girin",
+          "ERROR": "Slug gereklidir"
+        },
+        "TITLE": {
+          "LABEL": "Başlık",
+          "PLACEHOLDER": "Araç başlığını girin",
+          "ERROR": "Başlık gereklidir"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Açıklama",
+          "PLACEHOLDER": "Araç açıklamasını girin"
+        },
+        "HTTP_METHOD": {
+          "LABEL": "HTTP Metodu"
+        },
+        "ENDPOINT_URL": {
+          "LABEL": "Endpoint URL'si",
+          "PLACEHOLDER": "https://api.example.com/endpoint",
+          "ERROR": "Endpoint URL'si gereklidir"
+        },
+        "AUTH_TYPE": {
+          "LABEL": "Kimlik Doğrulama Türü"
+        },
+        "AUTH_TYPES": {
+          "NONE": "Yok",
+          "BEARER": "Bearer Token",
+          "API_KEY": "API Anahtarı"
+        },
+        "ENABLED": {
+          "LABEL": "Aracı Etkinleştir"
+        }
+      },
+      "OPTIONS": {
+        "EDIT_TOOL": "Aracı Düzenle",
+        "DELETE_TOOL": "Aracı Sil"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Özel araç bulunamadı",
+        "SUBTITLE": "Asistanınızın yeteneklerini genişletmek için özel araçlar oluşturun.",
+        "FEATURE_SPOTLIGHT": {
+          "TITLE": "Saturn Özel Araçlar",
+          "NOTE": "Asistanlarınızı harici API'ler ve hizmetlerle entegre etmek için özel araçlar oluşturun."
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Aracı Kaldır",
+        "DESCRIPTION": "Bu aracı kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Araç başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Araç kaldırılamadı"
+      }
+    },
+    "SCENARIOS": {
+      "HEADER": "Senaryolar",
+      "ADD_NEW": "Yeni Senaryo",
+      "SEARCH_PLACEHOLDER": "Senaryoları ara...",
+      "EMPTY_MESSAGE": "Senaryo bulunamadı. Asistanınız için belirli davranışları tanımlamak üzere bir senaryo oluşturun.",
+      "CREATE": {
+        "TITLE": "Senaryo Oluştur",
+        "SUCCESS_MESSAGE": "Senaryo başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "Senaryo oluşturulamadı"
+      },
+      "UPDATE": "Güncelle",
+      "FORM": {
+        "TITLE": {
+          "LABEL": "Başlık",
+          "PLACEHOLDER": "Senaryo başlığını girin",
+          "ERROR": "Başlık gereklidir"
+        },
+        "DESCRIPTION": {
+          "LABEL": "Açıklama",
+          "PLACEHOLDER": "Senaryo açıklamasını girin",
+          "ERROR": "Açıklama gereklidir"
+        },
+        "INSTRUCTION": {
+          "LABEL": "Talimat",
+          "PLACEHOLDER": "Senaryo talimatını girin",
+          "ERROR": "Talimat gereklidir"
+        }
+      },
+      "REMOVE": {
+        "TITLE": "Senaryoyu Kaldır",
+        "DESCRIPTION": "Bu senaryoyu kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Senaryo başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Senaryo kaldırılamadı"
+      }
+    },
+    "INBOXES": {
+      "HEADER": "Bağlı Gelen Kutuları",
+      "ADD_NEW": "Gelen Kutusu Bağla",
+      "FORM_DESCRIPTION": "Otomatik yanıtları etkinleştirmek için gelen kutularınızı asistanınıza bağlayın.",
+      "CREATE": {
+        "TITLE": "Gelen Kutusu Bağla",
+        "SUCCESS_MESSAGE": "Gelen kutusu başarıyla bağlandı",
+        "ERROR_MESSAGE": "Gelen kutusu bağlanamadı"
+      },
+      "FORM": {
+        "INBOX": {
+          "LABEL": "Gelen Kutusu",
+          "PLACEHOLDER": "Gelen kutusu seçin",
+          "ERROR": "Gelen kutusu gereklidir"
+        }
+      },
+      "OPTIONS": {
+        "DISCONNECT": "Bağlantıyı Kes"
+      },
+      "EMPTY_STATE": {
+        "TITLE": "Bağlı gelen kutusu yok",
+        "SUBTITLE": "Asistanınızın otomatik yanıt vermesini etkinleştirmek için bir gelen kutusu bağlayın."
+      },
+      "REMOVE": {
+        "TITLE": "Gelen Kutusunu Ayır",
+        "DESCRIPTION": "Bu gelen kutusunu ayırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, ayır",
+        "SUCCESS_MESSAGE": "Gelen kutusu başarıyla ayrıldı",
+        "ERROR_MESSAGE": "Gelen kutusu ayrılamadı"
+      }
+    },
+    "GUIDELINES": {
+      "HEADER": "Yanıt Yönergeleri",
+      "SEARCH_PLACEHOLDER": "Yönergeleri ara...",
+      "EMPTY_MESSAGE": "Yönerge bulunamadı. Asistanınızın nasıl yanıt vermesi gerektiğini tanımlamak için yönergeler ekleyin.",
+      "ADD": {
+        "PLACEHOLDER": "Yeni bir yönerge ekleyin...",
+        "SAVE": "Kaydet"
+      },
+      "REMOVE": {
+        "TITLE": "Yönergeyi Kaldır",
+        "DESCRIPTION": "Bu yönergeyi kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Yönerge başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Yönerge kaldırılamadı"
+      }
+    },
+    "GUARDRAILS": {
+      "HEADER": "Koruma Kuralları",
+      "SEARCH_PLACEHOLDER": "Koruma kurallarını ara...",
+      "EMPTY_MESSAGE": "Koruma kuralı bulunamadı. Asistanınızın yapmaması gerekenleri tanımlamak için koruma kuralları ekleyin.",
+      "ADD": {
+        "PLACEHOLDER": "Yeni bir koruma kuralı ekleyin...",
+        "SAVE": "Kaydet"
+      },
+      "REMOVE": {
+        "TITLE": "Koruma Kuralını Kaldır",
+        "DESCRIPTION": "Bu koruma kuralını kaldırmak istediğinizden emin misiniz?",
+        "CONFIRM": "Evet, kaldır",
+        "SUCCESS_MESSAGE": "Koruma kuralı başarıyla kaldırıldı",
+        "ERROR_MESSAGE": "Koruma kuralı kaldırılamadı"
+      }
+    },
+    "FORM": {
+      "CANCEL": "İptal Et",
+      "CREATE": "Oluştur",
+      "MODIFY": "Güncelle"
     }
   }
 }

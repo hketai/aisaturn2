@@ -108,6 +108,9 @@ class Integrations::App
 
     def all
       apps.values.each_with_object([]) do |app, result|
+        # Hide OpenAI integration from account level - it's managed by Super Admin
+        next if app[:id] == 'openai'
+
         result << new(app)
       end
     end

@@ -15,33 +15,33 @@
 
 # ------- Branding Related Config ------- #
 - name: INSTALLATION_NAME
-  value: 'Chatwoot'
+  value: 'AISATURN'
   display_title: 'Installation Name'
   description: 'The installation wide name that would be used in the dashboard, title etc.'
 - name: LOGO_THUMBNAIL
-  value: '/brand-assets/logo_thumbnail.svg'
+  value: '/brand-assets/logo.png'
   display_title: 'Logo Thumbnail'
   description: 'The thumbnail that would be used for favicon (512px X 512px)'
 - name: LOGO
-  value: '/brand-assets/logo.svg'
+  value: '/brand-assets/logo.png'
   display_title: 'Logo'
   description: 'The logo that would be used on the dashboard, login page etc.'
 - name: LOGO_DARK
-  value: '/brand-assets/logo_dark.svg'
+  value: '/brand-assets/logo_dark.png'
   display_title: 'Logo Dark Mode'
   description: 'The logo that would be used on the dashboard, login page etc. for dark mode'
 - name: BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://aisaturn.co'
   display_title: 'Brand URL'
-  description: 'The URL that would be used in emails under the section “Powered By”'
+  description: 'The URL that would be used in emails under the section "Powered By"'
 - name: WIDGET_BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://aisaturn.co'
   display_title: 'Widget Brand URL'
-  description: 'The URL that would be used in the widget under the section “Powered By”'
+  description: 'The URL that would be used in the widget under the section "Powered By"'
 - name: BRAND_NAME
-  value: 'Chatwoot'
+  value: ''
   display_title: 'Brand Name'
-  description: 'The name that would be used in emails and the widget'
+  description: 'The name that would be used in emails and the widget. Leave empty to hide "Powered by" branding.'
 - name: TERMS_URL
   value: 'https://www.chatwoot.com/terms-of-service'
   display_title: 'Terms URL'
@@ -51,7 +51,7 @@
   display_title: 'Privacy URL'
   description: 'The privacy policy URL displayed in the app'
 - name: DISPLAY_MANIFEST
-  value: true
+  value: false
   display_title: 'Chatwoot Metadata'
   description: 'Display default Chatwoot metadata like favicons and upgrade warnings'
   type: boolean
@@ -161,36 +161,50 @@
   type: secret
 # End of Microsoft Email Channel Config
 
-# MARK: Captain Config
-- name: CAPTAIN_OPEN_AI_API_KEY
+# MARK: Saturn AI Config
+- name: SATURN_OPEN_AI_API_KEY
   display_title: 'OpenAI API Key'
-  description: 'The API key used to authenticate requests to OpenAI services for Captain AI.'
+  description: 'The API key used to authenticate requests to OpenAI services for Saturn AI.'
   locked: false
   type: secret
-- name: CAPTAIN_OPEN_AI_MODEL
+- name: SATURN_OPEN_AI_MODEL
   display_title: 'OpenAI Model'
-  description: 'The OpenAI model configured for use in Captain AI. Default: gpt-4o-mini'
+  description: 'The OpenAI model configured for use in Saturn AI. Default: gpt-4o-mini'
   locked: false
-- name: CAPTAIN_OPEN_AI_ENDPOINT
+- name: SATURN_OPEN_AI_ENDPOINT
   display_title: 'OpenAI API Endpoint (optional)'
-  description: 'The OpenAI endpoint configured for use in Captain AI. Default: https://api.openai.com/'
+  description: 'The OpenAI endpoint configured for use in Saturn AI. Default: https://api.openai.com/'
   locked: false
-- name: CAPTAIN_EMBEDDING_MODEL
+- name: SATURN_EMBEDDING_MODEL
   display_title: 'Embedding Model (optional)'
-  description: 'The embedding model configured for use in Captain AI. Default: text-embedding-3-small'
+  description: 'The embedding model configured for use in Saturn AI. Default: text-embedding-3-small'
   locked: false
-- name: CAPTAIN_FIRECRAWL_API_KEY
-  display_title: 'FireCrawl API Key (optional)'
-  description: 'The FireCrawl API key for the Captain AI service'
+# ------- Saturn AI Config ------- #
+- name: SATURN_ENABLED
+  value: true
+  display_title: 'Enable Saturn AI'
+  description: 'Enable or disable Saturn AI features across the installation'
   locked: false
-  type: secret
-- name: CAPTAIN_CLOUD_PLAN_LIMITS
-  display_title: 'Captain Cloud Plan Limits'
-  description: 'The limits for the Captain AI service for different plans'
-  value:
-  type: code
-
-# End of Captain Config
+  type: boolean
+- name: SATURN_MAX_ASSISTANTS
+  value: 10
+  display_title: 'Max Assistants per Account'
+  description: 'Maximum number of Saturn assistants allowed per account'
+  locked: false
+  type: number
+- name: SATURN_MAX_DOCUMENTS
+  value: 50
+  display_title: 'Max Documents per Assistant'
+  description: 'Maximum number of documents allowed per Saturn assistant'
+  locked: false
+  type: number
+- name: SATURN_MAX_RESPONSES
+  value: 100
+  display_title: 'Max Responses per Assistant'
+  description: 'Maximum number of responses allowed per Saturn assistant'
+  locked: false
+  type: number
+# ------- End of Saturn AI Config ------- #
 
 # ------- Chatwoot Internal Config for Cloud ----#
 - name: CHATWOOT_INBOX_TOKEN

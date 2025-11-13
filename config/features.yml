@@ -140,6 +140,9 @@
   display_name: Captain
   enabled: false
   premium: true
+- name: saturn_integration
+  display_name: Saturn
+  enabled: true
 - name: custom_roles
   display_name: Custom Roles
   enabled: false

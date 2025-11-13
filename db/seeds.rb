@@ -18,14 +18,16 @@ unless Rails.env.production?
   GlobalConfig.clear_cache
 
   account = Account.create!(
-    name: 'Acme Inc'
+    name: 'AISATURN Demo',
+    locale: 'tr'
   )
 
   secondary_account = Account.create!(
-    name: 'Acme Org'
+    name: 'AISATURN Organizasyon',
+    locale: 'tr'
   )
 
-  user = User.new(name: 'John', email: 'john@acme.inc', password: 'Password1!', type: 'SuperAdmin')
+  user = User.new(name: 'Yönetici', email: 'john@acme.inc', password: 'Password1!', type: 'SuperAdmin')
   user.skip_confirmation!
   user.save!
 
@@ -41,16 +43,16 @@ unless Rails.env.production?
     role: :administrator
   )
 
-  web_widget = Channel::WebWidget.create!(account: account, website_url: 'https://acme.inc')
+  web_widget = Channel::WebWidget.create!(account: account, website_url: 'https://aisaturn.com')
 
-  inbox = Inbox.create!(channel: web_widget, account: account, name: 'Acme Support')
+  inbox = Inbox.create!(channel: web_widget, account: account, name: 'AISATURN Destek')
   InboxMember.create!(user: user, inbox: inbox)
 
   contact_inbox = ContactInboxWithContactBuilder.new(
     source_id: user.id,
     inbox: inbox,
     hmac_verified: true,
-    contact_attributes: { name: 'jane', email: 'jane@example.com', phone_number: '+2320000' }
+    contact_attributes: { name: 'Ayşe', email: 'ayse@example.com', phone_number: '+905551234567' }
   ).perform
 
   conversation = Conversation.create!(
@@ -63,26 +65,26 @@ unless Rails.env.production?
     additional_attributes: {}
   )
 
-  # sample email collect
+  # örnek e-posta toplama mesajı
   Seeders::MessageSeeder.create_sample_email_collect_message conversation
 
-  Message.create!(content: 'Hello', account: account, inbox: inbox, conversation: conversation, sender: contact_inbox.contact,
+  Message.create!(content: 'Merhaba, nasıl yardımcı olabilirsiniz?', account: account, inbox: inbox, conversation: conversation, sender: contact_inbox.contact,
                   message_type: :incoming)
 
-  # sample location message
+  # örnek konum mesajı
   #
   location_message = Message.new(content: 'location', account: account, inbox: inbox, sender: contact_inbox.contact, conversation: conversation,
                                  message_type: :incoming)
   location_message.attachments.new(
     account_id: account.id,
     file_type: 'location',
-    coordinates_lat: 37.7893768,
-    coordinates_long: -122.3895553,
-    fallback_title: 'Bay Bridge, San Francisco, CA, USA'
+    coordinates_lat: 41.0082,
+    coordinates_long: 28.9784,
+    fallback_title: 'İstanbul, Türkiye'
   )
   location_message.save!
 
-  # sample card
+  # örnek kart
   Seeders::MessageSeeder.create_sample_cards_message conversation
   # input select
   Seeders::MessageSeeder.create_sample_input_select_message conversation
@@ -93,5 +95,5 @@ unless Rails.env.production?
   # csat
   Seeders::MessageSeeder.create_sample_csat_collect_message conversation
 
-  CannedResponse.create!(account: account, short_code: 'start', content: 'Hello welcome to chatwoot.')
+  CannedResponse.create!(account: account, short_code: 'start', content: 'Merhaba, AISATURN\'a hoş geldiniz!')
 end

@@ -24,7 +24,9 @@ export function useSidebarContext() {
     return [];
   };
 
-  const resolveFeatureFlag = to => {
+  const resolveFeatureFlag = (to, itemFeatureFlag) => {
+    // If item has explicit featureFlag property, use it (null means no check)
+    if (itemFeatureFlag !== undefined) return itemFeatureFlag || '';
     if (to) return router.resolve(to)?.meta?.featureFlag || '';
     return '';
   };
@@ -34,9 +36,9 @@ export function useSidebarContext() {
     return [];
   };
 
-  const isAllowed = to => {
+  const isAllowed = (to, itemFeatureFlag) => {
     const permissions = resolvePermissions(to);
-    const featureFlag = resolveFeatureFlag(to);
+    const featureFlag = resolveFeatureFlag(to, itemFeatureFlag);
     const installationType = resolveInstallationType(to);
 
     return shouldShow(featureFlag, permissions, installationType);

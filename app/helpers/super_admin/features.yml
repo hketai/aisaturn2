@@ -9,6 +9,13 @@ captain:
   icon: 'icon-captain'
   config_key: 'captain'
   enterprise: true
+saturn:
+  name: 'Saturn'
+  description: 'Enable AI-powered conversations with your customers using Saturn AI.'
+  enabled: true
+  icon: 'icon-saturn'
+  config_key: 'saturn'
+  enterprise: false
 custom_branding:
   name: 'Custom Branding'
   description: 'Apply your own branding to this installation.'

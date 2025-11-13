@@ -23,6 +23,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -36,6 +37,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -51,6 +53,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -66,6 +69,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -81,6 +85,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -96,6 +101,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -109,6 +115,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -122,6 +129,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },
@@ -135,6 +143,7 @@ export const routes = [
       installationTypes: [
         INSTALLATION_TYPES.CLOUD,
         INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
       ],
     },
   },

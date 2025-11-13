@@ -16,6 +16,7 @@ const props = defineProps({
   activeOn: { type: Array, default: () => [] },
   children: { type: Array, default: undefined },
   getterKeys: { type: Object, default: () => ({}) },
+  featureFlag: { type: [String, null], default: undefined },
 });
 
 const {
@@ -45,7 +46,7 @@ const accessibleItems = computed(() => {
     // If a item has no link, it means it's just a subgroup header
     // So we don't need to check for permissions here, because there's nothing to
     // access here anyway
-    return child.to && isAllowed(child.to);
+    return child.to && isAllowed(child.to, props.featureFlag);
   });
 });
 
@@ -133,7 +134,7 @@ onMounted(async () => {
   <Policy
     v-if="!hasChildren || hasAccessibleChildren"
     :permissions="resolvePermissions(to)"
-    :feature-flag="resolveFeatureFlag(to)"
+    :feature-flag="resolveFeatureFlag(to, featureFlag)"
     as="li"
     class="grid gap-1 text-sm cursor-pointer select-none"
   >
