@@ -31,7 +31,11 @@ onMounted(() => {
 
 <template>
   <SaturnPageLayout
-    :page-title="assistant?.name ? `${assistant.name} - ${$t('SATURN.ASSISTANTS.OPTIONS.WORKING_HOURS')}` : $t('SATURN.ASSISTANTS.OPTIONS.WORKING_HOURS')"
+    :page-title="
+      assistant?.name
+        ? `${assistant.name} - ${$t('SATURN.ASSISTANTS.OPTIONS.WORKING_HOURS')}`
+        : $t('SATURN.ASSISTANTS.OPTIONS.WORKING_HOURS')
+    "
     :action-permissions="['administrator']"
     :enable-pagination="false"
     :is-loading="isFetching"
@@ -41,7 +45,9 @@ onMounted(() => {
     :return-path="{ name: 'saturn_assistants_edit', params: { assistantId } }"
   >
     <template #contentArea>
-      <div class="flex flex-col gap-4 p-6 bg-n-slate-1 rounded-lg border border-n-slate-4">
+      <div
+        class="flex flex-col gap-4 p-6 bg-n-slate-1 rounded-lg border border-n-slate-4"
+      >
         <p class="text-sm text-n-slate-11">
           {{ $t('SATURN.ASSISTANTS.WORKING_HOURS.DESCRIPTION') }}
         </p>
@@ -52,4 +58,3 @@ onMounted(() => {
     </template>
   </SaturnPageLayout>
 </template>
-

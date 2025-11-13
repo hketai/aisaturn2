@@ -10,7 +10,7 @@ class SaturnResponses extends ApiClient {
     const url = assistantId
       ? `${this.url}/${assistantId}/responses`
       : `/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses`;
-    
+
     return axios.get(url, {
       params: {
         page,
@@ -21,7 +21,9 @@ class SaturnResponses extends ApiClient {
   }
 
   show(id) {
-    return axios.get(`/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`);
+    return axios.get(
+      `/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`
+    );
   }
 
   create({ assistantId, ...data } = {}) {
@@ -31,13 +33,18 @@ class SaturnResponses extends ApiClient {
   }
 
   update(id, data = {}) {
-    return axios.put(`/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`, {
-      response: data,
-    });
+    return axios.put(
+      `/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`,
+      {
+        response: data,
+      }
+    );
   }
 
   delete(id) {
-    return axios.delete(`/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`);
+    return axios.delete(
+      `/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/${id}`
+    );
   }
 
   approve(id) {
@@ -45,11 +52,13 @@ class SaturnResponses extends ApiClient {
   }
 
   search({ query } = {}) {
-    return axios.get(`/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/search`, {
-      params: { query },
-    });
+    return axios.get(
+      `/api/v1/accounts/${this.accountIdFromRoute}/saturn/responses/search`,
+      {
+        params: { query },
+      }
+    );
   }
 }
 
 export default new SaturnResponses();
-

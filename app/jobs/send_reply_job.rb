@@ -12,6 +12,7 @@ class SendReplyJob < ApplicationJob
       'Channel::Line' => ::Line::SendOnLineService,
       'Channel::Telegram' => ::Telegram::SendOnTelegramService,
       'Channel::Whatsapp' => ::Whatsapp::SendOnWhatsappService,
+      'Channel::WhatsappWeb' => ::WhatsappWeb::SendOnWhatsappWebService,
       'Channel::Sms' => ::Sms::SendOnSmsService,
       'Channel::Instagram' => ::Instagram::SendOnInstagramService
     }

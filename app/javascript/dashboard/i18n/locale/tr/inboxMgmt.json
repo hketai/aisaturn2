@@ -228,6 +228,8 @@
           "TWILIO": "Twilio",
           "WHATSAPP_CLOUD": "WhatsApp Bulut",
           "WHATSAPP_CLOUD_DESC": "Meta üzerinden hızlı kurulum",
+          "WHATSAPP_WEB": "WhatsApp Web",
+          "WHATSAPP_WEB_DESC": "WhatsApp Web kullanarak bağlanın (QR kod kimlik doğrulama)",
           "TWILIO_DESC": "Twilio kimlik bilgileriyle bağlanın",
           "360_DIALOG": "360Dialog"
         },
@@ -304,6 +306,35 @@
         "API": {
           "ERROR_MESSAGE": "WhatsApp kanalını kaydedemedik"
         }
+      },
+      "WHATSAPP_WEB": {
+        "TITLE": "WhatsApp Web Kanalı",
+        "DESC": "WhatsApp Web kullanarak WhatsApp hesabınızı bağlayın. Kimlik doğrulama için QR kodunu tarayın.",
+        "INBOX_NAME": {
+          "LABEL": "Gelen Kutusu Adı",
+          "PLACEHOLDER": "Gelen kutusu adını girin"
+        },
+        "NAME_REQUIRED": "Gelen kutusu adı gereklidir",
+        "CREATE_BUTTON": "Kanal Oluştur",
+        "CREATE_SUCCESS": "WhatsApp Web kanalı başarıyla oluşturuldu",
+        "CREATE_ERROR": "WhatsApp Web kanalı oluşturulamadı",
+        "STATUS": "Durum",
+        "STATUS_CONNECTED": "Bağlı",
+        "STATUS_CONNECTING": "Bağlanıyor",
+        "STATUS_DISCONNECTED": "Bağlantı Kesildi",
+        "PHONE_NUMBER": "Telefon Numarası",
+        "QR_CODE": {
+          "TITLE": "QR Kodu Tara",
+          "DESCRIPTION": "Telefonunuzda WhatsApp'ı açın ve hesabınızı bağlamak için bu QR kodunu tarayın.",
+          "EXPIRES_IN": "QR kodu 2 dakika içinde sona erer",
+          "REGENERATE": "QR Kodunu Yeniden Oluştur"
+        },
+        "REGENERATE_ERROR": "QR kodu yeniden oluşturulamadı",
+        "CONNECTED_MESSAGE": "WhatsApp hesabınız başarıyla bağlandı!",
+        "CONNECTED_SUCCESS": "WhatsApp hesabınız başarıyla bağlandı!",
+        "WAITING_FOR_QR": "QR kodu bekleniyor...",
+        "SCAN_QR": "QR Kodu Tara",
+        "SCAN_QR_DESCRIPTION": "Telefonunuzda WhatsApp'ı açın ve hesabınızı bağlamak için bu QR kodunu tarayın."
       },
       "VOICE": {
         "TITLE": "Ses Kanalı",
@@ -998,6 +1029,7 @@
       "TWITTER_PROFILE": "Twitter",
       "TWILIO_SMS": "Twilio SMS",
       "WHATSAPP": "WhatsApp",
+      "WHATSAPP_WEB": "WhatsApp Web",
       "SMS": "SMS",
       "EMAIL": "E-Posta",
       "TELEGRAM": "Telegram",

@@ -58,4 +58,3 @@ const showBanner = computed(() => {
     </div>
   </div>
 </template>
-

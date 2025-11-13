@@ -62,8 +62,8 @@ const onCreateClick = () => {
       <div class="grid grid-cols-1 gap-4 p-px overflow-hidden">
         <SaturnAssistantItem
           v-for="(assistant, index) in sampleAssistants"
-          :assistant-id="assistant.id"
           :key="`saturn-assistant-${index}`"
+          :assistant-id="assistant.id"
           :assistant-name="assistant.name"
           :assistant-description="assistant.description"
           :last-modified="assistant.created_at"
@@ -79,4 +79,3 @@ const onCreateClick = () => {
     </template>
   </EmptyStateLayout>
 </template>
-

@@ -28,18 +28,70 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
   end
 
   def create
+    Rails.logger.error "=== Inbox Creation Debug ==="
+    Rails.logger.error "params: #{params.inspect}"
+    
+    # Get channel type first to determine editable attributes
+    channel_type = params.dig(:inbox, :channel, :type)
+    Rails.logger.error "channel_type from params: #{channel_type.inspect}"
+    
+    # Get channel class to determine editable attributes
+    channel_class = channel_type.present? ? channel_type_from_params_for_type(channel_type) : nil
+    Rails.logger.error "channel_class: #{channel_class.inspect}"
+    
+    # Get editable attributes
+    channel_attributes = channel_class.present? && channel_class.const_defined?(:EDITABLE_ATTRS) ? channel_class::EDITABLE_ATTRS : []
+    Rails.logger.error "channel_attributes: #{channel_attributes.inspect}"
+    
+    # Now get permitted params with channel attributes
+    permitted = permitted_params(channel_attributes)
+    Rails.logger.error "permitted_params: #{permitted.inspect}"
+    Rails.logger.error "permitted_params[:channel]: #{permitted[:channel].inspect}"
+    
+    # For WhatsApp Web, create channel outside transaction to ensure it's committed
+    channel = create_channel_with_permitted(permitted)
+    Rails.logger.error "create_channel returned: #{channel.inspect}"
+    if channel.nil?
+      Rails.logger.error "Channel creation failed - channel is nil!"
+      raise StandardError, 'Channel creation failed'
+    end
+
+    # For WhatsApp Web, don't create inbox until connection is established
+    if channel.is_a?(Channel::WhatsappWeb)
+      # Store inbox name in channel's provider_config for later use
+      inbox_name_value = permitted[:name] || inbox_name(channel)
+      channel.update!(provider_config: (channel.provider_config || {}).merge(pending_inbox_name: inbox_name_value))
+      
+      # Ensure channel is persisted and reloaded
+      channel.reload
+      
+      # Return channel only, inbox will be created after QR scan
+      render json: {
+        channel: channel.as_json(only: [:id, :account_id, :phone_number, :status, :provider_config, :qr_code_token, :qr_code_expires_at, :created_at, :updated_at]),
+        inbox: nil,
+        requires_qr_scan: true,
+        message: 'Channel created. Please scan QR code to complete setup.'
+      }
+      return
+    end
+
+    # For other channels, create inbox in transaction
     ActiveRecord::Base.transaction do
-      channel = create_channel
       @inbox = Current.account.inboxes.build(
         {
           name: inbox_name(channel),
           channel: channel
         }.merge(
-          permitted_params.except(:channel)
+          permitted.except(:channel)
         )
       )
       @inbox.save!
+      Rails.logger.debug "=== End Inbox Creation Debug ==="
     end
+  rescue StandardError => e
+    Rails.logger.error "Inbox creation error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n") if Rails.env.development?
+    render json: { error: e.message, message: e.message }, status: :unprocessable_entity
   end
 
   def update
@@ -66,8 +118,23 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
   end
 
   def destroy
-    ::DeleteObjectJob.perform_later(@inbox, Current.user, request.ip) if @inbox.present?
-    render status: :ok, json: { message: I18n.t('messages.inbox_deletetion_response') }
+    if @inbox.present?
+      # In development, perform synchronously if Sidekiq is not running
+      # In production, always use background job
+      if Rails.env.development? && !sidekiq_running?
+        ::DeleteObjectJob.perform_now(@inbox, Current.user, request.ip)
+        render status: :ok, json: { message: I18n.t('messages.inbox_deletetion_response') }
+      else
+        ::DeleteObjectJob.perform_later(@inbox, Current.user, request.ip)
+        render status: :ok, json: { message: I18n.t('messages.inbox_deletetion_response') }
+      end
+    else
+      render status: :not_found, json: { error: 'Inbox not found' }
+    end
+  rescue StandardError => e
+    Rails.logger.error "Inbox deletion error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n") if Rails.env.development?
+    render status: :unprocessable_entity, json: { error: e.message, message: "Silme işlemi başarısız: #{e.message}" }
   end
 
   def sync_templates
@@ -104,14 +171,80 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
     render json: { error: 'Health data only available for WhatsApp Cloud API channels' }, status: :bad_request
   end
 
-  def create_channel
-    return unless allowed_channel_types.include?(permitted_params[:channel][:type])
+  def create_channel_with_permitted(permitted)
+    Rails.logger.error "=== Channel Creation Debug ==="
+    Rails.logger.error "permitted[:channel]: #{permitted[:channel].inspect}"
+    
+    unless permitted[:channel].present?
+      Rails.logger.error "permitted[:channel] is not present!"
+      return nil
+    end
+    
+    channel_type = permitted[:channel][:type]
+    Rails.logger.error "channel_type: #{channel_type.inspect}"
+    Rails.logger.error "allowed_channel_types: #{allowed_channel_types.inspect}"
+    Rails.logger.error "is allowed? #{allowed_channel_types.include?(channel_type)}"
+    
+    unless allowed_channel_types.include?(channel_type)
+      Rails.logger.error "channel_type '#{channel_type}' is not in allowed_channel_types!"
+      return nil
+    end
 
-    account_channels_method.create!(permitted_params(channel_type_from_params::EDITABLE_ATTRS)[:channel].except(:type))
+    channel_class = channel_type_from_params_for_type(channel_type)
+    Rails.logger.error "channel_class: #{channel_class.inspect}"
+    if channel_class.nil?
+      Rails.logger.error "channel_class is nil!"
+      return nil
+    end
+
+    channel_method = account_channels_method_for_type(channel_type)
+    Rails.logger.error "channel_method: #{channel_method.inspect}"
+    if channel_method.nil?
+      Rails.logger.error "channel_method is nil!"
+      return nil
+    end
+
+    channel_attrs = permitted[:channel].except(:type)
+    Rails.logger.error "channel_attrs: #{channel_attrs.inspect}"
+    
+    result = channel_method.create!(channel_attrs)
+    Rails.logger.error "channel created: #{result.inspect}"
+    Rails.logger.error "=== End Channel Creation Debug ==="
+    result
+  rescue StandardError => e
+    Rails.logger.error "Channel creation error: #{e.class.name}: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n") if Rails.env.development?
+    raise
+  end
+
+  def channel_type_from_params_for_type(channel_type)
+    {
+      'web_widget' => Channel::WebWidget,
+      'api' => Channel::Api,
+      'email' => Channel::Email,
+      'line' => Channel::Line,
+      'telegram' => Channel::Telegram,
+      'whatsapp' => Channel::Whatsapp,
+      'whatsapp_web' => Channel::WhatsappWeb,
+      'sms' => Channel::Sms
+    }[channel_type]
+  end
+
+  def account_channels_method_for_type(channel_type)
+    {
+      'web_widget' => Current.account.web_widgets,
+      'api' => Current.account.api_channels,
+      'email' => Current.account.email_channels,
+      'line' => Current.account.line_channels,
+      'telegram' => Current.account.telegram_channels,
+      'whatsapp' => Current.account.whatsapp_channels,
+      'whatsapp_web' => Current.account.channel_whatsapp_webs,
+      'sms' => Current.account.sms_channels
+    }[channel_type]
   end
 
   def allowed_channel_types
-    %w[web_widget api email line telegram whatsapp sms]
+    %w[web_widget api email line telegram whatsapp whatsapp_web sms]
   end
 
   def update_inbox_working_hours
@@ -173,10 +306,39 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
     # We will remove this line after fixing https://linear.app/chatwoot/issue/CW-1567/null-value-passed-as-null-string-to-backend
     params.each { |k, v| params[k] = params[k] == 'null' ? nil : v }
 
-    params.permit(
+    Rails.logger.error "permitted_params called with channel_attributes: #{channel_attributes.inspect}"
+    Rails.logger.error "params[:inbox]: #{params[:inbox].inspect}"
+    Rails.logger.error "params.inspect: #{params.inspect}"
+    
+    # Flatten channel_attributes array to handle nested hashes
+    channel_permit_array = [:type]
+    channel_attributes.each do |attr|
+      if attr.is_a?(Hash)
+        attr.each do |key, value|
+          if value.is_a?(Hash)
+            channel_permit_array << { key => value }
+          else
+            channel_permit_array << { key => [] }
+          end
+        end
+      else
+        channel_permit_array << attr
+      end
+    end
+    
+    Rails.logger.error "channel_permit_array: #{channel_permit_array.inspect}"
+    
+    # Use require(:inbox) to ensure inbox params are present
+    inbox_params = params.require(:inbox)
+    Rails.logger.error "inbox_params after require: #{inbox_params.inspect}"
+    
+    result = inbox_params.permit(
       *inbox_attributes,
-      channel: [:type, *channel_attributes]
+      channel: channel_permit_array
     )
+    
+    Rails.logger.error "permitted_params result: #{result.inspect}"
+    result
   end
 
   def channel_type_from_params
@@ -187,6 +349,7 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
       'line' => Channel::Line,
       'telegram' => Channel::Telegram,
       'whatsapp' => Channel::Whatsapp,
+      'whatsapp_web' => Channel::WhatsappWeb,
       'sms' => Channel::Sms
     }[permitted_params[:channel][:type]]
   end
@@ -209,6 +372,16 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
     elsif @inbox.twilio? && @inbox.channel.whatsapp?
       Channels::Twilio::TemplatesSyncJob.perform_later(@inbox.channel)
     end
+  end
+
+  def sidekiq_running?
+    # Check if Sidekiq is running by checking if there are any processes
+    # In development, if Sidekiq is not running, perform synchronously
+    require 'sidekiq/api'
+    Sidekiq::ProcessSet.new.size > 0
+  rescue StandardError
+    # If we can't check (e.g., Redis not available), assume Sidekiq is not running
+    false
   end
 end
 

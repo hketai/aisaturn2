@@ -43,4 +43,3 @@ class SaturnAssistant extends ApiClient {
 }
 
 export default new SaturnAssistant();
-

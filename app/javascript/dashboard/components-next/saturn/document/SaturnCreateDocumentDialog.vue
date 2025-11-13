@@ -7,16 +7,16 @@ import saturnDocumentAPI from 'dashboard/api/saturn/document';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import SaturnDocumentForm from './SaturnDocumentForm.vue';
 
-const emit = defineEmits(['close']);
-
-const { t } = useI18n();
-
 const props = defineProps({
   assistants: {
     type: Array,
     default: () => [],
   },
 });
+
+const emit = defineEmits(['close']);
+
+const { t } = useI18n();
 
 const dialogRef = ref(null);
 const formRef = ref(null);
@@ -74,4 +74,3 @@ defineExpose({ dialogRef });
     <template #footer />
   </Dialog>
 </template>
-

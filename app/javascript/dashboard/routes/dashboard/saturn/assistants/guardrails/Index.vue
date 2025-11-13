@@ -115,7 +115,11 @@ onMounted(() => {
 
 <template>
   <SaturnPageLayout
-    :page-title="assistant?.name ? `${assistant.name} - Guardrails` : $t('SATURN.ASSISTANTS.GUARDRAILS.HEADER')"
+    :page-title="
+      assistant?.name
+        ? `${assistant.name} - Guardrails`
+        : $t('SATURN.ASSISTANTS.GUARDRAILS.HEADER')
+    "
     :enable-pagination="false"
     :is-loading="isFetching"
     :has-no-data="!guardrails.length"
@@ -124,7 +128,10 @@ onMounted(() => {
     :return-path="{ name: 'saturn_assistants_edit', params: { assistantId } }"
   >
     <template #topControls>
-      <div v-if="guardrails.length > 0" class="mb-4 flex justify-between items-center">
+      <div
+        v-if="guardrails.length > 0"
+        class="mb-4 flex justify-between items-center"
+      >
         <div class="flex gap-2 items-center">
           <Button
             v-if="bulkSelectedIds.size > 0"

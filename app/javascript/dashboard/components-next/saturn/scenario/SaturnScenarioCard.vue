@@ -131,21 +131,31 @@ const handleToggle = () => {
         v-model="state.title"
         :label="$t('SATURN.SCENARIOS.FORM.TITLE.LABEL')"
         :placeholder="$t('SATURN.SCENARIOS.FORM.TITLE.PLACEHOLDER')"
-        :message="v$.title.$error ? $t('SATURN.SCENARIOS.FORM.TITLE.ERROR') : ''"
+        :message="
+          v$.title.$error ? $t('SATURN.SCENARIOS.FORM.TITLE.ERROR') : ''
+        "
         :message-type="v$.title.$error ? 'error' : 'info'"
       />
       <TextArea
         v-model="state.description"
         :label="$t('SATURN.SCENARIOS.FORM.DESCRIPTION.LABEL')"
         :placeholder="$t('SATURN.SCENARIOS.FORM.DESCRIPTION.PLACEHOLDER')"
-        :message="v$.description.$error ? $t('SATURN.SCENARIOS.FORM.DESCRIPTION.ERROR') : ''"
+        :message="
+          v$.description.$error
+            ? $t('SATURN.SCENARIOS.FORM.DESCRIPTION.ERROR')
+            : ''
+        "
         :message-type="v$.description.$error ? 'error' : 'info'"
       />
       <Editor
         v-model="state.instruction"
         :label="$t('SATURN.SCENARIOS.FORM.INSTRUCTION.LABEL')"
         :placeholder="$t('SATURN.SCENARIOS.FORM.INSTRUCTION.PLACEHOLDER')"
-        :message="v$.instruction.$error ? $t('SATURN.SCENARIOS.FORM.INSTRUCTION.ERROR') : ''"
+        :message="
+          v$.instruction.$error
+            ? $t('SATURN.SCENARIOS.FORM.INSTRUCTION.ERROR')
+            : ''
+        "
         :message-type="v$.instruction.$error ? 'error' : 'info'"
       />
       <div class="flex items-center gap-3">
@@ -165,4 +175,3 @@ const handleToggle = () => {
     </div>
   </CardLayout>
 </template>
-

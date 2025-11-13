@@ -79,7 +79,11 @@ onMounted(() => {
 
 <template>
   <SaturnPageLayout
-    :page-title="assistant?.name ? `${assistant.name} - Inboxes` : $t('SATURN.ASSISTANTS.INBOXES.HEADER')"
+    :page-title="
+      assistant?.name
+        ? `${assistant.name} - Inboxes`
+        : $t('SATURN.ASSISTANTS.INBOXES.HEADER')
+    "
     :action-button-text="$t('SATURN.INBOXES.ADD_NEW')"
     :action-permissions="['administrator']"
     :enable-pagination="false"

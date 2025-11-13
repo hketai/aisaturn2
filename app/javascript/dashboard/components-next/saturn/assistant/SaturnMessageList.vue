@@ -50,8 +50,8 @@ const messageGroups = computed(() => {
           group.sender === 'user'
             ? 'bg-n-blue-9 text-white'
             : group.sender === 'error'
-            ? 'bg-n-red-3 text-n-red-11 border border-n-red-6'
-            : 'bg-n-slate-3 text-n-slate-12'
+              ? 'bg-n-red-3 text-n-red-11 border border-n-red-6'
+              : 'bg-n-slate-3 text-n-slate-12'
         "
       >
         <div
@@ -65,18 +65,18 @@ const messageGroups = computed(() => {
       </div>
     </div>
 
-    <div
-      v-if="isLoading"
-      class="flex justify-start"
-    >
+    <div v-if="isLoading" class="flex justify-start">
       <div class="max-w-[80%] rounded-lg p-3 bg-n-slate-3 text-n-slate-12">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-n-slate-11 animate-pulse" />
-          <div class="w-2 h-2 rounded-full bg-n-slate-11 animate-pulse delay-75" />
-          <div class="w-2 h-2 rounded-full bg-n-slate-11 animate-pulse delay-150" />
+          <div
+            class="w-2 h-2 rounded-full bg-n-slate-11 animate-pulse delay-75"
+          />
+          <div
+            class="w-2 h-2 rounded-full bg-n-slate-11 animate-pulse delay-150"
+          />
         </div>
       </div>
     </div>
   </div>
 </template>
-

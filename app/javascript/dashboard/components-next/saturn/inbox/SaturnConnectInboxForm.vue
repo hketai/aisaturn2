@@ -41,8 +41,12 @@ const isFetchingConnected = ref(false);
 const fetchConnectedInboxes = async () => {
   isFetchingConnected.value = true;
   try {
-    const response = await saturnInboxesAPI.get({ assistantId: props.assistantId });
-    connectedInboxIds.value = (Array.isArray(response.data) ? response.data : []).map(i => i.id);
+    const response = await saturnInboxesAPI.get({
+      assistantId: props.assistantId,
+    });
+    connectedInboxIds.value = (
+      Array.isArray(response.data) ? response.data : []
+    ).map(i => i.id);
   } catch (error) {
     console.error('Error fetching connected inboxes:', error);
   } finally {
@@ -116,12 +120,7 @@ onMounted(() => {
         class="w-full"
         @click="handleCancel"
       />
-      <Button
-        type="submit"
-        :label="t('SATURN.FORM.CREATE')"
-        class="w-full"
-      />
+      <Button type="submit" :label="t('SATURN.FORM.CREATE')" class="w-full" />
     </div>
   </form>
 </template>
-

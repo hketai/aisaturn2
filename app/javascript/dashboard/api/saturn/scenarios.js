@@ -34,4 +34,3 @@ class SaturnScenarios extends ApiClient {
 }
 
 export default new SaturnScenarios();
-

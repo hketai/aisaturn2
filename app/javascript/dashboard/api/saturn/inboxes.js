@@ -24,4 +24,3 @@ class SaturnInboxes extends ApiClient {
 }
 
 export default new SaturnInboxes();
-

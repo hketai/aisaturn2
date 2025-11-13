@@ -228,6 +228,8 @@
           "TWILIO": "Twilio",
           "WHATSAPP_CLOUD": "WhatsApp Cloud",
           "WHATSAPP_CLOUD_DESC": "Quick setup through Meta",
+          "WHATSAPP_WEB": "WhatsApp Web",
+          "WHATSAPP_WEB_DESC": "Connect using WhatsApp Web (QR code authentication)",
           "TWILIO_DESC": "Connect via Twilio credentials",
           "360_DIALOG": "360Dialog"
         },
@@ -304,6 +306,31 @@
         "API": {
           "ERROR_MESSAGE": "We were not able to save the WhatsApp channel"
         }
+      },
+      "WHATSAPP_WEB": {
+        "TITLE": "WhatsApp Web Channel",
+        "DESC": "Connect your WhatsApp account using WhatsApp Web. Scan the QR code to authenticate.",
+        "INBOX_NAME": {
+          "LABEL": "Inbox Name",
+          "PLACEHOLDER": "Enter inbox name"
+        },
+        "NAME_REQUIRED": "Inbox name is required",
+        "CREATE_BUTTON": "Create Channel",
+        "CREATE_SUCCESS": "WhatsApp Web channel created successfully",
+        "CREATE_ERROR": "Failed to create WhatsApp Web channel",
+        "STATUS": "Status",
+        "STATUS_CONNECTED": "Connected",
+        "STATUS_CONNECTING": "Connecting",
+        "STATUS_DISCONNECTED": "Disconnected",
+        "PHONE_NUMBER": "Phone Number",
+        "QR_CODE": {
+          "TITLE": "Scan QR Code",
+          "DESCRIPTION": "Open WhatsApp on your phone and scan this QR code to connect your account.",
+          "EXPIRES_IN": "QR code expires in 2 minutes",
+          "REGENERATE": "Regenerate QR Code"
+        },
+        "REGENERATE_ERROR": "Failed to regenerate QR code",
+        "CONNECTED_MESSAGE": "Your WhatsApp account is connected successfully!"
       },
       "VOICE": {
         "TITLE": "Voice Channel",
@@ -998,6 +1025,7 @@
       "TWITTER_PROFILE": "Twitter",
       "TWILIO_SMS": "Twilio SMS",
       "WHATSAPP": "WhatsApp",
+      "WHATSAPP_WEB": "WhatsApp Web",
       "SMS": "SMS",
       "EMAIL": "Email",
       "TELEGRAM": "Telegram",

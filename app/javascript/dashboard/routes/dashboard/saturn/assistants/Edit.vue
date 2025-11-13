@@ -66,15 +66,21 @@ onMounted(() => {
     :return-path="{ name: 'saturn_assistants_index' }"
   >
     <template #contentArea>
-      <div v-if="!isFetching && !isAssistantAvailable" class="text-center py-12">
+      <div
+        v-if="!isFetching && !isAssistantAvailable"
+        class="text-center py-12"
+      >
         <p class="text-lg text-gray-600">
           {{ $t('SATURN.ASSISTANTS.EDIT.NOT_FOUND') }}
         </p>
       </div>
-      <div v-else-if="isAssistantAvailable" class="flex flex-col lg:flex-row gap-6 h-full">
+      <div
+        v-else-if="isAssistantAvailable"
+        class="flex flex-col lg:flex-row gap-6 h-full"
+      >
         <div class="flex-1 lg:overflow-auto pr-0 lg:pr-4">
           <SaturnAssistantForm
-            :form-mode="'modify'"
+            form-mode="modify"
             :assistant-data="assistant"
             :is-submitting="isSubmitting"
             @submit="handleSubmit"

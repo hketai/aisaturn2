@@ -10,7 +10,8 @@ const sampleResponses = [
   {
     id: 1,
     question: 'How do I reset my password?',
-    answer: 'You can reset your password by clicking on "Forgot Password" on the login page.',
+    answer:
+      'You can reset your password by clicking on "Forgot Password" on the login page.',
     status: 'approved',
     created_at: Date.now() / 1000 - 86400,
     assistant: { id: 1, name: 'Support Assistant' },
@@ -64,4 +65,3 @@ const onClick = () => {
     </template>
   </EmptyStateLayout>
 </template>
-

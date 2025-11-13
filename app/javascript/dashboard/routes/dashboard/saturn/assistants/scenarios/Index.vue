@@ -121,7 +121,11 @@ onMounted(() => {
 
 <template>
   <SaturnPageLayout
-    :page-title="assistant?.name ? `${assistant.name} - Scenarios` : $t('SATURN.ASSISTANTS.SCENARIOS.HEADER')"
+    :page-title="
+      assistant?.name
+        ? `${assistant.name} - Scenarios`
+        : $t('SATURN.ASSISTANTS.SCENARIOS.HEADER')
+    "
     :action-button-text="$t('SATURN.SCENARIOS.ADD_NEW')"
     :action-permissions="['administrator']"
     :enable-pagination="false"

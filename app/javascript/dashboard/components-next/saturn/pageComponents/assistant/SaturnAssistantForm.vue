@@ -162,7 +162,9 @@ watch(
             step="0.1"
             class="flex-1"
           />
-          <span class="text-sm text-n-slate-12 min-w-[3rem]">{{ formData.temperature }}</span>
+          <span class="text-sm text-n-slate-12 min-w-[3rem]">{{
+            formData.temperature
+          }}</span>
         </div>
         <p class="text-sm text-n-slate-11 italic">
           {{ t('SATURN.ASSISTANTS.FORM.TEMPERATURE.DESCRIPTION') }}
@@ -184,9 +186,7 @@ watch(
             class="saturn-checkbox"
           />
           <span class="saturn-feature-label">
-            {{
-              t('SATURN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS')
-            }}
+            {{ t('SATURN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS') }}
           </span>
         </label>
 
@@ -233,5 +233,3 @@ watch(
     </div>
   </form>
 </template>
-
-

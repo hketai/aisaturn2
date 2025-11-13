@@ -15,7 +15,10 @@ class Integrations::BotProcessorService
   def should_run_processor?(message)
     return if message.private?
     return unless processable_message?(message)
-    return unless conversation.pending?
+    # Allow processing for both pending and open conversations
+    # Pending: new conversations that haven't been assigned
+    # Open: active conversations that are being handled
+    return unless conversation.pending? || conversation.open?
 
     true
   end

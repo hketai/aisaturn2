@@ -277,4 +277,3 @@ body.dark .saturn-card-footer,
   @apply text-sm font-medium cursor-pointer;
 }
 </style>
-

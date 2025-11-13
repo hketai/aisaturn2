@@ -6,6 +6,7 @@ import Twilio from './Twilio.vue';
 import ThreeSixtyDialogWhatsapp from './360DialogWhatsapp.vue';
 import CloudWhatsapp from './CloudWhatsapp.vue';
 import WhatsappEmbeddedSignup from './WhatsappEmbeddedSignup.vue';
+import WhatsappWeb from './WhatsappWeb.vue';
 import ChannelSelector from 'dashboard/components/ChannelSelector.vue';
 
 const route = useRoute();
@@ -39,6 +40,12 @@ const availableProviders = computed(() => [
     key: PROVIDER_TYPES.WHATSAPP,
     title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD'),
     description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD_DESC'),
+    icon: 'i-woot-whatsapp',
+  },
+  {
+    key: 'whatsapp_web',
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_WEB'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_WEB_DESC'),
     icon: 'i-woot-whatsapp',
   },
   {
@@ -129,6 +136,9 @@ const handleManualLinkClick = () => {
 
         <!-- Show manual setup -->
         <CloudWhatsapp v-else-if="shouldShowCloudWhatsapp(selectedProvider)" />
+
+        <!-- WhatsApp Web -->
+        <WhatsappWeb v-else-if="selectedProvider === 'whatsapp_web'" />
 
         <!-- Other providers -->
         <Twilio

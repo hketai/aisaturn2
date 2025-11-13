@@ -7,16 +7,16 @@ import saturnInboxesAPI from 'dashboard/api/saturn/inboxes';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import SaturnConnectInboxForm from './SaturnConnectInboxForm.vue';
 
-const emit = defineEmits(['close']);
-
-const { t } = useI18n();
-
 const props = defineProps({
   assistantId: {
     type: Number,
     required: true,
   },
 });
+
+const emit = defineEmits(['close']);
+
+const { t } = useI18n();
 
 const dialogRef = ref(null);
 const connectForm = ref(null);
@@ -65,4 +65,3 @@ defineExpose({ dialogRef });
     <template #footer />
   </Dialog>
 </template>
-

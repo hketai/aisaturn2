@@ -126,4 +126,3 @@ const handleAction = ({ action, value }) => {
     </div>
   </CardLayout>
 </template>
-

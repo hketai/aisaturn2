@@ -153,4 +153,3 @@ const onPageChange = event => {
     </footer>
   </section>
 </template>
-

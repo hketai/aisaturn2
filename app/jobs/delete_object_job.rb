@@ -4,7 +4,7 @@ class DeleteObjectJob < ApplicationJob
   BATCH_SIZE = 5_000
   HEAVY_ASSOCIATIONS = {
     Account => %i[conversations contacts inboxes reporting_events],
-    Inbox => %i[conversations contact_inboxes reporting_events]
+    Inbox => %i[conversations contact_inboxes reporting_events saturn_inboxes]
   }.freeze
 
   def perform(object, user = nil, ip = nil)

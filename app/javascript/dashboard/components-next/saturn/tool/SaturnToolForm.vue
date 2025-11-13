@@ -12,10 +12,6 @@ import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 
-const emit = defineEmits(['submit', 'cancel']);
-
-const { t } = useI18n();
-
 const props = defineProps({
   tool: {
     type: Object,
@@ -31,6 +27,10 @@ const props = defineProps({
     default: false,
   },
 });
+
+const emit = defineEmits(['submit', 'cancel']);
+
+const { t } = useI18n();
 
 const initialState = {
   slug: '',
@@ -81,9 +81,7 @@ const authTypeOptions = [
 const v$ = useVuelidate(validationRules, state);
 
 const getErrorMessage = (field, errorKey) => {
-  return v$.value[field].$error
-    ? t(`SATURN.TOOLS.FORM.${errorKey}.ERROR`)
-    : '';
+  return v$.value[field].$error ? t(`SATURN.TOOLS.FORM.${errorKey}.ERROR`) : '';
 };
 
 const formErrors = computed(() => ({
@@ -211,4 +209,3 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
-

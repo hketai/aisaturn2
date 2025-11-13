@@ -68,4 +68,3 @@ const handleAssistantFilterChange = ({ value }) => {
     />
   </OnClickOutside>
 </template>
-

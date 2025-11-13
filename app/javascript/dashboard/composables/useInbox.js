@@ -120,6 +120,7 @@ export const useInbox = (inboxId = null) => {
   const isAWhatsAppChannel = computed(() => {
     return (
       channelType.value === INBOX_TYPES.WHATSAPP ||
+      channelType.value === 'Channel::WhatsappWeb' ||
       isATwilioWhatsAppChannel.value
     );
   });

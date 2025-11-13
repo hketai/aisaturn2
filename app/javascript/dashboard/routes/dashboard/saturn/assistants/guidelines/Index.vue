@@ -117,7 +117,11 @@ onMounted(() => {
 
 <template>
   <SaturnPageLayout
-    :page-title="assistant?.name ? `${assistant.name} - Guidelines` : $t('SATURN.ASSISTANTS.GUIDELINES.HEADER')"
+    :page-title="
+      assistant?.name
+        ? `${assistant.name} - Guidelines`
+        : $t('SATURN.ASSISTANTS.GUIDELINES.HEADER')
+    "
     :enable-pagination="false"
     :is-loading="isFetching"
     :has-no-data="!guidelines.length"
@@ -126,7 +130,10 @@ onMounted(() => {
     :return-path="{ name: 'saturn_assistants_edit', params: { assistantId } }"
   >
     <template #topControls>
-      <div v-if="guidelines.length > 0" class="mb-4 flex justify-between items-center">
+      <div
+        v-if="guidelines.length > 0"
+        class="mb-4 flex justify-between items-center"
+      >
         <div class="flex gap-2 items-center">
           <Button
             v-if="bulkSelectedIds.size > 0"

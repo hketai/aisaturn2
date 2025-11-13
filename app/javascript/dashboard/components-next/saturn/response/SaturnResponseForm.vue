@@ -9,10 +9,6 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
-const emit = defineEmits(['submit', 'cancel']);
-
-const { t } = useI18n();
-
 const props = defineProps({
   assistants: {
     type: Array,
@@ -27,6 +23,10 @@ const props = defineProps({
     default: false,
   },
 });
+
+const emit = defineEmits(['submit', 'cancel']);
+
+const { t } = useI18n();
 
 const initialState = {
   question: '',
@@ -160,4 +160,3 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
-

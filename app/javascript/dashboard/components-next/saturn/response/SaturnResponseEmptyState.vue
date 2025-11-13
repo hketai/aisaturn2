@@ -30,4 +30,3 @@ const onClick = () => {
     </template>
   </EmptyStateLayout>
 </template>
-

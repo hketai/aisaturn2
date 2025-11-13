@@ -103,4 +103,3 @@ defineExpose({ dialogRef });
     @confirm="handleConfirmRemoval"
   />
 </template>
-

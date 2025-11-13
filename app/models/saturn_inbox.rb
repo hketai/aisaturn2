@@ -26,5 +26,31 @@ class SaturnInbox < ApplicationRecord
   belongs_to :inbox
 
   validates :saturn_assistant_id, uniqueness: { scope: :inbox_id }
+
+  after_create :create_saturn_hook
+  after_destroy :destroy_saturn_hook
+
+  private
+
+  def create_saturn_hook
+    # Create hook for Saturn integration
+    Integrations::Hook.find_or_create_by!(
+      app_id: 'saturn',
+      account_id: inbox.account_id,
+      inbox_id: inbox.id,
+      hook_type: 'inbox'
+    ) do |hook|
+      hook.settings = { assistant_id: saturn_assistant_id }
+    end
+  end
+
+  def destroy_saturn_hook
+    # Destroy hook when SaturnInbox is destroyed
+    Integrations::Hook.where(
+      app_id: 'saturn',
+      account_id: inbox.account_id,
+      inbox_id: inbox.id
+    ).destroy_all
+  end
 end
 

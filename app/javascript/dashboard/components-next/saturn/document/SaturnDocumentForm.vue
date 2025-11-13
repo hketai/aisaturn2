@@ -9,12 +9,6 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
-const emit = defineEmits(['submit', 'cancel']);
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-const { t } = useI18n();
-
 const props = defineProps({
   assistants: {
     type: Array,
@@ -25,6 +19,12 @@ const props = defineProps({
     default: false,
   },
 });
+
+const emit = defineEmits(['submit', 'cancel']);
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const { t } = useI18n();
 
 const initialState = {
   name: '',
@@ -252,4 +252,3 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
-

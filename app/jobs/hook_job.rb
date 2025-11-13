@@ -15,6 +15,8 @@ class HookJob < MutexApplicationJob
       google_translate_integration(hook, event_name, event_data)
     when 'leadsquared'
       process_leadsquared_integration_with_lock(hook, event_name, event_data)
+    when 'saturn'
+      process_saturn_integration(hook, event_name, event_data)
     end
   rescue StandardError => e
     Rails.logger.error e
@@ -79,5 +81,11 @@ class HookJob < MutexApplicationJob
     when 'conversation.resolved'
       processor.handle_conversation_resolved(event_data[:conversation])
     end
+  end
+
+  def process_saturn_integration(hook, event_name, event_data)
+    return unless ['message.created', 'message.updated'].include?(event_name)
+
+    Integrations::Saturn::ProcessorService.new(event_name: event_name, hook: hook, event_data: event_data).perform
   end
 end

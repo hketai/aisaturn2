@@ -208,6 +208,22 @@ shopify:
   hook_type: account
   allow_multiple_hooks: false
 
+saturn:
+  id: saturn
+  logo: saturn.png
+  i18n_key: saturn
+  hook_type: inbox
+  allow_multiple_hooks: true
+  settings_json_schema:
+    {
+      'type': 'object',
+      'properties':
+        {
+          'assistant_id': { 'type': 'integer' },
+        },
+      'required': ['assistant_id'],
+      'additionalProperties': false,
+    }
 leadsquared:
   id: leadsquared
   feature_flag: crm_integration

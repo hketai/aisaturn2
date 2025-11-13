@@ -11,10 +11,6 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 
-const emit = defineEmits(['submit', 'cancel']);
-
-const { t } = useI18n();
-
 const props = defineProps({
   assistantId: {
     type: Number,
@@ -29,6 +25,10 @@ const props = defineProps({
     default: false,
   },
 });
+
+const emit = defineEmits(['submit', 'cancel']);
+
+const { t } = useI18n();
 
 const initialState = {
   title: '',
@@ -133,4 +133,3 @@ const handleSubmit = async () => {
     </div>
   </form>
 </template>
-

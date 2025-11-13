@@ -53,4 +53,3 @@ onMounted(fetchQuotaInfo);
     {{ $t('SATURN.BANNER.RESPONSES') }}
   </Banner>
 </template>
-

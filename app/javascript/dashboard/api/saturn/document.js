@@ -10,7 +10,7 @@ class SaturnDocument extends ApiClient {
     const url = assistantId
       ? `${this.url}/${assistantId}/documents`
       : `/api/v1/accounts/${this.accountIdFromRoute}/saturn/documents`;
-    
+
     return axios.get(url, {
       params: {
         page,
@@ -42,4 +42,3 @@ class SaturnDocument extends ApiClient {
 }
 
 export default new SaturnDocument();
-

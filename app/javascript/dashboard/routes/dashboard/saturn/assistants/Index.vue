@@ -112,8 +112,8 @@ onMounted(() => {
       <div class="flex flex-col gap-4">
         <SaturnAssistantItem
           v-for="assistant in assistants"
-          :assistant-id="assistant.id"
           :key="assistant.id"
+          :assistant-id="assistant.id"
           :assistant-name="assistant.name"
           :assistant-description="assistant.description"
           :last-modified="assistant.updated_at || assistant.created_at"

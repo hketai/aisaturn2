@@ -56,4 +56,3 @@ onMounted(fetchLimits);
     {{ $t('SATURN.BANNER.RESPONSES') }}
   </Banner>
 </template>
-

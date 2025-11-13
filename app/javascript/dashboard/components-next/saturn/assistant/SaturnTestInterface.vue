@@ -67,7 +67,10 @@ const processUserMessage = async () => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error getting Saturn assistant response:', error);
-    const errorText = error?.response?.data?.error || error?.message || t('SATURN.TEST_INTERFACE.ERROR_GENERIC');
+    const errorText =
+      error?.response?.data?.error ||
+      error?.message ||
+      t('SATURN.TEST_INTERFACE.ERROR_GENERIC');
     errorMessage.value = errorText;
     conversationMessages.value.push({
       content: errorText,
@@ -129,4 +132,3 @@ const processUserMessage = async () => {
     </p>
   </div>
 </template>
-

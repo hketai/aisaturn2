@@ -53,4 +53,3 @@ onMounted(fetchLimits);
     {{ $t('SATURN.BANNER.DOCUMENTS') }}
   </Banner>
 </template>
-
