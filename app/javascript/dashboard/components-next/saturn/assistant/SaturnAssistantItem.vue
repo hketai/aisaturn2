@@ -1,7 +1,5 @@
 <script setup>
-import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { usePolicy } from 'dashboard/composables/usePolicy';
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
@@ -19,14 +17,6 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  lastModified: {
-    type: Number,
-    required: true,
-  },
-  createdAt: {
-    type: Number,
-    default: null,
-  },
   documentsCount: {
     type: Number,
     default: 0,
@@ -39,16 +29,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
 });
 
 const emit = defineEmits(['itemAction']);
 const router = useRouter();
-const { checkPermissions } = usePolicy();
-const { t } = useI18n();
 
 const handleEdit = () => {
   emit('itemAction', { action: 'modify', id: props.assistantId });
@@ -146,7 +130,8 @@ const handleHandoffSettings = () => {
             @click="handleViewInboxes"
           >
             <template v-if="props.connectedInboxes.length > 0">
-              {{ $t('SATURN.ASSISTANTS.OPTIONS.CHANNEL') }} ({{ props.connectedInboxes.length }})
+              {{ $t('SATURN.ASSISTANTS.OPTIONS.CHANNEL') }}
+              <span>{{ ` (${props.connectedInboxes.length})` }}</span>
             </template>
             <template v-else>
               {{ $t('SATURN.ASSISTANTS.OPTIONS.CONNECT_CHANNEL') }}

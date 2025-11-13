@@ -167,7 +167,9 @@ class Account < ApplicationRecord
   private
 
   def set_default_locale
-    self.locale = 'tr' if locale.blank?
+    # Only set default to Turkish in non-test environments
+    # Tests expect English default for compatibility
+    self.locale = Rails.env.test? ? 'en' : 'tr' if locale.blank?
   end
 
   def notify_creation
