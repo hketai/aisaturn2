@@ -60,9 +60,17 @@ jobs:
 
       - name: Create database
         run: bundle exec rake db:create
+        env:
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: ''
+          POSTGRES_HOST: localhost
 
       - name: Seed database
         run: bundle exec rake db:schema:load
+        env:
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: ''
+          POSTGRES_HOST: localhost
 
       - name: Run frontend tests
         run: pnpm run test:coverage
@@ -73,6 +81,9 @@ jobs:
           bundle exec rspec --profile=10 --format documentation
         env:
           NODE_OPTIONS: --openssl-legacy-provider
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: ''
+          POSTGRES_HOST: localhost
 
       - name: Upload rails log folder
         uses: actions/upload-artifact@v4
