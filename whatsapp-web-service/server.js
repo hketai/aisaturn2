@@ -321,28 +321,90 @@ async function sendMessage(channelId, phoneNumber, messageContent, attachments =
   }
 
   try {
-    let messageId;
+    let messageId = null;
+    const attachmentList = Array.isArray(attachments) ? attachments : [];
 
-    if (attachments.length > 0) {
-      // Send with media
-      const attachment = attachments[0];
-      const media = MessageMedia.fromFilePath(attachment.url);
-      if (attachment.caption) {
-        media.caption = attachment.caption;
+    if (attachmentList.length > 0) {
+      for (let index = 0; index < attachmentList.length; index += 1) {
+        const attachment = attachmentList[index];
+        const media = await prepareMediaFromAttachment(channelId, attachment);
+
+        if (!media) {
+          throw new Error('Attachment could not be processed');
+        }
+
+        const caption = (attachment && attachment.caption) ? attachment.caption : (index === 0 ? messageContent : null);
+        const options = caption ? { caption } : undefined;
+        const message = await client.sendMessage(phoneNumber, media, options);
+        messageId = message.id._serialized;
       }
-      const message = await client.sendMessage(phoneNumber, media);
-      messageId = message.id._serialized;
-    } else {
-      // Send text message
-      const message = await client.sendMessage(phoneNumber, messageContent);
-      messageId = message.id._serialized;
+
+      if (messageId) {
+        return { success: true, message_id: messageId };
+      }
     }
 
-    return { success: true, message_id: messageId };
+    if (messageContent) {
+      const message = await client.sendMessage(phoneNumber, messageContent);
+      return { success: true, message_id: message.id._serialized };
+    }
+
+    throw new Error('Message content or attachments required');
   } catch (error) {
     console.error(`[Channel ${channelId}] Send message error:`, error.message);
     return { success: false, error: error.message };
   }
+}
+
+async function prepareMediaFromAttachment(channelId, attachment) {
+  if (!attachment) {
+    return null;
+  }
+
+  try {
+    if (attachment.path || attachment.local_path) {
+      return MessageMedia.fromFilePath(attachment.path || attachment.local_path);
+    }
+
+    if (attachment.data) {
+      const payload = sanitizeBase64Payload(attachment.data);
+      const contentType = attachment.mimetype || 'application/octet-stream';
+      const filename = attachment.filename || defaultAttachmentFilename(contentType);
+      return new MessageMedia(contentType, payload, filename);
+    }
+
+    if (attachment.url) {
+      const response = await axios.get(attachment.url, { responseType: 'arraybuffer' });
+      const contentType = attachment.mimetype || response.headers['content-type'] || 'application/octet-stream';
+      const filename = attachment.filename || defaultAttachmentFilename(contentType);
+      const base64 = Buffer.from(response.data, 'binary').toString('base64');
+      return new MessageMedia(contentType, base64, filename);
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`[Channel ${channelId}] Failed to prepare attachment:`, error.message);
+    throw error;
+  }
+}
+
+function sanitizeBase64Payload(data) {
+  if (!data) {
+    return data;
+  }
+
+  const payload = typeof data === 'string' ? data : data.toString();
+  return payload.includes(',') ? payload.split(',').pop() : payload;
+}
+
+function defaultAttachmentFilename(mimetype) {
+  if (!mimetype) {
+    return 'attachment.bin';
+  }
+
+  const parts = mimetype.split('/');
+  const extension = parts[1] || 'bin';
+  return `attachment.${extension}`;
 }
 
 // API Routes

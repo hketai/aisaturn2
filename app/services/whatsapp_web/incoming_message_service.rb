@@ -1,5 +1,8 @@
 # Incoming Message Service for WhatsApp Web
 # Processes messages received from WhatsApp Web client
+require 'base64'
+require 'stringio'
+
 class WhatsappWeb::IncomingMessageService
   pattr_initialize [:channel!, :message_data!]
 
@@ -96,23 +99,29 @@ class WhatsappWeb::IncomingMessageService
   end
 
   def attach_files
-    message_data[:attachments].each do |attachment_data|
+    message_data[:attachments].each do |raw_attachment|
+      attachment_data = raw_attachment.respond_to?(:to_unsafe_h) ? raw_attachment.to_unsafe_h : raw_attachment
+      attachment_data = attachment_data.with_indifferent_access
+
       attachment = @message.attachments.new(
         account_id: channel.account_id,
-        file_type: determine_file_type(attachment_data[:mimetype]),
-        external_url: attachment_data[:url]
+        file_type: determine_file_type(attachment_data[:mimetype])
       )
 
-      # Download and attach file if URL is provided
       if attachment_data[:url].present?
-        download_and_attach_file(attachment, attachment_data)
+        attachment.external_url = attachment_data[:url]
+        attach_from_url(attachment, attachment_data)
+      elsif attachment_data[:data].present?
+        attach_from_base64(attachment, attachment_data)
+      else
+        Rails.logger.info "[WHATSAPP_WEB] Attachment skipped - no url or data provided"
       end
 
       attachment.save!
     end
   end
 
-  def download_and_attach_file(attachment, attachment_data)
+  def attach_from_url(attachment, attachment_data)
     file = Down.download(attachment_data[:url])
     attachment.file.attach(
       io: file,
@@ -121,6 +130,28 @@ class WhatsappWeb::IncomingMessageService
     )
   rescue StandardError => e
     Rails.logger.error "[WHATSAPP_WEB] File download error: #{e.message}"
+  end
+
+  def attach_from_base64(attachment, attachment_data)
+    payload = attachment_data[:data].to_s.split(',').last
+    decoded = Base64.decode64(payload)
+    io = StringIO.new(decoded)
+    attachment.file.attach(
+      io: io,
+      filename: attachment_data[:filename] || default_filename_for(attachment_data[:mimetype]),
+      content_type: attachment_data[:mimetype] || 'application/octet-stream'
+    )
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP_WEB] Inline attachment error: #{e.message}"
+  end
+
+  def default_filename_for(mimetype)
+    return 'whatsapp-attachment' if mimetype.blank?
+
+    extension = mimetype.split('/').last
+    return 'whatsapp-attachment' if extension.blank?
+
+    "whatsapp-attachment.#{extension}"
   end
 
   def normalize_phone_number(phone)
