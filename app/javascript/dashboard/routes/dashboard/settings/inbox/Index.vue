@@ -194,7 +194,7 @@ const handleWhatsappWebReconnect = inbox => {
                       class="text-xs text-n-slate-11"
                     >
                       {{
-                        $t('INBOX_MGMT.WHATSAPP_WEB.CONNECTED_TO', {
+                        t('INBOX_MGMT.WHATSAPP_WEB.CONNECTED_TO', {
                           phone: formatPhoneNumber(
                             inbox.whatsapp_web_phone_number
                           ),

@@ -327,7 +327,8 @@
           "TITLE": "QR Kodu Tara",
           "DESCRIPTION": "Telefonunuzda WhatsApp'ı açın ve hesabınızı bağlamak için bu QR kodunu tarayın.",
           "EXPIRES_IN": "QR kodu 2 dakika içinde sona erer",
-          "REGENERATE": "QR Kodunu Yeniden Oluştur"
+          "REGENERATE": "QR Kodunu Yeniden Oluştur",
+          "GENERATING": "QR kodu oluşturuluyor..."
         },
         "REGENERATE_ERROR": "QR kodu yeniden oluşturulamadı",
         "CONNECTED_MESSAGE": "WhatsApp hesabınız başarıyla bağlandı!",
@@ -784,7 +785,7 @@
         "QR_EXPIRED": "QR kodunun süresi doldu",
         "UNKNOWN": "Durum alınamadı"
       },
-      "CONNECTED_TO": "{{phone}} numarasına bağlı",
+      "CONNECTED_TO": "{phone} numarasına bağlı",
       "RECONNECT": "Yeniden bağla ve QR göster"
     },
     "AUTO_ASSIGNMENT": {

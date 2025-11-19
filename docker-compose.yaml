@@ -33,6 +33,7 @@ services:
       - vite
       - mailhog
       - sidekiq
+      - whatsapp-web
     ports:
       - 3000:3000
     env_file: .env
@@ -42,6 +43,7 @@ services:
       - RAILS_ENV=development
       - REDIS_URL=redis://redis:6379
       - POSTGRES_HOST=postgres
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
     entrypoint: docker/entrypoints/rails.sh
     command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
 
@@ -63,6 +65,7 @@ services:
       - RAILS_ENV=development
       - REDIS_URL=redis://redis:6379
       - POSTGRES_HOST=postgres
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
 
   vite:
@@ -115,6 +118,27 @@ services:
       - 1025:1025
       - 8025:8025
 
+  whatsapp-web:
+    build:
+      context: ./whatsapp-web-service
+      dockerfile: Dockerfile
+    image: whatsapp-web-service:development
+    volumes:
+      - ./whatsapp-web-service:/app:delegated
+      - whatsapp-web-sessions:/app/sessions
+      - whatsapp-web-node_modules:/app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - RAILS_API_URL=http://rails:3000
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
 volumes:
   postgres:
   redis:
@@ -122,3 +146,5 @@ volumes:
   node_modules:
   cache:
   bundle:
+  whatsapp-web-sessions:
+  whatsapp-web-node_modules:

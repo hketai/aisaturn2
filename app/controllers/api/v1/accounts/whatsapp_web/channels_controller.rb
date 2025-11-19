@@ -9,7 +9,9 @@ class Api::V1::Accounts::WhatsappWeb::ChannelsController < Api::V1::Accounts::Ba
   end
 
   def show
-    render json: @channel
+    channel_json = @channel.as_json
+    channel_json['inbox_id'] = @channel.inbox&.id
+    render json: channel_json
   end
 
   def update

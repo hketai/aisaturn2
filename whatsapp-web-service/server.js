@@ -31,12 +31,34 @@ const qrCodes = new Map();
 const processedMessageIds = new Map(); // channelId -> Set of message IDs
 
 /**
+ * Clean up stale session locks
+ */
+function cleanupSessionLocks(channelIdStr) {
+  const fs = require('fs');
+  const path = require('path');
+  const sessionPath = path.join('./sessions', `channel_${channelIdStr}`);
+  const lockPath = path.join(sessionPath, 'session-channel_' + channelIdStr, 'SingletonLock');
+  
+  try {
+    if (fs.existsSync(lockPath)) {
+      fs.unlinkSync(lockPath);
+      console.log(`[Channel ${channelIdStr}] Cleaned up stale SingletonLock`);
+    }
+  } catch (error) {
+    console.log(`[Channel ${channelIdStr}] Could not clean up lock (may not exist): ${error.message}`);
+  }
+}
+
+/**
  * Initialize WhatsApp client for a channel
  */
 async function initializeClient(channelId, authData, cacheData) {
   try {
     // Convert channelId to string for consistent Map key usage
     const channelIdStr = String(channelId);
+    
+    // Clean up any stale session locks before starting
+    cleanupSessionLocks(channelIdStr);
     
     // Create client with LocalAuth (uses authData if provided)
     const client = new Client({
@@ -525,8 +547,18 @@ app.post('/client/start', async (req, res) => {
     // Convert channel_id to string for consistent Map key usage
     const channelIdStr = String(channel_id);
 
+    // If client already exists, stop it first to avoid conflicts
     if (clients.has(channelIdStr)) {
-      return res.json({ success: true, status: 'already_running', message: 'Client already running' });
+      try {
+        const existingClient = clients.get(channelIdStr);
+        await existingClient.destroy();
+        clients.delete(channelIdStr);
+        qrCodes.delete(channelIdStr);
+        processedMessageIds.delete(channelIdStr);
+        console.log(`[Channel ${channelIdStr}] Stopped existing client before restart`);
+      } catch (error) {
+        console.error(`[Channel ${channelIdStr}] Error stopping existing client:`, error.message);
+      }
     }
 
     await initializeClient(channelIdStr, auth_data, cache_data);

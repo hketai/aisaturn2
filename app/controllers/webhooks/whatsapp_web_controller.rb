@@ -61,13 +61,28 @@ class Webhooks::WhatsappWebController < ActionController::API
   end
 
   def process_ready(channel)
+    phone_number = params[:phone_number] || params['phone_number']
+    Rails.logger.info "[WHATSAPP_WEB] Ready event received for channel #{channel.id}, phone_number param: #{phone_number.inspect}"
+    Rails.logger.info "[WHATSAPP_WEB] All params keys: #{params.keys.inspect}"
+    
+    # Format phone number: ensure it starts with +
+    formatted_phone = if phone_number.present?
+                        phone_number.to_s.start_with?('+') ? phone_number.to_s : "+#{phone_number}"
+                      else
+                        nil
+                      end
+    
+    Rails.logger.info "[WHATSAPP_WEB] Formatted phone_number: #{formatted_phone.inspect}"
+    
     channel.update!(
       status: 'connected',
-      phone_number: params[:phone_number]
+      phone_number: formatted_phone
     )
 
     # Create inbox now that connection is established
     create_inbox_for_channel(channel)
+    
+    Rails.logger.info "[WHATSAPP_WEB] Channel #{channel.id} updated with phone_number: #{channel.phone_number}"
   end
 
   def create_inbox_for_channel(channel)
