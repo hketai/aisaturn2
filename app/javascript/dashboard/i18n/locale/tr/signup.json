@@ -1,49 +1,49 @@
 {
   "REGISTER": {
-    "TRY_WOOT": "Hesap oluştur",
-    "TITLE": "Kayıt ol",
+    "TRY_WOOT": "Hesap Oluştur",
+    "TITLE": "Kayıt Ol",
     "TESTIMONIAL_HEADER": "İlerlemek için tek bir adım atmanız yeterlidir",
     "TESTIMONIAL_CONTENT": "Müşterilerinizle etkileşimde bulunmaktan, onları elde tutmaktan ve yeni müşteriler bulmaktan sadece bir adım uzaktasınız.",
     "TERMS_ACCEPT": "Bir hesap oluşturarak, <a href=\"https://www.aisaturn.com/terms\">Kullanım Koşulları</a> ve <a href=\"https://www.aisaturn.com/privacy-policy\">Gizlilik Politikamızı</a> kabul etmiş olursunuz",
     "OAUTH": {
-      "GOOGLE_SIGNUP": "Google ile kaydol"
+      "GOOGLE_SIGNUP": "Google ile Kaydol"
     },
     "COMPANY_NAME": {
-      "LABEL": "Şirket adı",
-      "PLACEHOLDER": "Şirket adınızı girin. Örneğin, Wayne Enterprises",
+      "LABEL": "Şirket Adı",
+      "PLACEHOLDER": "Şirket adınızı girin. Örn: AISATURN",
       "ERROR": "Şirket adı çok kısa."
     },
     "FULL_NAME": {
       "LABEL": "Ad Soyad",
-      "PLACEHOLDER": "Tam adınızı girin. Örneğin, Bruce Wayne",
+      "PLACEHOLDER": "Adınızı ve soyadınızı girin",
       "ERROR": "Ad Soyad çok kısa."
     },
     "EMAIL": {
-      "LABEL": "İş emaili",
-      "PLACEHOLDER": "Enter your work email address. E.g., bruce{'@'}wayne{'.'}enterprises",
-      "ERROR": "Lütfen geçerli bir iş email adresi girin."
+      "LABEL": "E-posta",
+      "PLACEHOLDER": "E-posta adresinizi girin",
+      "ERROR": "Lütfen geçerli bir e-posta adresi girin."
     },
     "PASSWORD": {
-      "LABEL": "Parola",
-      "PLACEHOLDER": "Parola",
-      "ERROR": "Parola çok kısa.",
+      "LABEL": "Şifre",
+      "PLACEHOLDER": "Şifrenizi girin",
+      "ERROR": "Şifre çok kısa.",
       "IS_INVALID_PASSWORD": "Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir.",
-      "REQUIREMENTS_LENGTH": "At least 6 characters long",
-      "REQUIREMENTS_UPPERCASE": "At least one uppercase letter",
-      "REQUIREMENTS_LOWERCASE": "At least one lowercase letter",
-      "REQUIREMENTS_NUMBER": "At least one number",
-      "REQUIREMENTS_SPECIAL": "At least one special character"
+      "REQUIREMENTS_LENGTH": "En az 6 karakter",
+      "REQUIREMENTS_UPPERCASE": "En az bir büyük harf",
+      "REQUIREMENTS_LOWERCASE": "En az bir küçük harf",
+      "REQUIREMENTS_NUMBER": "En az bir rakam",
+      "REQUIREMENTS_SPECIAL": "En az bir özel karakter"
     },
     "CONFIRM_PASSWORD": {
-      "LABEL": "Parolayı onayla",
-      "PLACEHOLDER": "Parolayı onayla",
-      "ERROR": "Parola eşleşmiyor."
+      "LABEL": "Şifre Tekrar",
+      "PLACEHOLDER": "Şifrenizi tekrar girin",
+      "ERROR": "Şifreler eşleşmiyor."
     },
     "API": {
-      "SUCCESS_MESSAGE": "Registration Successful",
-      "ERROR_MESSAGE": "Woot sunucusuna bağlanılamadı. Lütfen tekrar deneyin."
+      "SUCCESS_MESSAGE": "Kayıt başarılı!",
+      "ERROR_MESSAGE": "Sunucuya bağlanılamadı. Lütfen tekrar deneyin."
     },
-    "SUBMIT": "Hesap oluştur",
-    "HAVE_AN_ACCOUNT": "Hesabın var mı?"
+    "SUBMIT": "Hesap Oluştur",
+    "HAVE_AN_ACCOUNT": "Zaten hesabınız var mı?"
   }
 }
