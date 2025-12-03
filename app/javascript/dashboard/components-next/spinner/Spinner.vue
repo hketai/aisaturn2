@@ -8,18 +8,39 @@ defineProps({
 </script>
 
 <template>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    :width="size"
-    :height="size"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    class="animate-spin"
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
+  <div class="aisa-spinner" :style="{ width: `${size}px`, height: `${size}px` }">
+    <div class="aisa-spinner-circle" />
+  </div>
 </template>
+
+<style>
+.aisa-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.aisa-spinner-circle {
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background-color: #2781F6;
+  animation: aisa-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes aisa-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+}
+</style>
