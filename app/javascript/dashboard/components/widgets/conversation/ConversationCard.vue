@@ -335,7 +335,7 @@ const deleteConversation = () => {
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
-        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
+        class="my-0 mx-2 leading-5 h-5 flex-1 min-w-0 text-[13px]"
         :class="messagePreviewClass"
       />
       <p
@@ -364,10 +364,10 @@ const deleteConversation = () => {
           />
         </span>
         <span
-          class="shadow-lg rounded-full text-xxs font-semibold h-4 leading-4 ltr:ml-auto rtl:mr-auto mt-1 min-w-[1rem] px-1 py-0 text-center text-white bg-n-teal-9"
+          class="shadow-lg rounded-full text-xxs font-semibold h-5 leading-5 ltr:ml-auto rtl:mr-auto mt-1 min-w-[1.25rem] px-1.5 py-0 text-center text-white bg-n-teal-9"
           :class="hasUnread ? 'block' : 'hidden'"
         >
-          {{ unreadCount > 9 ? '9+' : unreadCount }}
+          {{ unreadCount > 99 ? '99+' : unreadCount }}
         </span>
       </div>
       <CardLabels

@@ -1,6 +1,8 @@
 <script setup>
 import { defineProps, computed, reactive } from 'vue';
 import Message from './Message.vue';
+import DateSeparator from './DateSeparator.vue';
+import UnreadSeparator from './UnreadSeparator.vue';
 import { MESSAGE_TYPES } from './constants.js';
 import { useCamelCase } from 'dashboard/composables/useTransformKeys';
 import { useMapGetter } from 'dashboard/composables/store.js';
@@ -157,16 +159,60 @@ const getInReplyToMessage = parentMessage => {
 
   return replyMessage ? useCamelCase(replyMessage) : null;
 };
+
+/**
+ * Checks if date separator should be shown before current message
+ * @param {Number} index - Index of the current message
+ * @param {Array} messageList - Array of messages
+ * @returns {Boolean} - Whether to show date separator
+ */
+const shouldShowDateSeparator = (index, messageList) => {
+  if (index === 0) return true;
+
+  const current = messageList[index];
+  const previous = messageList[index - 1];
+
+  const currentDate = new Date(current.createdAt * 1000).toDateString();
+  const previousDate = new Date(previous.createdAt * 1000).toDateString();
+
+  return currentDate !== previousDate;
+};
+
+/**
+ * Gets the date for the separator
+ * @param {Object} message - The message object
+ * @returns {Date} - Date object from message createdAt
+ */
+const getMessageDate = message => {
+  return new Date(message.createdAt * 1000);
+};
+
+/**
+ * Counts unread messages
+ */
+const unreadCount = computed(() => {
+  if (!props.firstUnreadId) return 0;
+  const unreadIndex = allMessages.value.findIndex(
+    m => m.id === props.firstUnreadId
+  );
+  if (unreadIndex === -1) return 0;
+  return allMessages.value.length - unreadIndex;
+});
 </script>
 
 <template>
   <ul class="px-4 bg-n-background">
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
-      <slot
-        v-if="firstUnreadId && message.id === firstUnreadId"
-        name="unreadBadge"
+      <DateSeparator
+        v-if="shouldShowDateSeparator(index, allMessages)"
+        :date="getMessageDate(message)"
       />
+      <template v-if="firstUnreadId && message.id === firstUnreadId">
+        <slot name="unreadBadge">
+          <UnreadSeparator :count="unreadCount" />
+        </slot>
+      </template>
       <Message
         v-bind="message"
         :is-email-inbox="isAnEmailChannel"

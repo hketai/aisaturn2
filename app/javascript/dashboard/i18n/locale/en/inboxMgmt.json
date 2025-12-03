@@ -327,7 +327,8 @@
           "TITLE": "Scan QR Code",
           "DESCRIPTION": "Open WhatsApp on your phone and scan this QR code to connect your account.",
           "EXPIRES_IN": "QR code expires in 2 minutes",
-          "REGENERATE": "Regenerate QR Code"
+          "REGENERATE": "Regenerate QR Code",
+          "GENERATING": "Generating QR code..."
         },
         "REGENERATE_ERROR": "Failed to regenerate QR code",
         "CONNECTED_MESSAGE": "Your WhatsApp account is connected successfully!"
@@ -780,7 +781,7 @@
         "QR_EXPIRED": "QR code expired",
         "UNKNOWN": "Status unavailable"
       },
-      "CONNECTED_TO": "Linked to {{phone}}",
+      "CONNECTED_TO": "Linked to {phone}",
       "RECONNECT": "Reconnect & show QR"
     },
     "AUTO_ASSIGNMENT": {
