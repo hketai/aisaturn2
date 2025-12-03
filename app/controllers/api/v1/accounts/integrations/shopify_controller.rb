@@ -1,51 +1,8 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::BaseController
   include Shopify::IntegrationHelper
-  before_action :setup_shopify_context, only: [:orders, :test]
-  before_action :fetch_hook, except: [:auth, :connect, :show, :test]
+  before_action :setup_shopify_context, only: [:orders]
+  before_action :fetch_hook, except: [:auth]
   before_action :validate_contact, only: [:orders]
-
-  def show
-    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
-    if hook
-      render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
-    else
-      render json: { hook: nil }, status: :not_found
-    end
-  end
-
-  def connect
-    shop_domain = params[:shop_domain]
-    access_token = params[:access_token]
-
-    return render json: { error: 'Shop domain is required' }, status: :unprocessable_entity if shop_domain.blank?
-    return render json: { error: 'Access token is required' }, status: :unprocessable_entity if access_token.blank?
-
-    # Validate shop domain format
-    unless shop_domain.match?(/\A[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com\z/)
-      return render json: { error: 'Invalid shop domain format' }, status: :unprocessable_entity
-    end
-
-    # Test the access token by making a simple API call
-    begin
-      test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
-      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
-      test_client.get(path: 'shop.json')
-    rescue StandardError => e
-      return render json: { error: "Invalid access token: #{e.message}" }, status: :unprocessable_entity
-    end
-
-    # Create or update the hook
-    hook = Integrations::Hook.find_or_initialize_by(
-      account: Current.account,
-      app_id: 'shopify'
-    )
-    hook.reference_id = shop_domain
-    hook.access_token = access_token
-    hook.status = :enabled
-    hook.save!
-
-    render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
-  end
 
   def auth
     shop_domain = params[:shop_domain]
@@ -64,20 +21,6 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     render json: { redirect_url: auth_url }
   end
 
-  def test
-    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
-    return render json: { error: 'Integration not found' }, status: :not_found unless hook
-
-    # Test connection by fetching shop info
-    session = ShopifyAPI::Auth::Session.new(shop: hook.reference_id, access_token: hook.access_token)
-    client = ShopifyAPI::Clients::Rest::Admin.new(session: session)
-    shop_info = client.get(path: 'shop.json')
-
-    render json: { success: true, shop: shop_info.body['shop'] }
-  rescue StandardError => e
-    render json: { error: e.message, success: false }, status: :unprocessable_entity
-  end
-
   def orders
     customers = fetch_customers
     return render json: { orders: [] } if customers.empty?
@@ -93,114 +36,6 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     head :ok
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
-  end
-
-  def sync_products
-    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
-    return render json: { error: 'Integration not found' }, status: :not_found unless hook
-    
-    # Mevcut aktif sync var mı?
-    active_sync = Shopify::SyncStatus.active.find_by(
-      account_id: Current.account.id,
-      hook_id: hook.id
-    )
-    
-    if active_sync
-      render json: {
-        message: 'Sync already in progress',
-        sync_status: {
-          id: active_sync.id,
-          status: active_sync.status,
-          synced_products: active_sync.synced_products,
-          total_products: active_sync.total_products,
-          progress_percentage: active_sync.progress_percentage
-        }
-      }
-      return
-    end
-    
-    # Incremental sync mi?
-    incremental = params[:incremental] == true || params[:incremental] == 'true'
-    
-    # Yeni sync başlat
-    Shopify::SyncProductsMasterJob.perform_later(Current.account.id, hook.id, incremental: incremental)
-    
-    sync_type = incremental ? 'incremental' : 'full'
-    render json: { 
-      message: "Product #{sync_type} sync started",
-      status: 'pending',
-      sync_type: sync_type
-    }
-  rescue StandardError => e
-    Rails.logger.error "Sync products failed: #{e.message}"
-    render json: { error: e.message }, status: :unprocessable_entity
-  end
-
-  def sync_status
-    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
-    return render json: { error: 'Integration not found' }, status: :not_found unless hook
-    
-    sync_status = Shopify::SyncStatus.recent.find_by(
-      account_id: Current.account.id,
-      hook_id: hook.id
-    )
-    
-    # Get total synced products count
-    total_synced_products = Shopify::Product.for_account(Current.account.id).count
-    
-    if sync_status
-      render json: {
-        sync_status: {
-          id: sync_status.id,
-          status: sync_status.status,
-          synced_products: sync_status.synced_products,
-          total_products: sync_status.total_products,
-          progress_percentage: sync_status.progress_percentage,
-          started_at: sync_status.started_at,
-          completed_at: sync_status.completed_at,
-          error_message: sync_status.error_message
-        },
-        total_synced_products: total_synced_products
-      }
-    else
-      render json: { 
-        sync_status: nil,
-        total_synced_products: total_synced_products
-      }
-    end
-  end
-
-  def products
-    query = params[:query]
-    limit = params[:limit] || 20
-    
-    if query.present?
-      products = Shopify::Product.for_account(Current.account.id)
-                                  .text_search(query, account_id: Current.account.id, limit: limit)
-    else
-      products = Shopify::Product.for_account(Current.account.id)
-                                  .order(last_queried_at: :desc, created_at: :desc)
-                                  .limit(limit)
-    end
-    
-    render json: { 
-      products: products.map do |p|
-        {
-          id: p.id,
-          shopify_product_id: p.shopify_product_id,
-          title: p.title,
-          description: p.description,
-          handle: p.handle,
-          vendor: p.vendor,
-          product_type: p.product_type,
-          min_price: p.min_price,
-          max_price: p.max_price,
-          total_inventory: p.total_inventory,
-          images: p.images,
-          variants: p.variants
-        }
-      end
-    }
   end
 
   private

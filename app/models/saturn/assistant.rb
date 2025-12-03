@@ -30,10 +30,9 @@ class Saturn::Assistant < ApplicationRecord
   has_many :saturn_inboxes, class_name: 'SaturnInbox', foreign_key: :saturn_assistant_id, dependent: :destroy_async
   has_many :inboxes, through: :saturn_inboxes
   has_many :messages, as: :sender, dependent: :nullify
-  has_many :assistant_integrations, class_name: 'Saturn::AssistantIntegration', foreign_key: :saturn_assistant_id, dependent: :destroy
 
   # Config accessors
-  store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_citation, :product_name, :working_hours, :handoff_config, :sector
+  store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_citation, :product_name, :working_hours, :handoff_config
 
   # Validations - different order and approach
   validates :account_id, presence: true
@@ -72,55 +71,5 @@ class Saturn::Assistant < ApplicationRecord
 
   def response_count
     responses.count
-  end
-
-  def push_event_data
-    {
-      id: id,
-      name: name,
-      avatar_url: avatar_url,
-      type: 'saturn_assistant'
-    }
-  end
-
-  def webhook_data
-    {
-      id: id,
-      name: name,
-      type: 'saturn_assistant'
-    }
-  end
-
-  # Integration helpers
-  def integration_enabled?(integration_type)
-    integration = assistant_integrations.find_by(integration_type: integration_type)
-    # Eğer kayıt yoksa, varsayılan olarak disabled kabul et
-    return false if integration.nil?
-
-    integration.enabled?
-  end
-
-  def shopify_enabled?
-    integration_enabled?('shopify')
-  end
-
-  def enable_integration!(integration_type)
-    integration = assistant_integrations.find_or_initialize_by(integration_type: integration_type)
-    integration.update!(enabled: true)
-  end
-
-  def disable_integration!(integration_type)
-    integration = assistant_integrations.find_by(integration_type: integration_type)
-    integration&.update!(enabled: false)
-  end
-
-  def toggle_integration!(integration_type)
-    integration = assistant_integrations.find_or_initialize_by(integration_type: integration_type)
-    integration.update!(enabled: !integration.enabled?)
-    integration.enabled?
-  end
-
-  def enabled_integrations
-    assistant_integrations.enabled.pluck(:integration_type)
   end
 end

@@ -19,13 +19,13 @@ const { variant, orientation, inReplyTo, shouldGroupWithNext } =
 const { t } = useI18n();
 
 const varaintBaseMap = {
-  [MESSAGE_VARIANTS.AGENT]: 'bg-n-teal-9/90 text-white',
+  [MESSAGE_VARIANTS.AGENT]: 'bg-n-solid-blue text-n-slate-12',
   [MESSAGE_VARIANTS.PRIVATE]:
     'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
-  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-3 text-n-slate-12',
+  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-4 text-n-slate-12',
   [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
   [MESSAGE_VARIANTS.BOT]: 'bg-n-solid-iris text-n-slate-12',
-  [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-teal-9/90 text-white',
+  [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-solid-iris text-n-slate-12',
   [MESSAGE_VARIANTS.ERROR]: 'bg-n-ruby-4 text-n-ruby-12',
   [MESSAGE_VARIANTS.EMAIL]: 'w-full',
   [MESSAGE_VARIANTS.UNSUPPORTED]:
@@ -34,9 +34,9 @@ const varaintBaseMap = {
 
 const orientationMap = {
   [ORIENTATION.LEFT]:
-    'left-bubble rounded-lg ltr:rounded-bl-none rtl:rounded-br-none',
+    'left-bubble rounded-xl ltr:rounded-bl-sm rtl:rounded-br-sm',
   [ORIENTATION.RIGHT]:
-    'right-bubble rounded-lg ltr:rounded-br-none rtl:rounded-bl-none',
+    'right-bubble rounded-xl ltr:rounded-br-sm rtl:rounded-bl-sm',
   [ORIENTATION.CENTER]: 'rounded-md',
 };
 
@@ -125,56 +125,3 @@ const replyToPreview = computed(() => {
     />
   </div>
 </template>
-
-<style scoped>
-/* WhatsApp style bubble tail - Left (incoming message) */
-.left-bubble {
-  position: relative;
-}
-.left-bubble::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: -8px;
-  width: 0;
-  height: 0;
-  border: 8px solid transparent;
-  border-right-color: rgb(var(--slate-3));
-  border-bottom-color: rgb(var(--slate-3));
-  border-left: 0;
-  border-top: 0;
-}
-
-/* WhatsApp style bubble tail - Right (outgoing message) */
-.right-bubble {
-  position: relative;
-}
-.right-bubble::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: -8px;
-  width: 0;
-  height: 0;
-  border: 8px solid transparent;
-  border-left-color: rgb(var(--teal-9) / 0.9);
-  border-bottom-color: rgb(var(--teal-9) / 0.9);
-  border-right: 0;
-  border-top: 0;
-}
-
-/* RTL support */
-[dir='rtl'] .left-bubble::before {
-  left: auto;
-  right: -8px;
-  border-left-color: rgb(var(--slate-3));
-  border-right-color: transparent;
-}
-
-[dir='rtl'] .right-bubble::before {
-  right: auto;
-  left: -8px;
-  border-right-color: rgb(var(--teal-9) / 0.9);
-  border-left-color: transparent;
-}
-</style>

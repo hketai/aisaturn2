@@ -440,11 +440,6 @@
           "LABEL": "Response Temperature",
           "DESCRIPTION": "Adjust how creative or restrictive the assistant's responses should be. Lower values produce more focused and deterministic responses, while higher values allow for more creative and varied outputs."
         },
-        "INBOXES": {
-          "LABEL": "Channels",
-          "DESCRIPTION": "Select the channels to connect to this assistant. You can select multiple channels.",
-          "SELECTED": "channel(s) selected"
-        },
         "DESCRIPTION": {
           "LABEL": "Description",
           "PLACEHOLDER": "Enter assistant description",
@@ -987,8 +982,6 @@
     "ASSISTANTS": {
       "HEADER": "Assistants",
       "ADD_NEW": "New Assistant",
-      "ACTIVE": "active",
-      "NO_CHANNEL_WARNING": "Assistant is not connected to any channel. Connect a channel to enable message responses.",
       "STATUS": {
         "ACTIVE": "Active"
       },

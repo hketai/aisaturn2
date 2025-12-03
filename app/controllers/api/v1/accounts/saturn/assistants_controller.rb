@@ -164,6 +164,6 @@ class Api::V1::Accounts::Saturn::AssistantsController < Api::V1::Accounts::BaseC
   end
 
   def permitted_assistant_params
-    params.require(:assistant).permit(:name, :description, :sector, config: {})
+    params.require(:assistant).permit(:name, :description, config: {}, response_guidelines: [], guardrails: [])
   end
 end

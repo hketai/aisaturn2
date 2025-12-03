@@ -29,7 +29,6 @@ class Saturn::Document < ApplicationRecord
   belongs_to :account
   belongs_to :assistant, class_name: 'Saturn::Assistant'
   has_many :responses, class_name: 'Saturn::AssistantResponse', dependent: :destroy, as: :documentable
-  has_many :chunks, class_name: 'Saturn::DocumentChunk', dependent: :destroy, foreign_key: :document_id
   has_one_attached :pdf_file
 
   # Status enum

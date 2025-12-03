@@ -43,7 +43,6 @@ class Saturn::AssistantResponse < ApplicationRecord
   # Callbacks - different order
   before_validation :set_default_status
   before_validation :link_to_assistant_account
-  after_commit :enqueue_embedding_update, on: [:create, :update], if: :should_update_embedding?
 
   # Scopes - different organization
   scope :by_account, ->(account_id) { where(account_id: account_id) }
@@ -70,13 +69,5 @@ class Saturn::AssistantResponse < ApplicationRecord
 
   def link_to_assistant_account
     self.account = assistant&.account if account_id.blank? && assistant.present?
-  end
-
-  def should_update_embedding?
-    saved_change_to_question? || saved_change_to_answer?
-  end
-
-  def enqueue_embedding_update
-    Saturn::UpdateFaqEmbeddingJob.perform_later(id)
   end
 end

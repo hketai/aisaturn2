@@ -3,12 +3,6 @@ require 'openai'
 class Saturn::Llm::BaseOpenAiService
   DEFAULT_MODEL = 'gpt-4o-mini'.freeze
 
-  # Tracking için accessor'lar
-  attr_accessor :tracking_assistant, :tracking_account
-  
-  # Child class'ların erişebilmesi için
-  attr_reader :client, :model
-
   def initialize
     setup_api_credentials
     initialize_openai_client
@@ -20,22 +14,15 @@ class Saturn::Llm::BaseOpenAiService
   protected
 
   def execute_chat_api(messages:, tools: nil, temperature: nil)
-    start_time = Time.current
     api_params = build_chat_params(messages, tools, temperature)
     api_response = call_openai_api(api_params)
-    response_time = Time.current - start_time
-    
-    # API Usage Tracking
-    track_chat_usage(api_response, response_time)
-    
     extract_message_content(api_response)
   rescue StandardError => e
-    track_chat_error(e)
     handle_api_error(e)
     raise
   end
 
-  protected
+  private
 
   def setup_api_credentials
     # Priority: Account-specific key > Global Super Admin key
@@ -100,44 +87,5 @@ class Saturn::Llm::BaseOpenAiService
   def handle_api_error(error)
     Rails.logger.error("Saturn OpenAI API Error: #{error.message}")
     Rails.logger.error(error.backtrace.join("\n")) if Rails.env.development?
-  end
-
-  # API Usage Tracking Methods
-  def track_chat_usage(api_response, response_time)
-    return unless defined?(Saturn::ApiUsageTrackerService)
-
-    usage = api_response['usage'] || {}
-    
-    Saturn::ApiUsageTrackerService.track_chat(
-      account_id: tracking_account&.id || Current.account&.id,
-      saturn_assistant_id: tracking_assistant&.id,
-      model: @model,
-      input_tokens: usage['prompt_tokens'] || 0,
-      output_tokens: usage['completion_tokens'] || 0,
-      response_time: response_time.to_f.round(3)
-    )
-  rescue StandardError => e
-    Rails.logger.error "[API TRACKING] Failed to track chat usage: #{e.message}"
-  end
-
-  def track_chat_error(error)
-    return unless defined?(Saturn::ApiUsageTrackerService)
-
-    error_type = case error
-                 when OpenAI::Error then 'openai_error'
-                 when Faraday::TimeoutError then 'timeout'
-                 when Faraday::ConnectionFailed then 'connection_failed'
-                 else 'unknown'
-                 end
-
-    Saturn::ApiUsageTrackerService.track_error(
-      api_type: 'chat',
-      account_id: tracking_account&.id || Current.account&.id,
-      saturn_assistant_id: tracking_assistant&.id,
-      model: @model,
-      error_type: error_type
-    )
-  rescue StandardError => e
-    Rails.logger.error "[API TRACKING] Failed to track error: #{e.message}"
   end
 end

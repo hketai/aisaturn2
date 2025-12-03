@@ -46,36 +46,19 @@ useKeyboardEvents(keyboardEvents);
 </script>
 
 <template>
-  <div class="flex items-center gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
-    <button
+  <woot-tabs
+    :index="activeTabIndex"
+    class="w-full px-3 -mt-1 py-0 [&_ul]:p-0"
+    @change="onTabChange"
+  >
+    <woot-tabs-item
       v-for="(item, index) in items"
       :key="item.key"
-      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-n-teal-9/50"
-      :class="[
-        activeTabIndex === index
-          ? 'bg-n-teal-9 text-white shadow-sm'
-          : 'bg-n-slate-3 text-n-slate-11 hover:bg-n-slate-4 hover:text-n-slate-12',
-      ]"
-      @click="onTabChange(index)"
-    >
-      <span>{{ item.name }}</span>
-      <span
-        v-if="item.count > 0"
-        class="text-xs font-semibold"
-        :class="[activeTabIndex === index ? 'text-white/80' : 'text-n-slate-10']"
-      >
-        {{ item.count }}
-      </span>
-    </button>
-  </div>
+      class="text-sm [&_a]:font-medium"
+      :index="index"
+      :name="item.name"
+      :count="item.count"
+      is-compact
+    />
+  </woot-tabs>
 </template>
-
-<style scoped>
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-</style>
