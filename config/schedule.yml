@@ -53,3 +53,10 @@ bulk_auto_assignment_job:
   cron: '*/15 * * * *'
   class: 'Inboxes::BulkAutoAssignmentJob'
   queue: scheduled_jobs
+
+# WhatsApp Web client recovery - executed every 10 minutes
+# Checks all WhatsApp Web channels and restarts disconnected clients
+whatsapp_web_recovery_job:
+  cron: '*/10 * * * *'
+  class: 'WhatsappWeb::RecoveryJob'
+  queue: scheduled_jobs
