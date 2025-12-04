@@ -63,28 +63,21 @@ class Saturn::MultiIntentDetectionService
 
     combined_message = @messages.join(' ')
 
-    # Bağlamdan kategori bilgisi varsa ekle (örn: "kırmızısı var mı" → önceki konuşmada "kolye" geçmişse)
-    context_category = extract_category_from_context
-    if context_category.present? && !combined_message.downcase.include?(context_category)
-      combined_message = "#{context_category} #{combined_message}"
-      Rails.logger.info "[INTENT] Context category added: #{context_category} → '#{combined_message}'"
-    end
-
-    # Önce confidence score hesapla
+    # Önce confidence score hesapla (bağlam olmadan)
     confidence_result = calculate_product_confidence(combined_message)
 
-    # Tek mesaj ve basit pattern ise hızlı kontrol
+    # Tek mesaj ve basit pattern ise hızlı kontrol (selamlama, teşekkür vb.)
     if @messages.size == 1 && simple_intent?(@messages.first) && confidence_result[:confidence] < CONFIDENCE_MEDIUM
-      return quick_detect(@messages.first)
+      quick_result = quick_detect(@messages.first)
+      # Basit intent tespit edildiyse bağlam ekleme
+      if quick_result[:intents].any? { |i| %i[greeting farewell thanks confirmation].include?(i) }
+        Rails.logger.info "[INTENT] Simple intent detected: #{quick_result[:intents].inspect}, skipping context"
+        return quick_result
+      end
     end
 
-    # Ürün kelimesi içeriyorsa confidence'a göre değerlendir
-    if confidence_result[:has_product_words]
-      return build_product_result(combined_message, confidence_result)
-    end
-
-    # LLM ile detaylı analiz
-    llm_detect
+    # LLM ile bağlam dahil analiz yap (LLM bağlamı kullanıp kullanmayacağına karar verir)
+    llm_detect_with_context
   end
 
   # Netleştirme sorusu oluştur - detect sonucunu parametre olarak alır
@@ -114,21 +107,98 @@ class Saturn::MultiIntentDetectionService
 
   private
 
-  # Konuşma bağlamından en son geçen ürün kategorisini çıkar
-  def extract_category_from_context
-    return nil if @conversation_context.blank?
-
-    # Son 5 mesajı kontrol et (en yeniden en eskiye)
-    recent_context = @conversation_context.last(5).reverse
+  # LLM ile bağlam dahil analiz - LLM bağlamı kullanıp kullanmayacağına karar verir
+  def llm_detect_with_context
+    current_message = @messages.join("\n")
+    context_text = build_context_text
     
-    recent_context.each do |msg|
-      clean_msg = msg.downcase
-      PRODUCT_CATEGORIES.each do |category|
-        return category if clean_msg.include?(category)
-      end
+    prompt = build_context_aware_prompt(current_message, context_text)
+    
+    begin
+      response = call_llm(prompt)
+      parse_llm_response_with_context(response, current_message)
+    rescue StandardError => e
+      Rails.logger.error "[INTENT] LLM with context failed: #{e.message}"
+      fallback_detect(current_message)
+    end
+  end
+
+  def build_context_text
+    return nil if @conversation_context.blank?
+    
+    # Son 10 mesajı bağlam olarak al
+    @conversation_context.last(10).join("\n")
+  end
+
+  def build_context_aware_prompt(message, context)
+    context_section = if context.present?
+      <<~CONTEXT
+        
+        ÖNCEKİ KONUŞMA BAĞLAMI:
+        #{context}
+        
+        NOT: Eğer mevcut mesaj önceki konuşmayla ilgili bir takip sorusuysa (örn: "kırmızısı var mı" önceki üründen bahsediyorsa), bağlamdaki ürün bilgilerini product_keywords'e ekle.
+        Eğer yeni bir konu, selamlama veya vedalaşma ise bağlamı KULLANMA.
+      CONTEXT
+    else
+      ""
     end
 
-    nil
+    <<~PROMPT
+      Müşteri mesajını analiz et. SADECE JSON döndür:
+      
+      MEVCUT MESAJ: #{message}
+      #{context_section}
+      
+      Intent türleri: greeting, farewell, thanks, product_query, order_query, general_question, complaint, human_request, confirmation, other
+      
+      Kurallar:
+      - Selamlama (merhaba, selam vb.) → greeting
+      - Vedalaşma (görüşürüz, hoşçakal vb.) → farewell  
+      - Teşekkür → thanks
+      - Ürün hakkında soru → product_query (bağlamdan ürün kategorisini de al)
+      - Sipariş/kargo sorusu → order_query
+      
+      Eğer ürün sorgusu ise, product_keywords'e TÜM ilgili kelimeleri ekle (bağlamdan da dahil et).
+      
+      Format:
+      {"intents": ["intent1"], "product_keywords": ["keyword1", "keyword2"], "uses_context": true/false, "summary": "özet"}
+    PROMPT
+  end
+
+  def parse_llm_response_with_context(response, original_message)
+    return fallback_detect(original_message) if response.blank?
+
+    json_match = response.match(/\{[\s\S]*\}/)
+    return fallback_detect(original_message) unless json_match
+
+    parsed = JSON.parse(json_match[0])
+    intents = (parsed['intents'] || []).map { |i| i.to_s.downcase.to_sym }
+    intents = [:other] if intents.empty?
+    
+    # LLM'in verdiği keywords'ü kullan (bağlamdan gelen dahil)
+    keywords = parsed['product_keywords'] || []
+    uses_context = parsed['uses_context'] || false
+    
+    Rails.logger.info "[INTENT] LLM result: intents=#{intents.inspect}, keywords=#{keywords.inspect}, uses_context=#{uses_context}"
+    
+    # Confidence hesapla - keywords'e göre
+    combined_for_confidence = keywords.any? ? keywords.join(' ') : original_message
+    confidence_result = calculate_product_confidence(combined_for_confidence)
+
+    {
+      intents: intents,
+      product_keywords: keywords,
+      combined_message: keywords.any? ? keywords.join(' ') : original_message,
+      confidence: confidence_result[:confidence],
+      confidence_details: confidence_result,
+      uses_context: uses_context,
+      summary: parsed['summary'],
+      raw_analysis: parsed
+    }
+  rescue JSON::ParserError => e
+    Rails.logger.error "[INTENT] JSON parse error: #{e.message}"
+    fallback_detect(original_message)
   end
 
   def empty_result
@@ -248,31 +318,6 @@ class Saturn::MultiIntentDetectionService
     }
   end
 
-  def llm_detect
-    combined_message = @messages.join("\n")
-
-    begin
-      response = call_llm(build_analysis_prompt(combined_message))
-      parse_llm_response(response, combined_message)
-    rescue StandardError => e
-      Rails.logger.error "[INTENT] LLM failed: #{e.message}"
-      fallback_detect(combined_message)
-    end
-  end
-
-  def build_analysis_prompt(message)
-    <<~PROMPT
-      Müşteri mesajını analiz et. SADECE JSON döndür:
-      
-      Mesaj: #{message}
-      
-      Intent türleri: greeting, farewell, thanks, product_query, order_query, general_question, complaint, human_request, confirmation, other
-      
-      Format:
-      {"intents": ["intent1"], "product_keywords": ["keyword1"], "summary": "özet"}
-    PROMPT
-  end
-
   def call_llm(prompt)
     client = OpenAI::Client.new(access_token: GlobalConfigService.load('OPENAI_API_KEY', nil))
     response = client.chat(
@@ -284,31 +329,6 @@ class Saturn::MultiIntentDetectionService
       }
     )
     response.dig('choices', 0, 'message', 'content')
-  end
-
-  def parse_llm_response(response, combined_message)
-    return fallback_detect(combined_message) if response.blank?
-
-    json_match = response.match(/\{[\s\S]*\}/)
-    return fallback_detect(combined_message) unless json_match
-
-    parsed = JSON.parse(json_match[0])
-    intents = (parsed['intents'] || []).map { |i| i.to_s.downcase.to_sym }
-    intents = [:other] if intents.empty?
-
-    confidence_result = calculate_product_confidence(combined_message)
-
-    {
-      intents: intents,
-      product_keywords: parsed['product_keywords'] || [],
-      combined_message: combined_message,
-      confidence: confidence_result[:confidence],
-      confidence_details: confidence_result,
-      summary: parsed['summary'],
-      raw_analysis: parsed
-    }
-  rescue JSON::ParserError
-    fallback_detect(combined_message)
   end
 
   def fallback_detect(message)
