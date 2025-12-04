@@ -476,6 +476,51 @@ async function saveAuthData(channelId, client) {
 }
 
 /**
+ * Resolve the correct WhatsApp chat ID for a phone number
+ * WhatsApp now uses LID (Linked ID) format for some users
+ */
+async function resolveWhatsAppChatId(client, channelId, phoneNumber) {
+  console.log(`[Channel ${channelId}] Resolving chat ID for: ${phoneNumber}`);
+  
+  // Extract just the phone number digits
+  const cleanNumber = phoneNumber.replace(/@.*$/, '').replace(/[^\d]/g, '');
+  console.log(`[Channel ${channelId}] Clean number: ${cleanNumber}`);
+  
+  // Method 1: Try getNumberId first (returns the correct format)
+  try {
+    const numberId = await client.getNumberId(cleanNumber);
+    if (numberId && numberId._serialized) {
+      console.log(`[Channel ${channelId}] ✅ getNumberId resolved: ${numberId._serialized}`);
+      return numberId._serialized;
+    }
+  } catch (error) {
+    console.log(`[Channel ${channelId}] getNumberId failed: ${error.message}`);
+  }
+  
+  // Method 2: Try to find the chat by iterating through recent chats
+  try {
+    const chats = await client.getChats();
+    const matchingChat = chats.find(chat => {
+      if (chat.isGroup) return false;
+      const chatNumber = chat.id.user || '';
+      return chatNumber === cleanNumber || chatNumber.endsWith(cleanNumber) || cleanNumber.endsWith(chatNumber);
+    });
+    
+    if (matchingChat) {
+      console.log(`[Channel ${channelId}] ✅ Found matching chat: ${matchingChat.id._serialized}`);
+      return matchingChat.id._serialized;
+    }
+  } catch (error) {
+    console.log(`[Channel ${channelId}] Chat search failed: ${error.message}`);
+  }
+  
+  // Method 3: Try @c.us format as fallback
+  const cusFormat = `${cleanNumber}@c.us`;
+  console.log(`[Channel ${channelId}] ⚠️ Using fallback @c.us format: ${cusFormat}`);
+  return cusFormat;
+}
+
+/**
  * Send message via WhatsApp
  */
 async function sendMessage(channelId, phoneNumber, messageContent, attachments = []) {
@@ -485,6 +530,10 @@ async function sendMessage(channelId, phoneNumber, messageContent, attachments =
   }
 
   try {
+    // Resolve the correct chat ID (handles LID format)
+    const chatId = await resolveWhatsAppChatId(client, channelId, phoneNumber);
+    console.log(`[Channel ${channelId}] Sending message to resolved chatId: ${chatId}`);
+    
     let messageId = null;
     const attachmentList = Array.isArray(attachments) ? attachments : [];
 
@@ -499,7 +548,7 @@ async function sendMessage(channelId, phoneNumber, messageContent, attachments =
 
         const caption = (attachment && attachment.caption) ? attachment.caption : (index === 0 ? messageContent : null);
         const options = caption ? { caption } : undefined;
-        const message = await client.sendMessage(phoneNumber, media, options);
+        const message = await client.sendMessage(chatId, media, options);
         messageId = message.id._serialized;
       }
 
@@ -509,7 +558,7 @@ async function sendMessage(channelId, phoneNumber, messageContent, attachments =
     }
 
     if (messageContent) {
-      const message = await client.sendMessage(phoneNumber, messageContent);
+      const message = await client.sendMessage(chatId, messageContent);
       return { success: true, message_id: message.id._serialized };
     }
 
