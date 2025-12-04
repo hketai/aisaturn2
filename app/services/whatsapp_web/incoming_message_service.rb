@@ -85,8 +85,10 @@ class WhatsappWeb::IncomingMessageService
     return true if %w[protocol system].include?(message_data[:type].to_s)
 
     # 5. Empty messages without media (likely system messages)
-    # BUT: Allow media messages even if body is empty
-    return true if message_data[:body].blank? && message_data[:attachments].blank? && !from.include?('@g.us')
+    # BUT: Allow media messages, stickers, and contact cards even if body is empty
+    is_sticker = message_data[:is_sticker] == true || message_data[:type] == 'sticker'
+    is_contact_card = message_data[:is_contact_card] == true || %w[vcard multi_vcard].include?(message_data[:type].to_s)
+    return true if message_data[:body].blank? && message_data[:attachments].blank? && !is_sticker && !is_contact_card && !from.include?('@g.us')
 
     # 6. Messages from broadcast lists
     return true if from == 'status@broadcast'
@@ -193,17 +195,46 @@ class WhatsappWeb::IncomingMessageService
     # Tüm kontroller geçildi → Yeni mesaj oluştur
     Rails.logger.info "[WHATSAPP_WEB] ✅ Creating new incoming message (fromMe=#{from_me})"
 
-    @message = @conversation.messages.create!(
-      content: message_data[:body] || message_data[:caption],
+    message_params = {
       account_id: channel.account_id,
       inbox_id: channel.inbox.id,
       message_type: from_me ? :outgoing : :incoming,
       sender: from_me ? outgoing_sender : @contact,
       source_id: message_source_id,
       content_type: determine_content_type
-    )
+    }
+
+    # Handle different message types
+    if message_data[:is_sticker] || message_data[:type] == 'sticker'
+      message_params[:content] = '🎨 Sticker'
+      message_params[:content_attributes] = { 'is_sticker' => true }
+      Rails.logger.info '[WHATSAPP_WEB] 🎨 Processing sticker message'
+    elsif message_data[:is_contact_card] || %w[vcard multi_vcard].include?(message_data[:type].to_s)
+      contact_cards = message_data[:contact_cards] || []
+      message_params[:content] = build_contact_card_content(contact_cards)
+      message_params[:content_attributes] = { 'contact_cards' => contact_cards, 'is_contact_card' => true }
+      Rails.logger.info "[WHATSAPP_WEB] 👤 Processing contact card: #{contact_cards.size} contacts"
+    else
+      message_params[:content] = message_data[:body] || message_data[:caption]
+    end
+
+    @message = @conversation.messages.create!(message_params)
 
     Rails.logger.info "[WHATSAPP_WEB] ✅ Created message: ID=#{@message.id}, type=#{@message.message_type}, source_id=#{message_source_id}, from=#{message_data[:from]}, to=#{message_data[:to]}, fromMe=#{from_me}"
+  end
+
+  def build_contact_card_content(contact_cards)
+    return '👤 Contact Card' if contact_cards.blank?
+
+    contacts = contact_cards.map do |card|
+      card = card.with_indifferent_access if card.respond_to?(:with_indifferent_access)
+      name = card[:name] || card['name'] || 'Unknown'
+      phone = card[:phone] || card['phone']
+      phone_text = phone.present? ? " (#{phone})" : ''
+      "👤 #{name}#{phone_text}"
+    end
+
+    contacts.join("\n")
   end
 
   def attach_files

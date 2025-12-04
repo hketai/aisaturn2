@@ -242,6 +242,33 @@ async function initializeClient(channelId, authData, cacheData) {
       }
     });
 
+    // Reaction event (emoji reactions to messages)
+    client.on('message_reaction', async (reaction) => {
+      console.log(`[Channel ${channelIdStr}] ===== REACTION EVENT =====`);
+      console.log(`[Channel ${channelIdStr}] Reaction:`, {
+        msgId: reaction.msgId?._serialized,
+        senderId: reaction.senderId,
+        reaction: reaction.reaction,
+        timestamp: reaction.timestamp
+      });
+      
+      try {
+        await axios.post(`${RAILS_API_URL}/webhooks/whatsapp_web`, {
+          channel_id: channelIdStr,
+          event_type: 'reaction',
+          reaction_data: {
+            message_id: reaction.msgId?._serialized,
+            sender_id: reaction.senderId,
+            reaction: reaction.reaction, // emoji or empty string for removal
+            timestamp: reaction.timestamp
+          }
+        });
+        console.log(`[Channel ${channelIdStr}] ✅ Reaction sent to Rails`);
+      } catch (error) {
+        console.error(`[Channel ${channelIdStr}] Failed to send reaction:`, error.message);
+      }
+    });
+
     // Disconnected event
     client.on('disconnected', async (reason) => {
       console.log(`[Channel ${channelIdStr}] Client disconnected:`, reason);
@@ -297,6 +324,57 @@ async function initializeClient(channelId, authData, cacheData) {
 }
 
 /**
+ * Parse vCard format to extract contact information
+ */
+function parseVCard(vcardString) {
+  const contact = {
+    name: null,
+    phone: null,
+    email: null,
+    organization: null,
+    raw: vcardString
+  };
+  
+  if (!vcardString) return contact;
+  
+  const lines = vcardString.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Parse FN (Full Name)
+    if (trimmedLine.startsWith('FN:')) {
+      contact.name = trimmedLine.substring(3).trim();
+    }
+    // Parse N (Name components)
+    else if (trimmedLine.startsWith('N:') && !contact.name) {
+      const nameParts = trimmedLine.substring(2).split(';');
+      contact.name = nameParts.filter(p => p).reverse().join(' ').trim();
+    }
+    // Parse TEL (Phone)
+    else if (trimmedLine.includes('TEL')) {
+      const phoneMatch = trimmedLine.match(/:([\d\s\+\-\(\)]+)/);
+      if (phoneMatch) {
+        contact.phone = phoneMatch[1].replace(/\s/g, '').trim();
+      }
+    }
+    // Parse EMAIL
+    else if (trimmedLine.includes('EMAIL')) {
+      const emailMatch = trimmedLine.match(/:(.+)/);
+      if (emailMatch) {
+        contact.email = emailMatch[1].trim();
+      }
+    }
+    // Parse ORG (Organization)
+    else if (trimmedLine.startsWith('ORG:')) {
+      contact.organization = trimmedLine.substring(4).trim();
+    }
+  }
+  
+  return contact;
+}
+
+/**
  * Process incoming message and send to Rails
  */
 /**
@@ -334,8 +412,10 @@ function shouldIgnoreMessage(message) {
   }
   
   // 5. Empty messages that are not media (likely system messages)
-  // BUT: Allow media messages even if body is empty
-  if (!message.body && !message.hasMedia && !message.isGroupMsg) {
+  // BUT: Allow media messages, stickers, and contact cards even if body is empty
+  const isSticker = message.type === 'sticker';
+  const isContactCard = message.type === 'vcard' || message.type === 'multi_vcard';
+  if (!message.body && !message.hasMedia && !isSticker && !isContactCard && !message.isGroupMsg) {
     console.log(`[FILTER] Ignoring empty message: body=${message.body}, hasMedia=${message.hasMedia}`);
     return true;
   }
@@ -384,8 +464,46 @@ async function processIncomingMessage(channelId, message) {
       fromMe: messageData.fromMe
     });
 
-    // Handle media attachments with error handling
-    if (message.hasMedia) {
+    // Handle sticker messages
+    if (message.type === 'sticker') {
+      console.log(`[Channel ${channelId}] 🎨 Processing sticker message`);
+      messageData.is_sticker = true;
+      try {
+        const media = await message.downloadMedia();
+        messageData.attachments = [{
+          mimetype: media.mimetype || 'image/webp',
+          data: media.data,
+          filename: 'sticker.webp',
+          is_sticker: true
+        }];
+        console.log(`[Channel ${channelId}] ✅ Sticker downloaded successfully`);
+      } catch (error) {
+        console.error(`[Channel ${channelId}] Failed to download sticker:`, error.message);
+      }
+    }
+    // Handle contact card messages (vCard)
+    else if (message.type === 'vcard' || message.type === 'multi_vcard') {
+      console.log(`[Channel ${channelId}] 👤 Processing contact card message`);
+      messageData.is_contact_card = true;
+      
+      try {
+        // Get vCard data
+        const vCards = message.vCards || [];
+        if (vCards.length > 0) {
+          messageData.contact_cards = vCards.map(vcard => parseVCard(vcard));
+          console.log(`[Channel ${channelId}] ✅ Parsed ${messageData.contact_cards.length} contact cards`);
+        } else if (message.body) {
+          // Sometimes vCard data is in the body
+          messageData.contact_cards = [parseVCard(message.body)];
+          console.log(`[Channel ${channelId}] ✅ Parsed contact card from body`);
+        }
+      } catch (error) {
+        console.error(`[Channel ${channelId}] Failed to parse contact card:`, error.message);
+        messageData.contact_cards = [];
+      }
+    }
+    // Handle regular media attachments
+    else if (message.hasMedia) {
       try {
         const media = await message.downloadMedia();
         messageData.attachments = [{
