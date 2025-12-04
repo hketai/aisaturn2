@@ -91,10 +91,12 @@ class Saturn::DelayedResponseJob < ApplicationJob
     pending_messages = collect_pending_messages
     Rails.logger.info "[RESPONSE] Collected #{pending_messages.size} pending messages"
 
-    # 2. Intent tespiti (TEK SEFER)
+    # 2. Intent tespiti (TEK SEFER) - Konuşma bağlamı ile
+    conversation_context = recent_conversation_messages
     intent_service = Saturn::MultiIntentDetectionService.new(
       assistant: @assistant,
-      messages: pending_messages.map(&:content).reject(&:blank?)
+      messages: pending_messages.map(&:content).reject(&:blank?),
+      conversation_context: conversation_context
     )
     @intent_result = intent_service.detect
     intents = @intent_result[:intents] || []
@@ -232,6 +234,18 @@ class Saturn::DelayedResponseJob < ApplicationJob
   
   def found_products
     @chat_service&.found_products || []
+  end
+
+  # Intent detection için son mesajların içeriklerini döndür (bağlam için)
+  def recent_conversation_messages
+    @conversation.messages
+                 .where(message_type: [:outgoing, :incoming])
+                 .where(private: false)
+                 .reorder(created_at: :desc, id: :desc)
+                 .limit(10)
+                 .pluck(:content)
+                 .reverse
+                 .compact
   end
 
   def format_message_history

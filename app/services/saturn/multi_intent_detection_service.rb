@@ -50,9 +50,10 @@ class Saturn::MultiIntentDetectionService
     gold silver rose gri lacivert turkuaz bordo bej krem kahve
   ].freeze
 
-  def initialize(assistant:, messages:)
+  def initialize(assistant:, messages:, conversation_context: [])
     @assistant = assistant
     @messages = Array(messages).map(&:to_s).reject(&:blank?)
+    @conversation_context = Array(conversation_context).map(&:to_s).reject(&:blank?)
   end
 
   # Ana metod - intent tespiti yapar, sonucu döndürür
@@ -61,6 +62,13 @@ class Saturn::MultiIntentDetectionService
     return empty_result if @messages.empty?
 
     combined_message = @messages.join(' ')
+
+    # Bağlamdan kategori bilgisi varsa ekle (örn: "kırmızısı var mı" → önceki konuşmada "kolye" geçmişse)
+    context_category = extract_category_from_context
+    if context_category.present? && !combined_message.downcase.include?(context_category)
+      combined_message = "#{context_category} #{combined_message}"
+      Rails.logger.info "[INTENT] Context category added: #{context_category} → '#{combined_message}'"
+    end
 
     # Önce confidence score hesapla
     confidence_result = calculate_product_confidence(combined_message)
@@ -105,6 +113,23 @@ class Saturn::MultiIntentDetectionService
   end
 
   private
+
+  # Konuşma bağlamından en son geçen ürün kategorisini çıkar
+  def extract_category_from_context
+    return nil if @conversation_context.blank?
+
+    # Son 5 mesajı kontrol et (en yeniden en eskiye)
+    recent_context = @conversation_context.last(5).reverse
+    
+    recent_context.each do |msg|
+      clean_msg = msg.downcase
+      PRODUCT_CATEGORIES.each do |category|
+        return category if clean_msg.include?(category)
+      end
+    end
+
+    nil
+  end
 
   def empty_result
     {
