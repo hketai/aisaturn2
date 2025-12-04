@@ -101,46 +101,6 @@ If you are looking for a stable version, please use the `master` or tags labelle
 
 ## Deployment
 
-### Running locally with Docker Compose
-
-If you prefer running Chatwoot locally via Docker Compose, build the base image before the other services so the `chatwoot:development` tag exists locally (it is not published to Docker Hub). Run the builds in order, then start the stack:
-
-```
-docker compose build base
-docker compose build rails sidekiq vite
-docker compose up
-```
-
-This avoids `pull access denied for chatwoot:development` errors while building the Vite image.
-
-#### Running seeds in Docker Compose
-
-After the containers are built, you can load the default seed data into the development database:
-
-```
-docker compose run --rm rails bundle exec rails db:prepare db:seed
-```
-
-If you already have Postgres listening on port 5432 on your host (for example via Homebrew), set a different host bind port before running Docker commands:
-
-```
-export POSTGRES_HOST_PORT=5433
-docker compose up -d postgres
-docker compose run --rm rails bundle exec rails db:prepare db:seed
-```
-
-For repeated seeding, add `RAILS_ENV=development` to the command or clear the `db/seeds.rb` lock records as needed.
-
-#### Running seeds on a local setup (without Docker)
-
-If you are running Chatwoot directly on your machine, execute the seeds after installing dependencies:
-
-```
-bundle exec rails db:prepare db:seed
-```
-
-Use `RAILS_ENV=development` for non-production databases, and rerun `db:seed` after adjusting any seed data.
-
 ### Heroku one-click deploy
 
 Deploying Chatwoot to Heroku is a breeze. It's as simple as clicking this button:

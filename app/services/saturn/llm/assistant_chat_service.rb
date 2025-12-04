@@ -21,18 +21,13 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
   MAX_HISTORY_MESSAGES = 10
   MAX_RELEVANT_FAQS = 5
   MAX_RELEVANT_CHUNKS = 5
-  MAX_RELEVANT_PRODUCTS = 5
   CONTEXT_MESSAGES_FOR_SEARCH = 10 # Semantic search için kaç mesaj bağlam kullanılacak
 
-  attr_reader :found_products, :intent_result
-  
-  def initialize(assistant: nil, user_message: nil, conversation_history: [], intent_result: nil)
+  def initialize(assistant: nil, user_message: nil, conversation_history: [])
     super()
     @assistant = assistant
     @user_message = user_message
     @conversation_history = conversation_history || []
-    @found_products = [] # Store found products for potential carousel display
-    @intent_result = intent_result # Multi-intent analiz sonucu
     
     # API Usage Tracking için set et
     self.tracking_assistant = assistant
@@ -53,10 +48,12 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     append_conversation_history(@conversation_history)
     append_user_message(@user_message, message_role) if @user_message.present?
 
-    # Shopify tool'ları ekle (aktifse)
-    tools = shopify_order_tools_enabled? ? Saturn::Shopify::ToolsService.order_lookup_tools : nil
+    # TÜM Shopify tool'larını ekle (ürün arama + sipariş sorgulama)
+    # LLM kendisi karar verir hangi tool'u kullanacağına
+    tools = Saturn::Shopify::ToolsService.all_tools(account: @assistant.account)
+    tools = nil if tools.blank?
 
-    # İlk API çağrısı
+    # Tek API çağrısı - LLM tool calling ile ürün araması yapacak
     response = execute_chat_api_with_tools(messages: @messages, tools: tools, temperature: get_temperature_setting)
 
     response
@@ -161,8 +158,7 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     template_parts << build_description_section
     template_parts << build_faqs_section if feature_faq_enabled?
     template_parts << build_documents_section if feature_citation_enabled?
-    template_parts << build_shopify_products_section if shopify_products_enabled?
-    template_parts << build_shopify_order_instructions if shopify_order_tools_enabled?
+    template_parts << build_shopify_tools_instructions if shopify_enabled?
     template_parts.compact.join("\n\n")
   end
 
@@ -419,134 +415,36 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     @assistant.shopify_enabled?
   end
 
-  def shopify_products_enabled?
-    return false unless shopify_enabled?
+  # Shopify tool kullanım talimatları (ürün arama + sipariş sorgulama)
+  def build_shopify_tools_instructions
+    <<~TOOLS_INSTRUCTIONS
+      ## Mağaza Yetenekleri (Tool Calling)
 
-    # Intent sonucu varsa, ürün araması gerekip gerekmediğini kontrol et
-    if @intent_result.present?
-      return false unless should_search_products_by_intent?
-    end
+      Bu asistan mağaza ürünlerini arama ve sipariş sorgulama yeteneğine sahiptir.
 
-    # Shopify ürün sayısını kontrol et
-    product_service = Saturn::Shopify::ProductSearchService.new(account: @assistant.account)
-    product_service.available? && product_service.product_count.positive?
-  end
+      ### 🛍️ ÜRÜN ARAMA (search_products tool)
 
-  # Intent sonucuna göre ürün araması yapılmalı mı?
-  def should_search_products_by_intent?
-    return true if @intent_result.blank?
+      Aşağıdaki durumlarda `search_products` tool'unu KULLAN:
+      - Müşteri ürün sorduğunda: "kolye var mı?", "bileklik göster"
+      - Ürün önerisi istediğinde: "ne önerirsin?", "hangi ürünler var?"
+      - Özellik/renk belirttiğinde: "kırmızı taşlı kolye", "altın bileklik"
+      - Takip sorusu sorduğunda: "başka renk var mı?", "daha ucuzu var mı?"
+      
+      ÖNEMLİ: Önceki konuşmada bir ürün kategorisinden bahsedildiyse (örn: kolye) ve müşteri "kırmızısı var mı?" derse, arama sorgusuna kategoriyi dahil et: "kırmızı kolye"
 
-    intents = @intent_result[:intents] || []
+      Tool sonucunda ürün bulunursa:
+      - Ürün bilgilerini kısa ve öz paylaş
+      - Fiyat ve stok bilgisini belirt
+      - Ürün linkini ver
 
-    # Ürün sorgusu intent'i varsa kesinlikle ara
-    return true if intents.include?(:product_query)
+      ### 📦 SİPARİŞ SORGULAMA (lookup_order tool)
 
-    # Ürün keyword'leri varsa ara
-    return true if @intent_result[:product_keywords].present?
+      Müşteri sipariş durumunu sorduğunda:
+      1. Email adresi ve sipariş numarasını iste
+      2. Her iki bilgi de alındıktan sonra `lookup_order` tool'unu kullan
+      3. Tool sonucunu olduğu gibi paylaş
 
-    # Sadece selamlama, teşekkür, veda, onay intent'leri varsa arama yapma
-    non_product_intents = %i[greeting farewell thanks confirmation human_request]
-    return false if intents.all? { |i| non_product_intents.include?(i) }
-
-    # Diğer durumlarda da arama yapmayabiliriz
-    # general_question, complaint gibi intent'ler için SSS/doküman araması yeterli
-    false
-  end
-
-  def shopify_order_tools_enabled?
-    return false unless shopify_enabled?
-
-    order_service = Saturn::Shopify::OrderLookupService.new(account: @assistant.account)
-    order_service.available?
-  end
-
-  def build_shopify_products_section
-    # Intent kontrolü - ürün araması gerekli mi?
-    return nil unless should_search_products_by_intent?
-    return nil if @user_message.blank? && @intent_result.blank?
-
-    # Ürünleri ara
-    products = find_relevant_shopify_products
-    return nil if products.blank?
-
-    product_service = Saturn::Shopify::ProductSearchService.new(account: @assistant.account)
-    formatted_products = product_service.format_for_prompt(products)
-    return nil if formatted_products.blank?
-
-    # Intent bilgisini logla
-    if @intent_result.present?
-      Rails.logger.info "[CHAT SERVICE] Product search triggered by intents: #{@intent_result[:intents].inspect}"
-      Rails.logger.info "[CHAT SERVICE] Product keywords: #{@intent_result[:product_keywords].inspect}"
-    end
-
-    <<~SHOPIFY
-      ## Shopify Ürünleri
-
-      Kullanıcının sorusuyla alakalı ürün bilgileri aşağıdadır. Bu bilgileri kullanarak ürün önerileri yapabilirsin:
-
-      #{formatted_products}
-
-      ÖNEMLİ: Ürün bilgilerini kullandığında [ÜRÜN_X] formatında referans ver.
-    SHOPIFY
-  end
-
-  def find_relevant_shopify_products
-    product_service = Saturn::Shopify::ProductSearchService.new(account: @assistant.account)
-
-    # Intent sonucunda product_keywords varsa onları kullan
-    # Yoksa kullanıcı mesajını kullan
-    search_query = if @intent_result.present? && @intent_result[:product_keywords].present?
-                     # Intent'ten çıkarılan keyword'leri kullan
-                     @intent_result[:product_keywords].join(' ')
-                   elsif @intent_result.present? && @intent_result[:combined_message].present?
-                     # Birleştirilmiş mesajı kullan
-                     @intent_result[:combined_message]
-                   else
-                     # Sadece mevcut kullanıcı mesajını kullan
-                     @user_message
-                   end
-
-    Rails.logger.info "[CHAT SERVICE] Searching products with query: #{search_query.to_s.truncate(100)}"
-
-    products = product_service.search(
-      query: search_query,
-      limit: MAX_RELEVANT_PRODUCTS
-    )
-
-    # Store products for potential carousel display
-    @found_products = products
-    products
-  rescue StandardError => e
-    Rails.logger.error "[CHAT SERVICE] Shopify product search failed: #{e.message}"
-    @found_products = []
-    []
-  end
-
-  def build_shopify_order_instructions
-    <<~ORDER_INSTRUCTIONS
-      ## Sipariş Sorgulama Yetenekleri
-
-      Bu asistan Shopify siparişlerini sorgulama yeteneğine sahiptir.
-
-      ⚠️ **GÜVENLİK KURALI**: Sipariş sorgulamak için HEM email adresi HEM DE sipariş numarası GEREKLİDİR.
-
-      ### Sipariş Sorgulama Akışı:
-
-      1. Müşteri sipariş durumunu sorduğunda:
-         - Email adresini ve sipariş numarasını iste
-
-      2. Her iki bilgi de alındıktan sonra `lookup_order` tool'unu kullan.
-
-      3. Tool'dan gelen sipariş bilgisini OLDUĞU GİBİ paylaş:
-         - Markdown formatı KULLANMA (*, **, [], () gibi)
-         - Ekstra metin EKLEME ("Başka bir konuda yardımcı olabilir miyim?" gibi)
-         - Sadece tool'un döndürdüğü bilgiyi ver
-         - [GÜVEN: ...] etiketi EKLEME
-
-      4. Sipariş bulunamazsa:
-         "Girdiğiniz bilgilerle eşleşen bir sipariş bulunamadı."
-
-      ÖNEMLİ: Sipariş bilgisi verdikten sonra konuşmayı uzatma, ekstra soru sorma.
-    ORDER_INSTRUCTIONS
+      ⚠️ GÜVENLİK: Sipariş sorgulamak için HEM email HEM sipariş numarası gerekli.
+    TOOLS_INSTRUCTIONS
   end
 end

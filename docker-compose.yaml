@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   base: &base
@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile
       args:
-        BUNDLE_WITHOUT: ''
-        EXECJS_RUNTIME: 'Node'
-        RAILS_ENV: 'development'
-        RAILS_SERVE_STATIC_FILES: 'false'
+        BUNDLE_WITHOUT: ""
+        EXECJS_RUNTIME: "Node"
+        RAILS_ENV: "development"
+        RAILS_SERVE_STATIC_FILES: "false"
     tty: true
     stdin_open: true
     image: chatwoot:development
@@ -33,6 +33,7 @@ services:
       - vite
       - mailhog
       - sidekiq
+      - whatsapp-web
     ports:
       - 3000:3000
     env_file: .env
@@ -40,7 +41,12 @@ services:
       - VITE_DEV_SERVER_HOST=vite
       - NODE_ENV=development
       - RAILS_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
     entrypoint: docker/entrypoints/rails.sh
+    dns:
+      - 8.8.8.8
     command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
 
   sidekiq:
@@ -59,6 +65,9 @@ services:
     environment:
       - NODE_ENV=development
       - RAILS_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - POSTGRES_HOST=postgres
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
 
   vite:
@@ -86,29 +95,51 @@ services:
     image: pgvector/pgvector:pg16
     restart: always
     ports:
-      - "${POSTGRES_HOST_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - postgres:/data/postgres
     environment:
       - POSTGRES_DB=chatwoot
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   redis:
     image: redis:alpine
     restart: always
-    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
+    command: ["sh", "-c", 'redis-server --requirepass "$REDIS_PASSWORD"']
     env_file: .env
     volumes:
       - redis:/data/redis
     ports:
-      - '6379:6379'
+      - "6379:6379"
 
   mailhog:
     image: mailhog/mailhog
     ports:
       - 1025:1025
       - 8025:8025
+
+  whatsapp-web:
+    build:
+      context: ./whatsapp-web-service
+      dockerfile: Dockerfile
+    image: whatsapp-web-service:development
+    volumes:
+      - ./whatsapp-web-service:/app:delegated
+      - whatsapp-web-sessions:/app/sessions
+      - whatsapp-web-node_modules:/app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - RAILS_API_URL=http://rails:3000
+      - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
 
 volumes:
   postgres:
@@ -117,3 +148,5 @@ volumes:
   node_modules:
   cache:
   bundle:
+  whatsapp-web-sessions:
+  whatsapp-web-node_modules:

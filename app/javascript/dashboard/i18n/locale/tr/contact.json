@@ -44,10 +44,10 @@
     },
     "MERGE_CONTACT": "Kişileri birleştir",
     "CONTACT_ACTIONS": "Kişi Eylemleri",
-    "MUTE_CONTACT": "Block Contact",
-    "UNMUTE_CONTACT": "Unblock Contact",
-    "MUTED_SUCCESS": "This contact is blocked successfully. You will not be notified of any future conversations.",
-    "UNMUTED_SUCCESS": "This contact is unblocked successfully.",
+    "MUTE_CONTACT": "Kişiyi Engelle",
+    "UNMUTE_CONTACT": "Engeli Kaldır",
+    "MUTED_SUCCESS": "Bu kişi başarıyla engellendi. Gelecekteki konuşmalar hakkında bildirim almayacaksınız.",
+    "UNMUTED_SUCCESS": "Bu kişinin engeli başarıyla kaldırıldı.",
     "SEND_TRANSCRIPT": "Transkript Gönder",
     "EDIT_LABEL": "Düzenle",
     "SIDEBAR_SECTIONS": {
@@ -289,37 +289,37 @@
   "CONTACTS_LAYOUT": {
     "HEADER": {
       "TITLE": "Kişiler",
-      "SEARCH_TITLE": "Search contacts",
+      "SEARCH_TITLE": "Kişileri Ara",
       "ACTIVE_TITLE": "Aktif kişiler",
-      "SEARCH_PLACEHOLDER": "Search...",
+      "SEARCH_PLACEHOLDER": "Ara...",
       "MESSAGE_BUTTON": "Mesaj",
       "SEND_MESSAGE": "Mesajı Gönder",
-      "BLOCK_CONTACT": "Block contact",
-      "UNBLOCK_CONTACT": "Unblock contact",
+      "BLOCK_CONTACT": "Kişiyi Engelle",
+      "UNBLOCK_CONTACT": "Engeli Kaldır",
       "BREADCRUMB": {
         "CONTACTS": "Kişiler"
       },
       "ACTIONS": {
         "CONTACT_CREATION": {
-          "ADD_CONTACT": "Add contact",
-          "EXPORT_CONTACT": "Export contacts",
-          "IMPORT_CONTACT": "Import contacts",
-          "SAVE_CONTACT": "Save contact",
+          "ADD_CONTACT": "Kişi Ekle",
+          "EXPORT_CONTACT": "Kişileri Dışa Aktar",
+          "IMPORT_CONTACT": "Kişileri İçe Aktar",
+          "SAVE_CONTACT": "Kişiyi Kaydet",
           "EMAIL_ADDRESS_DUPLICATE": "Bu e-posta adresi başka bir kişi için kullanılıyor.",
           "PHONE_NUMBER_DUPLICATE": "Bu telefon numarası başka bir kişi tarafından kullanılıyor.",
           "SUCCESS_MESSAGE": "Kişi bilgileri başarıyla kaydedildi",
-          "ERROR_MESSAGE": "Unable to save contact. Please try again later."
+          "ERROR_MESSAGE": "Kişi kaydedilemedi. Lütfen daha sonra tekrar deneyin."
         },
-        "BLOCK_SUCCESS_MESSAGE": "This contact is blocked successfully",
-        "BLOCK_ERROR_MESSAGE": "Unable to block contact. Please try again later.",
-        "UNBLOCK_SUCCESS_MESSAGE": "This contact is unblocked successfully",
-        "UNBLOCK_ERROR_MESSAGE": "Unable to unblock contact. Please try again later.",
+        "BLOCK_SUCCESS_MESSAGE": "Bu kişi başarıyla engellendi",
+        "BLOCK_ERROR_MESSAGE": "Kişi engellenemedi. Lütfen daha sonra tekrar deneyin.",
+        "UNBLOCK_SUCCESS_MESSAGE": "Bu kişinin engeli başarıyla kaldırıldı",
+        "UNBLOCK_ERROR_MESSAGE": "Kişinin engeli kaldırılamadı. Lütfen daha sonra tekrar deneyin.",
         "IMPORT_CONTACT": {
-          "TITLE": "Import contacts",
+          "TITLE": "Kişileri İçe Aktar",
           "DESCRIPTION": "Kişileri CSV dosyası olarak içe aktar.",
           "DOWNLOAD_LABEL": "Örnek CSV dosyası indir.",
           "LABEL": "CSV Dosyası:",
-          "CHOOSE_FILE": "Choose file",
+          "CHOOSE_FILE": "Dosya Seç",
           "CHANGE": "Durumu Değiştir",
           "CANCEL": "İptal Et",
           "IMPORT": "İçe Aktar",
@@ -327,8 +327,8 @@
           "ERROR_MESSAGE": "Bir hata oluştu, lütfen tekrar deneyin"
         },
         "EXPORT_CONTACT": {
-          "TITLE": "Export contacts",
-          "DESCRIPTION": "Quickly export a csv file with comprehensive details of your contacts",
+          "TITLE": "Kişileri Dışa Aktar",
+          "DESCRIPTION": "Kişilerinizin detaylı bilgilerini CSV dosyası olarak dışa aktarın",
           "CONFIRM": "Dışa Aktar",
           "SUCCESS_MESSAGE": "Dışa aktarma işlemi devam ediyor, dışa aktarma dosyası indirmeye hazır olduğunda e-posta ile bildirileceksiniz.",
           "ERROR_MESSAGE": "Bir hata oluştu, lütfen tekrar deneyin"
@@ -347,10 +347,10 @@
           }
         },
         "ORDER": {
-          "LABEL": "Ordering",
+          "LABEL": "Sıralama",
           "OPTIONS": {
-            "ASCENDING": "Ascending",
-            "DESCENDING": "Descending"
+            "ASCENDING": "Artan",
+            "DESCENDING": "Azalan"
           }
         },
         "FILTERS": {
@@ -358,24 +358,24 @@
             "TITLE": "Bu Filtreyi Kaydetmek İster Misiniz?",
             "CONFIRM": "Filtreyi Kaydet",
             "LABEL": "İsim",
-            "PLACEHOLDER": "Enter the name of the filter",
-            "ERROR": "Enter a valid name",
-            "SUCCESS_MESSAGE": "Filter saved successfully",
-            "ERROR_MESSAGE": "Unable to save filter. Please try again later."
+            "PLACEHOLDER": "Filtre adını girin",
+            "ERROR": "Geçerli bir ad girin",
+            "SUCCESS_MESSAGE": "Filtre başarıyla kaydedildi",
+            "ERROR_MESSAGE": "Filtre kaydedilemedi. Lütfen daha sonra tekrar deneyin."
           },
           "DELETE_SEGMENT": {
             "TITLE": "Silmeyi onayla",
-            "DESCRIPTION": "Are you sure you want to delete this filter?",
+            "DESCRIPTION": "Bu filtreyi silmek istediğinizden emin misiniz?",
             "CONFIRM": "Evet, Sil",
-            "CANCEL": "No, Cancel",
-            "SUCCESS_MESSAGE": "Filter deleted successfully",
-            "ERROR_MESSAGE": "Unable to delete filter. Please try again later."
+            "CANCEL": "Hayır, İptal",
+            "SUCCESS_MESSAGE": "Filtre başarıyla silindi",
+            "ERROR_MESSAGE": "Filtre silinemedi. Lütfen daha sonra tekrar deneyin."
           }
         }
       }
     },
     "PAGINATION_FOOTER": {
-      "SHOWING": "Showing {startItem} - {endItem} of {totalItems} contacts"
+      "SHOWING": "{totalItems} kişiden {startItem} - {endItem} arası gösteriliyor"
     },
     "FILTER": {
       "NAME": "İsim",
@@ -414,53 +414,53 @@
         "TITLE": "İletişim bilgilerini düzenleyin",
         "FORM": {
           "FIRST_NAME": {
-            "PLACEHOLDER": "Enter the first name"
+            "PLACEHOLDER": "Adını girin"
           },
           "LAST_NAME": {
-            "PLACEHOLDER": "Enter the last name"
+            "PLACEHOLDER": "Soyadını girin"
           },
           "EMAIL_ADDRESS": {
-            "PLACEHOLDER": "Enter the email address",
+            "PLACEHOLDER": "E-posta adresini girin",
             "DUPLICATE": "Bu e-posta adresi başka bir kişi için kullanılıyor."
           },
           "PHONE_NUMBER": {
-            "PLACEHOLDER": "Enter the phone number",
+            "PLACEHOLDER": "Telefon numarasını girin",
             "DUPLICATE": "Bu telefon numarası başka bir kişi tarafından kullanılıyor."
           },
           "CITY": {
             "PLACEHOLDER": "Şehir adını girin"
           },
           "COUNTRY": {
-            "PLACEHOLDER": "Select country"
+            "PLACEHOLDER": "Ülke seçin"
           },
           "BIO": {
-            "PLACEHOLDER": "Enter the bio"
+            "PLACEHOLDER": "Biyografi girin"
           },
           "COMPANY_NAME": {
             "PLACEHOLDER": "Şirket adını girin"
           }
         },
-        "UPDATE_BUTTON": "Update contact",
-        "SUCCESS_MESSAGE": "Contact updated successfully",
-        "ERROR_MESSAGE": "Unable to update contact. Please try again later."
+        "UPDATE_BUTTON": "Kişiyi Güncelle",
+        "SUCCESS_MESSAGE": "Kişi başarıyla güncellendi",
+        "ERROR_MESSAGE": "Kişi güncellenemedi. Lütfen daha sonra tekrar deneyin."
       },
       "SOCIAL_MEDIA": {
-        "TITLE": "Edit social links",
+        "TITLE": "Sosyal Bağlantıları Düzenle",
         "FORM": {
           "FACEBOOK": {
-            "PLACEHOLDER": "Add Facebook"
+            "PLACEHOLDER": "Facebook ekle"
           },
           "GITHUB": {
-            "PLACEHOLDER": "Add Github"
+            "PLACEHOLDER": "Github ekle"
           },
           "INSTAGRAM": {
-            "PLACEHOLDER": "Add Instagram"
+            "PLACEHOLDER": "Instagram ekle"
           },
           "LINKEDIN": {
-            "PLACEHOLDER": "Add LinkedIn"
+            "PLACEHOLDER": "LinkedIn ekle"
           },
           "TWITTER": {
-            "PLACEHOLDER": "Add Twitter"
+            "PLACEHOLDER": "Twitter ekle"
           }
         }
       },
@@ -470,9 +470,9 @@
       }
     },
     "DETAILS": {
-      "CREATED_AT": "Created {date}",
-      "LAST_ACTIVITY": "Last active {date}",
-      "DELETE_CONTACT_DESCRIPTION": "Permanently delete this contact. This action is irreversible",
+      "CREATED_AT": "{date} tarihinde oluşturuldu",
+      "LAST_ACTIVITY": "Son aktiflik {date}",
+      "DELETE_CONTACT_DESCRIPTION": "Bu kişiyi kalıcı olarak sil. Bu işlem geri alınamaz",
       "DELETE_CONTACT": "Kişiyi Sil",
       "DELETE_DIALOG": {
         "TITLE": "Silmeyi onayla",
@@ -485,29 +485,29 @@
       },
       "AVATAR": {
         "UPLOAD": {
-          "ERROR_MESSAGE": "Could not upload avatar. Please try again later.",
-          "SUCCESS_MESSAGE": "Avatar uploaded successfully"
+          "ERROR_MESSAGE": "Profil resmi yüklenemedi. Lütfen daha sonra tekrar deneyin.",
+          "SUCCESS_MESSAGE": "Profil resmi başarıyla yüklendi"
         },
         "DELETE": {
           "SUCCESS_MESSAGE": "Avatar başarıyla silindi",
-          "ERROR_MESSAGE": "Could not delete avatar. Please try again later."
+          "ERROR_MESSAGE": "Profil resmi silinemedi. Lütfen daha sonra tekrar deneyin."
         }
       }
     },
     "SIDEBAR": {
       "TABS": {
         "ATTRIBUTES": "Öznitelikler",
-        "HISTORY": "History",
+        "HISTORY": "Geçmiş",
         "NOTES": "Notlar",
-        "MERGE": "Merge"
+        "MERGE": "Birleştir"
       },
       "HISTORY": {
         "EMPTY_STATE": "Bu kişiyle ilişkilendirilmiş önceki görüşme yok"
       },
       "ATTRIBUTES": {
-        "SEARCH_PLACEHOLDER": "Search for attributes",
-        "UNUSED_ATTRIBUTES": "{count} Used attribute | {count} Unused attributes",
-        "EMPTY_STATE": "There are no contact custom attributes available in this account. You can create a custom attribute in settings.",
+        "SEARCH_PLACEHOLDER": "Öznitelik ara",
+        "UNUSED_ATTRIBUTES": "{count} kullanılan öznitelik | {count} kullanılmayan öznitelik",
+        "EMPTY_STATE": "Bu hesapta kişi özel özniteliği yok. Ayarlardan özel öznitelik oluşturabilirsiniz.",
         "YES": "Evet",
         "NO": "Hayır",
         "TRIGGER": {
@@ -515,11 +515,11 @@
           "INPUT": "Filtre verisini giriniz"
         },
         "VALIDATIONS": {
-          "INVALID_NUMBER": "Invalid number",
+          "INVALID_NUMBER": "Geçersiz numara",
           "REQUIRED": "Geçerli değer gereklidir",
-          "INVALID_INPUT": "Invalid input",
+          "INVALID_INPUT": "Geçersiz giriş",
           "INVALID_URL": "Geçersiz URL",
-          "INVALID_DATE": "Invalid date"
+          "INVALID_DATE": "Geçersiz tarih"
         },
         "NO_ATTRIBUTES": "Nitelik bulunamadı",
         "API": {
@@ -531,16 +531,16 @@
       },
       "MERGE": {
         "TITLE": "Kişileri birleştir",
-        "DESCRIPTION": "Combine two profiles into one, including all attributes and conversations. In case of conflict, the primary contact’s attributes will take precedence.",
+        "DESCRIPTION": "İki profili, tüm özellikler ve konuşmalar dahil olmak üzere tek bir profilde birleştirin. Çakışma durumunda birincil kişinin özellikleri öncelikli olacaktır.",
         "PRIMARY": "Birincil kişi",
-        "PRIMARY_HELP_LABEL": "To be saved",
-        "PRIMARY_REQUIRED_ERROR": "Please select a contact to merge with before proceeding",
-        "PARENT": "To be merged",
+        "PRIMARY_HELP_LABEL": "Kaydedilecek",
+        "PRIMARY_REQUIRED_ERROR": "Devam etmeden önce birleştirilecek bir kişi seçin",
+        "PARENT": "Birleştirilecek",
         "PARENT_HELP_LABEL": "Silinecek",
-        "EMPTY_STATE": "No contacts found",
-        "PLACEHOLDER": "Search for primary contact",
+        "EMPTY_STATE": "Kişi bulunamadı",
+        "PLACEHOLDER": "Birincil kişiyi arayın",
         "SEARCH_PLACEHOLDER": "Kişileri arayın",
-        "SEARCH_ERROR_MESSAGE": "Could not search for contacts. Please try again later.",
+        "SEARCH_ERROR_MESSAGE": "Kişiler aranamadı. Lütfen daha sonra tekrar deneyin.",
         "SUCCESS_MESSAGE": "Kişi başarıyla birleştirildi",
         "ERROR_MESSAGE": "Kişiler birleştirilemedi, tekrar deneyin!",
         "IS_SEARCHING": "Aranıyor...",
@@ -551,23 +551,23 @@
       },
       "NOTES": {
         "PLACEHOLDER": "Not ekleyin",
-        "WROTE": "wrote",
+        "WROTE": "yazdı",
         "YOU": "Sen",
-        "SAVE": "Save note",
+        "SAVE": "Notu Kaydet",
         "ADD_NOTE": "Kişi notu ekle",
         "EXPAND": "Genişlet",
         "COLLAPSE": "Daralt",
         "NO_NOTES": "Not yok, kişi detayları sayfasından not ekleyebilirsiniz.",
-        "EMPTY_STATE": "There are no notes associated to this contact. You can add a note by typing in the box above.",
+        "EMPTY_STATE": "Bu kişiye ait not yok. Yukarıdaki kutuya yazarak not ekleyebilirsiniz.",
         "CONVERSATION_EMPTY_STATE": "Henüz not yok. Not eklemek için Not ekle düğmesini kullanın."
       }
     },
     "EMPTY_STATE": {
-      "TITLE": "No contacts found in this account",
-      "SUBTITLE": "Start adding new contacts by clicking on the button below",
-      "BUTTON_LABEL": "Add contact",
+      "TITLE": "Bu hesapta kişi bulunamadı",
+      "SUBTITLE": "Aşağıdaki butona tıklayarak yeni kişi eklemeye başlayın",
+      "BUTTON_LABEL": "Kişi Ekle",
       "SEARCH_EMPTY_STATE_TITLE": "Aramanızla eşleşen kişi bulunamadı 🔍",
-      "LIST_EMPTY_STATE_TITLE": "No contacts available in this view 📋",
+      "LIST_EMPTY_STATE_TITLE": "Bu görünümde kişi yok 📋",
       "ACTIVE_EMPTY_STATE_TITLE": "Şu anda aktif kişi yok 🌙"
     }
   },

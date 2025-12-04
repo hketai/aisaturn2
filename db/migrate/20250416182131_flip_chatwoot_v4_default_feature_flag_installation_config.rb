@@ -19,6 +19,11 @@ class FlipChatwootV4DefaultFeatureFlagInstallationConfig < ActiveRecord::Migrati
       accounts.each { |account| account.enable_features!('chatwoot_v4') }
     end
 
-    GlobalConfig.clear_cache
+    # Clear cache if Redis is available
+    begin
+      GlobalConfig.clear_cache
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED
+      # Redis not available during migration, skip cache clearing
+    end
   end
 end

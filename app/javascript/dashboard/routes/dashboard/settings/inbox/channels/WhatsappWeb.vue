@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import PageHeader from '../../SettingsSubPageHeader.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 import whatsappWebChannelAPI from 'dashboard/api/whatsappWeb/channel';
 import inboxesAPI from 'dashboard/api/inboxes';
 
@@ -26,7 +27,6 @@ const qrCodePollingInterval = ref(null);
 const pendingInboxName = ref('');
 
 const isConnected = computed(() => status.value === 'connected');
-const isConnecting = computed(() => status.value === 'connecting');
 // Show QR code if we have a channel and status is not connected
 // Keep showing QR code even if status changes, as long as it's not connected
 const showQrCode = computed(() => channel.value && !isConnected.value);
@@ -83,9 +83,9 @@ const startPollingQrCode = async channelId => {
           useAlert(t('INBOX_MGMT.ADD.WHATSAPP_WEB.CONNECTED_SUCCESS'));
 
           // Inbox should be created by webhook, check if it exists and redirect to agents page
-          // Retry mechanism: try up to 10 times with 500ms intervals (faster retry)
+          // Retry mechanism: try up to 20 times with 500ms intervals (more retries to avoid reload)
           let retryCount = 0;
-          const maxRetries = 10;
+          const maxRetries = 20;
 
           const checkInboxAndRedirect = async () => {
             try {
@@ -96,7 +96,8 @@ const startPollingQrCode = async channelId => {
               });
 
               const channelData = channelResponse.data || channelResponse;
-              const fetchedInboxId = channelData.inbox_id;
+              const fetchedInboxId =
+                channelData.inbox_id || channelData.inbox?.id;
 
               if (fetchedInboxId) {
                 // Redirect to agents page (step 3) immediately
@@ -114,8 +115,45 @@ const startPollingQrCode = async channelId => {
                 if (retryCount < maxRetries) {
                   setTimeout(checkInboxAndRedirect, 500); // Faster retry (500ms instead of 1000ms)
                 } else {
-                  // Fallback: reload page if inbox still not found after retries
-                  window.location.reload();
+                  // If inbox still not found after retries, try to fetch inboxes list
+                  // and find the inbox by channel_id
+                  try {
+                    const inboxesResponse = await inboxesAPI.get({
+                      accountId: accountId.value,
+                    });
+                    const inboxes = inboxesResponse.data || inboxesResponse;
+                    const foundInbox =
+                      inboxes.find(
+                        inbox =>
+                          inbox.channel &&
+                          inbox.channel.id === parseInt(channelIdStr, 10)
+                      ) ||
+                      inboxes.find(
+                        inbox => inbox.channel_id === parseInt(channelIdStr, 10)
+                      );
+
+                    if (foundInbox && foundInbox.id) {
+                      router.replace({
+                        name: 'settings_inboxes_add_agents',
+                        params: {
+                          accountId: accountId.value,
+                          inbox_id: foundInbox.id,
+                        },
+                      });
+                    } else {
+                      // Last resort: show error but don't reload
+                      useAlert(
+                        t('INBOX_MGMT.ADD.WHATSAPP_WEB.INBOX_NOT_FOUND') ||
+                          'Inbox oluşturuldu ancak bulunamadı. Lütfen inbox listesinden kontrol edin.'
+                      );
+                    }
+                  } catch (fetchError) {
+                    // Show error but don't reload
+                    useAlert(
+                      t('INBOX_MGMT.ADD.WHATSAPP_WEB.INBOX_NOT_FOUND') ||
+                        'Inbox oluşturuldu ancak bulunamadı. Lütfen inbox listesinden kontrol edin.'
+                    );
+                  }
                 }
               }
             } catch (error) {
@@ -124,8 +162,11 @@ const startPollingQrCode = async channelId => {
               if (retryCount < maxRetries) {
                 setTimeout(checkInboxAndRedirect, 500); // Faster retry
               } else {
-                // Fallback: reload page on error after retries
-                window.location.reload();
+                // Last resort: show error but don't reload
+                useAlert(
+                  t('INBOX_MGMT.ADD.WHATSAPP_WEB.INBOX_NOT_FOUND') ||
+                    'Inbox oluşturuldu ancak bulunamadı. Lütfen inbox listesinden kontrol edin.'
+                );
               }
             }
           };
@@ -404,57 +445,22 @@ onUnmounted(() => {
     </div>
 
     <div v-else class="mt-6">
-      <!-- Status Display -->
-      <div
-        class="mb-6 p-4 rounded-lg border"
-        :class="{
-          'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800':
-            isConnected,
-          'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800':
-            isConnecting,
-          'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700':
-            !isConnected && !isConnecting,
-        }"
-      >
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.STATUS') }}:
-          </span>
-          <span class="text-sm text-gray-700 dark:text-gray-300">
-            {{
-              isConnected
-                ? $t('INBOX_MGMT.ADD.WHATSAPP_WEB.STATUS_CONNECTED')
-                : isConnecting
-                  ? $t('INBOX_MGMT.ADD.WHATSAPP_WEB.STATUS_CONNECTING')
-                  : $t('INBOX_MGMT.ADD.WHATSAPP_WEB.STATUS_DISCONNECTED')
-            }}
-          </span>
-        </div>
-        <div
-          v-if="channel.phone_number"
-          class="mt-2 text-sm text-gray-600 dark:text-gray-400"
-        >
-          {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.PHONE_NUMBER') }}:
-          {{ channel.phone_number }}
-        </div>
-      </div>
-
       <!-- QR Code Display -->
       <div
         v-if="showQrCode"
-        class="mb-6 p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+        class="mb-6 p-6 rounded-lg border border-n-slate-4 bg-n-slate-1"
       >
         <div class="text-center">
-          <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+          <h3 class="mb-4 text-lg font-medium text-n-slate-12">
             {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.QR_CODE.TITLE') }}
           </h3>
-          <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          <p class="mb-4 text-sm text-n-slate-11">
             {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.QR_CODE.DESCRIPTION') }}
           </p>
           <div class="flex justify-center mb-4">
             <div
               v-if="qrCode"
-              class="p-4 bg-white dark:bg-gray-900 rounded-lg border-2 border-gray-300 dark:border-gray-600"
+              class="p-4 bg-n-slate-2 rounded-lg border-2 border-n-slate-4"
             >
               <img
                 :src="`data:image/png;base64,${qrCode}`"
@@ -464,14 +470,18 @@ onUnmounted(() => {
             </div>
             <div
               v-else
-              class="flex items-center justify-center w-64 h-64 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900"
+              class="flex flex-col items-center justify-center w-64 h-64 border-2 border-n-slate-4 rounded-lg bg-n-slate-2"
             >
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.WAITING_FOR_QR') }}
+              <Icon
+                icon="i-lucide-loader-2"
+                class="w-8 h-8 text-n-blue-11 mb-3 animate-spin"
+              />
+              <p class="text-sm text-n-slate-11">
+                {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.QR_CODE.GENERATING') }}
               </p>
             </div>
           </div>
-          <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+          <p class="mb-4 text-xs text-n-slate-11">
             {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.QR_CODE.EXPIRES_IN') }}
           </p>
           <Button
@@ -485,9 +495,9 @@ onUnmounted(() => {
       <!-- Connected Message -->
       <div
         v-if="isConnected"
-        class="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+        class="p-4 rounded-lg bg-n-teal-9/20 border border-n-teal-9"
       >
-        <p class="text-sm text-green-800 dark:text-green-200">
+        <p class="text-sm text-n-teal-11">
           {{ $t('INBOX_MGMT.ADD.WHATSAPP_WEB.CONNECTED_MESSAGE') }}
         </p>
       </div>

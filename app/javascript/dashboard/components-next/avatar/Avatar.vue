@@ -5,6 +5,7 @@ import { removeEmoji } from 'shared/helpers/emoji';
 
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import ChannelIcon from 'dashboard/components-next/icon/ChannelIcon.vue';
+import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
 import wootConstants from 'dashboard/constants/globals';
 
 const props = defineProps({
@@ -237,7 +238,8 @@ watch(
 
       <template v-else>
         <!-- Custom Icon -->
-        <Icon v-if="iconName" :icon="iconName" :style="iconStyles" />
+        <SaturnIcon v-if="iconName === 'saturn'" :style="iconStyles" />
+        <Icon v-else-if="iconName" :icon="iconName" :style="iconStyles" />
 
         <!-- Initials -->
         <span

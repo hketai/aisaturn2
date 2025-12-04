@@ -161,7 +161,8 @@ const variant = computed(() => {
   if (props.contentAttributes?.isUnsupported)
     return MESSAGE_VARIANTS.UNSUPPORTED;
 
-  const isBot = !props.sender || props.sender.type === SENDER_TYPES.AGENT_BOT;
+  const botTypes = [SENDER_TYPES.AGENT_BOT, SENDER_TYPES.CAPTAIN_ASSISTANT, SENDER_TYPES.SATURN_ASSISTANT];
+  const isBot = !props.sender || botTypes.includes(props.sender.type);
   if (isBot && props.messageType === MESSAGE_TYPES.OUTGOING) {
     return MESSAGE_VARIANTS.BOT;
   }
@@ -196,7 +197,7 @@ const isBotOrAgentMessage = computed(() => {
   }
 
   if (
-    [SENDER_TYPES.AGENT_BOT, SENDER_TYPES.CAPTAIN_ASSISTANT].includes(
+    [SENDER_TYPES.AGENT_BOT, SENDER_TYPES.CAPTAIN_ASSISTANT, SENDER_TYPES.SATURN_ASSISTANT].includes(
       senderType
     )
   ) {
@@ -426,6 +427,15 @@ const avatarInfo = computed(() => {
 
   const { sender } = props;
   const { name, type, avatarUrl, thumbnail } = sender || {};
+
+  // If sender type is Saturn Assistant, use Saturn icon
+  if (type === SENDER_TYPES.SATURN_ASSISTANT) {
+    return {
+      name: name ?? '',
+      src: '',
+      iconName: 'saturn',
+    };
+  }
 
   // If sender type is agent bot, use avatarUrl
   if ([SENDER_TYPES.AGENT_BOT, SENDER_TYPES.CAPTAIN_ASSISTANT].includes(type)) {

@@ -1,0 +1,21 @@
+<% content_for(:title) do %>
+  Saturn Analytics
+<% end %>
+
+<%= render_vue_component('SaturnAnalyticsIndex', {
+  summary: @summary,
+  dailyTrend: @daily_trend,
+  accountUsage: @account_usage,
+  modelUsage: @model_usage,
+  assistantPerformance: @assistant_performance,
+  systemHealth: @system_health,
+  stats: {
+    totalAssistants: @total_assistants,
+    activeAssistants: @active_assistants,
+    totalFaqs: @total_faqs,
+    totalDocuments: @total_documents,
+    faqsWithEmbedding: @faqs_with_embedding,
+    chunksWithEmbedding: @chunks_with_embedding || 0
+  }
+}) %>
+

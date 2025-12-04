@@ -140,13 +140,14 @@ export const actions = {
     }
   },
 
-  limits: async ({ commit }) => {
-    try {
-      const response = await EnterpriseAccountAPI.getLimits();
-      commit(types.default.SET_ACCOUNT_LIMITS, response.data);
-    } catch (error) {
-      // silent error
-    }
+  limits: async () => {
+    // Enterprise limits are not available in this version
+    // try {
+    //   const response = await EnterpriseAccountAPI.getLimits();
+    //   commit(types.default.SET_ACCOUNT_LIMITS, response.data);
+    // } catch (error) {
+    //   // silent error
+    // }
   },
 
   getCacheKeys: async () => {

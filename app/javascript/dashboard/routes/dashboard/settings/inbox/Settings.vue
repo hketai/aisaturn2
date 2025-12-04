@@ -13,6 +13,7 @@ import DuplicateInboxBanner from './channels/instagram/DuplicateInboxBanner.vue'
 import MicrosoftReauthorize from './channels/microsoft/Reauthorize.vue';
 import GoogleReauthorize from './channels/google/Reauthorize.vue';
 import WhatsappReauthorize from './channels/whatsapp/Reauthorize.vue';
+import WhatsappWebReauthorize from './channels/whatsappWeb/Reauthorize.vue';
 import InboxHealthAPI from 'dashboard/api/inboxHealth';
 import PreChatFormSettings from './PreChatForm/Settings.vue';
 import WeeklyAvailability from './components/WeeklyAvailability.vue';
@@ -50,6 +51,7 @@ export default {
     NextButton,
     InstagramReauthorize,
     WhatsappReauthorize,
+    WhatsappWebReauthorize,
     DuplicateInboxBanner,
     Editor,
     Avatar,
@@ -124,19 +126,20 @@ export default {
         },
       ];
 
-      if (!this.isAVoiceChannel) {
-        visibleToAllChannelTabs = [
-          ...visibleToAllChannelTabs,
-          {
-            key: 'businesshours',
-            name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
-          },
-          {
-            key: 'csat',
-            name: this.$t('INBOX_MGMT.TABS.CSAT'),
-          },
-        ];
-      }
+      // İş Saatleri ve CSAT sekmeleri gizlendi
+      // if (!this.isAVoiceChannel) {
+      //   visibleToAllChannelTabs = [
+      //     ...visibleToAllChannelTabs,
+      //     {
+      //       key: 'businesshours',
+      //       name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
+      //     },
+      //     {
+      //       key: 'csat',
+      //       name: this.$t('INBOX_MGMT.TABS.CSAT'),
+      //     },
+      //   ];
+      // }
 
       if (this.isAWebWidgetInbox) {
         visibleToAllChannelTabs = [
@@ -170,17 +173,18 @@ export default {
         ];
       }
 
-      if (
-        this.isFeatureEnabledonAccount(this.accountId, FEATURE_FLAGS.AGENT_BOTS)
-      ) {
-        visibleToAllChannelTabs = [
-          ...visibleToAllChannelTabs,
-          {
-            key: 'botConfiguration',
-            name: this.$t('INBOX_MGMT.TABS.BOT_CONFIGURATION'),
-          },
-        ];
-      }
+      // Bot Yapılandırma sekmesi gizlendi
+      // if (
+      //   this.isFeatureEnabledonAccount(this.accountId, FEATURE_FLAGS.AGENT_BOTS)
+      // ) {
+      //   visibleToAllChannelTabs = [
+      //     ...visibleToAllChannelTabs,
+      //     {
+      //       key: 'botConfiguration',
+      //       name: this.$t('INBOX_MGMT.TABS.BOT_CONFIGURATION'),
+      //     },
+      //   ];
+      // }
       if (this.shouldShowWhatsAppConfiguration) {
         visibleToAllChannelTabs = [
           ...visibleToAllChannelTabs,
@@ -285,6 +289,9 @@ export default {
         this.isEmbeddedSignupWhatsApp &&
         this.inbox.reauthorization_required
       );
+    },
+    isWhatsappWebChannel() {
+      return this.inbox.channel_type === 'Channel::WhatsappWeb';
     },
     whatsappRegistrationIncomplete() {
       if (
@@ -506,6 +513,10 @@ export default {
       <WhatsappReauthorize
         v-if="whatsappUnauthorized"
         :whatsapp-registration-incomplete="whatsappRegistrationIncomplete"
+        :inbox="inbox"
+      />
+      <WhatsappWebReauthorize
+        v-if="isWhatsappWebChannel"
         :inbox="inbox"
       />
       <DuplicateInboxBanner

@@ -1,12 +1,12 @@
 {
   "INBOX_MGMT": {
-    "HEADER": "Gelen kutuları",
-    "DESCRIPTION": "A channel is the mode of communication your customer chooses to interact with you. An inbox is where you manage interactions for a specific channel. It can include communications from various sources such as email, live chat, and social media.",
-    "LEARN_MORE": "Learn more about inboxes",
-    "RECONNECTION_REQUIRED": "Your inbox is disconnected. You won't receive new messages until you reauthorize it.",
-    "CLICK_TO_RECONNECT": "Click here to reconnect.",
-    "WHATSAPP_REGISTRATION_INCOMPLETE": "Your WhatsApp Business registration isn’t complete. Please check your display name status in Meta Business Manager before reconnecting.",
-    "COMPLETE_REGISTRATION": "Complete Registration",
+    "HEADER": "Kanallar",
+    "DESCRIPTION": "Kanal, müşterinizin sizinle iletişim kurmayı seçtiği iletişim modudur. Gelen kutusu, belirli bir kanal için etkileşimleri yönettiğiniz yerdir. E-posta, canlı sohbet ve sosyal medya gibi çeşitli kaynaklardan gelen iletişimleri içerebilir.",
+    "LEARN_MORE": "Kanallar hakkında daha fazla bilgi",
+    "RECONNECTION_REQUIRED": "Gelen kutunuzun bağlantısı kesildi. Yeniden yetkilendirene kadar yeni mesaj alamayacaksınız.",
+    "CLICK_TO_RECONNECT": "Yeniden bağlanmak için tıklayın.",
+    "WHATSAPP_REGISTRATION_INCOMPLETE": "WhatsApp Business kaydınız tamamlanmadı. Yeniden bağlanmadan önce lütfen Meta Business Manager'da görünen ad durumunuzu kontrol edin.",
+    "COMPLETE_REGISTRATION": "Kaydı Tamamla",
     "LIST": {
       "404": "Bu hesaba bağlı gelen kutusu yok."
     },
@@ -327,7 +327,8 @@
           "TITLE": "QR Kodu Tara",
           "DESCRIPTION": "Telefonunuzda WhatsApp'ı açın ve hesabınızı bağlamak için bu QR kodunu tarayın.",
           "EXPIRES_IN": "QR kodu 2 dakika içinde sona erer",
-          "REGENERATE": "QR Kodunu Yeniden Oluştur"
+          "REGENERATE": "QR Kodunu Yeniden Oluştur",
+          "GENERATING": "QR kodu oluşturuluyor..."
         },
         "REGENERATE_ERROR": "QR kodu yeniden oluşturulamadı",
         "CONNECTED_MESSAGE": "WhatsApp hesabınız başarıyla bağlandı!",
@@ -784,7 +785,7 @@
         "QR_EXPIRED": "QR kodunun süresi doldu",
         "UNKNOWN": "Durum alınamadı"
       },
-      "CONNECTED_TO": "{{phone}} numarasına bağlı",
+      "CONNECTED_TO": "{phone} numarasına bağlı",
       "RECONNECT": "Yeniden bağla ve QR göster"
     },
     "AUTO_ASSIGNMENT": {

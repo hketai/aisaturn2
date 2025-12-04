@@ -5,6 +5,16 @@ import {
   formatDistanceToNow,
   differenceInDays,
 } from 'date-fns';
+import { tr } from 'date-fns/locale';
+
+// Get current locale from document or default to 'en'
+const getCurrentLocale = () => {
+  const htmlLang = document.documentElement.lang || 'en';
+  if (htmlLang.startsWith('tr')) {
+    return tr;
+  }
+  return undefined; // Use default (English)
+};
 
 /**
  * Formats a Unix timestamp into a human-readable time format.
@@ -40,7 +50,8 @@ export const messageTimestamp = (time, dateFormat = 'MMM d, yyyy') => {
  */
 export const dynamicTime = time => {
   const unixTime = fromUnixTime(time);
-  return formatDistanceToNow(unixTime, { addSuffix: true });
+  const locale = getCurrentLocale();
+  return formatDistanceToNow(unixTime, { addSuffix: true, locale });
 };
 
 /**
@@ -62,32 +73,69 @@ export const dateFormat = (time, df = 'MMM d, yyyy') => {
  */
 export const shortTimestamp = (time, withAgo = false) => {
   // This function takes a time string and converts it to a short time string
-  // with the following format: 1m, 1h, 1d, 1mo, 1y
+  // with the following format: 1dk, 1sa, 1g, 1ay, 1y (Turkish) or 1m, 1h, 1d, 1mo, 1y (English)
   // The function also takes an optional boolean parameter withAgo
-  // which will add the word "ago" to the end of the time string
-  const suffix = withAgo ? ' ago' : '';
-  const timeMappings = {
-    'less than a minute ago': 'now',
-    'a minute ago': `1m${suffix}`,
-    'an hour ago': `1h${suffix}`,
-    'a day ago': `1d${suffix}`,
-    'a month ago': `1mo${suffix}`,
+  // which will add the word "ago"/"önce" to the end of the time string
+
+  const isTurkish = time.includes('önce') || time.includes('dakika') || time.includes('saat');
+  const suffix = withAgo ? (isTurkish ? ' önce' : ' ago') : '';
+
+  // English mappings
+  const englishMappings = {
+    'less than a minute ago': 'şimdi',
+    'a minute ago': `1dk${suffix}`,
+    'an hour ago': `1sa${suffix}`,
+    'a day ago': `1g${suffix}`,
+    'a month ago': `1ay${suffix}`,
     'a year ago': `1y${suffix}`,
   };
+
+  // Turkish mappings
+  const turkishMappings = {
+    'bir dakikadan az önce': 'şimdi',
+    'bir dakika önce': `1dk${suffix}`,
+    '1 dakika önce': `1dk${suffix}`,
+    'bir saat önce': `1sa${suffix}`,
+    '1 saat önce': `1sa${suffix}`,
+    'bir gün önce': `1g${suffix}`,
+    '1 gün önce': `1g${suffix}`,
+    'bir ay önce': `1ay${suffix}`,
+    '1 ay önce': `1ay${suffix}`,
+    'bir yıl önce': `1y${suffix}`,
+    '1 yıl önce': `1y${suffix}`,
+  };
+
   // Check if the time string is one of the specific cases
-  if (timeMappings[time]) {
-    return timeMappings[time];
+  if (englishMappings[time]) {
+    return englishMappings[time];
   }
+  if (turkishMappings[time]) {
+    return turkishMappings[time];
+  }
+
+  // Handle Turkish time strings
+  if (isTurkish) {
+    const convertToShortTime = time
+      .replace(/yaklaşık |neredeyse |/g, '')
+      .replace(/ dakika önce/g, `dk${suffix}`)
+      .replace(/ saat önce/g, `sa${suffix}`)
+      .replace(/ gün önce/g, `g${suffix}`)
+      .replace(/ ay önce/g, `ay${suffix}`)
+      .replace(/ yıl önce/g, `y${suffix}`);
+    return convertToShortTime;
+  }
+
+  // Handle English time strings
   const convertToShortTime = time
     .replace(/about|over|almost|/g, '')
-    .replace(' minute ago', `m${suffix}`)
-    .replace(' minutes ago', `m${suffix}`)
-    .replace(' hour ago', `h${suffix}`)
-    .replace(' hours ago', `h${suffix}`)
-    .replace(' day ago', `d${suffix}`)
-    .replace(' days ago', `d${suffix}`)
-    .replace(' month ago', `mo${suffix}`)
-    .replace(' months ago', `mo${suffix}`)
+    .replace(' minute ago', `dk${suffix}`)
+    .replace(' minutes ago', `dk${suffix}`)
+    .replace(' hour ago', `sa${suffix}`)
+    .replace(' hours ago', `sa${suffix}`)
+    .replace(' day ago', `g${suffix}`)
+    .replace(' days ago', `g${suffix}`)
+    .replace(' month ago', `ay${suffix}`)
+    .replace(' months ago', `ay${suffix}`)
     .replace(' year ago', `y${suffix}`)
     .replace(' years ago', `y${suffix}`);
   return convertToShortTime;

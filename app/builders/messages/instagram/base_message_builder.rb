@@ -1,6 +1,9 @@
 class Messages::Instagram::BaseMessageBuilder < Messages::Messenger::MessageBuilder
   attr_reader :messaging
 
+  RESOLVED_THRESHOLD = 24.hours   # Resolved için 24 saat
+  UNRESOLVED_THRESHOLD = 7.days   # Open için 7 gün
+
   def initialize(messaging, inbox, outgoing_echo: false)
     super()
     @messaging = messaging
@@ -73,10 +76,40 @@ class Messages::Instagram::BaseMessageBuilder < Messages::Messenger::MessageBuil
   end
 
   def find_or_build_for_multiple_conversations
-    last_conversation = find_conversation_scope.where.not(status: :resolved).order(created_at: :desc).first
-    return build_conversation if last_conversation.nil?
+    # Önce resolved olmayan conversation'ları kontrol et
+    unresolved = find_conversation_scope
+                  .where.not(status: :resolved)
+                  .order(created_at: :desc)
+                  .first
 
-    last_conversation
+    if unresolved
+      # Resolved olmayan conversation var
+      # Son aktiviteden 48 saat geçmişse yeni aç, değilse mevcut olanı kullan
+      if unresolved.last_activity_at < UNRESOLVED_THRESHOLD.ago
+        return build_conversation
+      else
+        return unresolved
+      end
+    end
+
+    # Resolved olmayan conversation yok, resolved conversation'ları kontrol et
+    resolved = find_conversation_scope
+                .resolved
+                .order(created_at: :desc)
+                .first
+
+    if resolved
+      # Son aktiviteden 24 saat geçmişse yeni aç, değilse mevcut olanı aç
+      if resolved.last_activity_at < RESOLVED_THRESHOLD.ago
+        return build_conversation
+      else
+        resolved.open! # Resolved'dan open'a çevir
+        return resolved
+      end
+    end
+
+    # Hiç conversation yok, yeni açılacak
+    build_conversation
   end
 
   def message_content

@@ -83,6 +83,8 @@ class Saturn::DelayedResponseJob < ApplicationJob
     Time.current - @first_message_at > MAX_WAIT_TIME.seconds
   end
 
+  # Basitleştirilmiş AI yanıtı oluşturma
+  # Intent detection YOK - LLM tool calling ile kendisi karar veriyor
   def generate_ai_response(message)
     @assistant = @hook.account.saturn_assistants.find_by(id: @hook.settings['assistant_id'])
     return nil unless @assistant
@@ -91,42 +93,15 @@ class Saturn::DelayedResponseJob < ApplicationJob
     pending_messages = collect_pending_messages
     Rails.logger.info "[RESPONSE] Collected #{pending_messages.size} pending messages"
 
-    # 2. Intent tespiti (TEK SEFER) - Konuşma bağlamı ile
-    conversation_context = recent_conversation_messages
-    intent_service = Saturn::MultiIntentDetectionService.new(
-      assistant: @assistant,
-      messages: pending_messages.map(&:content).reject(&:blank?),
-      conversation_context: conversation_context
-    )
-    @intent_result = intent_service.detect
-    intents = @intent_result[:intents] || []
-    confidence = @intent_result[:confidence] || 0
-
-    Rails.logger.info "[RESPONSE] Intents: #{intents.inspect}, Confidence: #{confidence}%"
-
-    # 3. Intent'e göre aksiyon (SWITCH-CASE tarzı)
-    
-    # 3a. Netleştirme gerekli
-    if intents.include?(:clarification_needed)
-      question = intent_service.build_clarification_question(@intent_result)
-      Rails.logger.info "[RESPONSE] → Clarification: #{question}"
-      return question
-    end
-
-    # 3b. Müşteri temsilcisi talebi
-    if intents.include?(:human_request)
+    # 2. Müşteri temsilcisi talebi kontrolü (basit pattern)
+    if human_handoff_requested?(pending_messages)
+      Rails.logger.info "[RESPONSE] → Human handoff requested"
       return handle_handoff_request
     end
 
-    # 3c. Ürün sorgusu (yüksek güven)
-    if intents.include?(:product_query) && confidence >= 70
-      Rails.logger.info "[RESPONSE] → Product search with keywords: #{@intent_result[:product_keywords].inspect}"
-      return generate_product_response(pending_messages)
-    end
-
-    # 3d. Normal AI yanıtı (selamlama, teşekkür, genel sorular vb.)
-    Rails.logger.info "[RESPONSE] → Normal AI response"
-    generate_normal_response(pending_messages)
+    # 3. Tek LLM çağrısı - Tool calling ile (ürün arama, sipariş sorgulama vb.)
+    Rails.logger.info "[RESPONSE] → Single LLM call with tool calling"
+    generate_response_with_tools(pending_messages)
 
   rescue StandardError => e
     Rails.logger.error("[RESPONSE] Error: #{e.message}")
@@ -134,32 +109,15 @@ class Saturn::DelayedResponseJob < ApplicationJob
     'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.'
   end
 
-  # Ürün araması yapıp yanıt oluştur
-  def generate_product_response(pending_messages)
-    @chat_service = Saturn::Llm::AssistantChatService.new(
-      assistant: @assistant,
-      intent_result: @intent_result
-    )
-
-    user_message_content = build_combined_message_content(pending_messages)
-    formatted_history = format_message_history
-
-    @chat_service.create_ai_response(
-      user_message: user_message_content,
-      conversation_history: formatted_history
-    )
+  # Müşteri temsilcisi talebi mi? (Basit pattern kontrolü)
+  def human_handoff_requested?(pending_messages)
+    combined = pending_messages.map(&:content).join(' ').downcase
+    combined.match?(/müşteri\s*temsilci|insan|canlı\s*destek|gerçek\s*kişi/i)
   end
 
-  # Normal AI yanıtı oluştur (ürün araması olmadan)
-  def generate_normal_response(pending_messages)
-    # Intent'i product_query'den temizle (ürün araması yapılmasın)
-    clean_intent = @intent_result.dup
-    clean_intent[:intents] = clean_intent[:intents].reject { |i| i == :product_query }
-
-    @chat_service = Saturn::Llm::AssistantChatService.new(
-      assistant: @assistant,
-      intent_result: clean_intent
-    )
+  # Tool calling destekli tek LLM çağrısı
+  def generate_response_with_tools(pending_messages)
+    @chat_service = Saturn::Llm::AssistantChatService.new(assistant: @assistant)
 
     user_message_content = build_combined_message_content(pending_messages)
     formatted_history = format_message_history
@@ -232,22 +190,6 @@ class Saturn::DelayedResponseJob < ApplicationJob
     combined_parts.reject(&:blank?).join("\n\n")
   end
   
-  def found_products
-    @chat_service&.found_products || []
-  end
-
-  # Intent detection için son mesajların içeriklerini döndür (bağlam için)
-  def recent_conversation_messages
-    @conversation.messages
-                 .where(message_type: [:outgoing, :incoming])
-                 .where(private: false)
-                 .reorder(created_at: :desc, id: :desc)
-                 .limit(10)
-                 .pluck(:content)
-                 .reverse
-                 .compact
-  end
-
   def format_message_history
     previous_messages = []
     
@@ -286,57 +228,11 @@ class Saturn::DelayedResponseJob < ApplicationJob
     assistant = @hook.account.saturn_assistants.find_by(id: @hook.settings['assistant_id'])
     return unless assistant
 
-    products = found_products
-    has_product_cards = products.present? && product_cards_supported?
-    
-    # Ürün kartları gönderilecekse, kısa bir intro mesajı gönder
-    # Detaylı ürün bilgisi kartlarda zaten var
-    if has_product_cards
-      Rails.logger.info "[SATURN DELAYED] Products found - sending intro message + product cards"
-      intro_message = product_intro_message(products.count)
-      create_outgoing_message(message, { content: intro_message }, assistant)
-      send_product_cards_if_available
-      Rails.logger.info "[SATURN DELAYED] Product cards sent for conversation #{@conversation.id}"
-      return
-    end
-
     # Yanıtı doğrula ve işle
     validated_response = validate_and_process_response(response, assistant)
     create_outgoing_message(message, validated_response, assistant)
     
-    # Ürün kartlarını gönder (Facebook/Instagram için)
-    send_product_cards_if_available
-    
     Rails.logger.info "[SATURN DELAYED] Response sent for conversation #{@conversation.id}"
-  end
-  
-  def product_intro_message(count)
-    if count == 1
-      'Aradığınız ürünü buldum 👇'
-    else
-      "Aradığınız ürünlerden #{count} tanesini buldum 👇"
-    end
-  end
-  
-  def product_cards_supported?
-    channel_type = @conversation.inbox.channel_type
-    %w[Channel::FacebookPage Channel::Instagram Channel::WhatsappWeb].include?(channel_type)
-  end
-  
-  def send_product_cards_if_available
-    products = found_products
-    return if products.blank?
-    
-    Rails.logger.info "[SATURN DELAYED] Found #{products.count} products, attempting to send product cards"
-    
-    product_cards_service = Saturn::ProductCardsService.new(
-      conversation: @conversation,
-      products: products
-    )
-    product_cards_service.send_product_cards
-  rescue StandardError => e
-    Rails.logger.error "[SATURN DELAYED] Error sending product cards: #{e.message}"
-    # Don't fail the whole response if product cards fail
   end
 
   def validate_and_process_response(response, assistant)

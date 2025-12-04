@@ -7,6 +7,7 @@
       "NON_ADMIN": "Please contact your administrator to upgrade the plan and continue using all features."
     },
     "TITLE": "Account settings",
+    "DESCRIPTION": "Manage your account preferences and settings",
     "SUBMIT": "Update settings",
     "BACK": "Back",
     "DISMISS": "Dismiss",

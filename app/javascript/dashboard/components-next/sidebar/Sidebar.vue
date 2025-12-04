@@ -2,21 +2,17 @@
 import { h, computed, onMounted } from 'vue';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useStorage } from '@vueuse/core';
-import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 
-import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
-import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
 
 const props = defineProps({
@@ -27,7 +23,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  'closeKeyShortcutModal',
   'openKeyShortcutModal',
   'showCreateAccountModal',
   'closeMobileSidebar',
@@ -35,18 +30,7 @@ const emit = defineEmits([
 
 const { accountScopedRoute } = useAccount();
 const store = useStore();
-const searchShortcut = useKbd([`$mod`, 'k']);
 const { t } = useI18n();
-
-const toggleShortcutModalFn = show => {
-  if (show) {
-    emit('openKeyShortcutModal');
-  } else {
-    emit('closeKeyShortcutModal');
-  }
-};
-
-useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
 // We're using localStorage to store the expanded item in the sidebar
 // This helps preserve context when navigating between portal and dashboard layouts
@@ -122,40 +106,6 @@ const reportRoutes = computed(() => newReportRoutes());
 
 const menuItems = computed(() => {
   return [
-    {
-      name: 'Inbox',
-      label: t('SIDEBAR.INBOX'),
-      icon: h(
-        'svg',
-        {
-          class: 'size-4',
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          xmlns: 'http://www.w3.org/2000/svg',
-        },
-        [
-          h('path', {
-            d: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('polyline', {
-            points: '22,6 12,13 2,6',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-        ]
-      ),
-      to: accountScopedRoute('inbox_view'),
-      activeOn: ['inbox_view', 'inbox_view_conversation'],
-      getterKeys: {
-        count: 'notifications/getUnreadCount',
-      },
-    },
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
@@ -442,6 +392,11 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.SATURN_RESPONSES'),
           to: accountScopedRoute('saturn_responses_index'),
         },
+        {
+          name: 'Integrations',
+          label: t('SIDEBAR.SATURN_INTEGRATIONS'),
+          to: accountScopedRoute('saturn_integrations_index'),
+        },
       ],
     },
     {
@@ -655,16 +610,6 @@ const menuItems = computed(() => {
         },
         ...reportRoutes.value,
         {
-          name: 'Reports CSAT',
-          label: t('SIDEBAR.CSAT'),
-          to: accountScopedRoute('csat_reports'),
-        },
-        {
-          name: 'Reports SLA',
-          label: t('SIDEBAR.REPORTS_SLA'),
-          to: accountScopedRoute('sla_reports'),
-        },
-        {
           name: 'Reports Bot',
           label: t('SIDEBAR.REPORTS_BOT'),
           to: accountScopedRoute('bot_reports'),
@@ -672,263 +617,70 @@ const menuItems = computed(() => {
       ],
     },
     {
-      name: 'Campaigns',
-      label: t('SIDEBAR.CAMPAIGNS'),
-      icon: h(
-        'svg',
-        {
-          class: 'size-4',
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          xmlns: 'http://www.w3.org/2000/svg',
-        },
-        [
-          h('path', {
-            d: 'M3 11c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('path', {
-            d: 'M7 11V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v5',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('path', {
-            d: 'M11 11v9a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-9',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-        ]
-      ),
-      children: [
-        {
-          name: 'Live chat',
-          label: t('SIDEBAR.LIVE_CHAT'),
-          to: accountScopedRoute('campaigns_livechat_index'),
-        },
-        {
-          name: 'SMS',
-          label: t('SIDEBAR.SMS'),
-          to: accountScopedRoute('campaigns_sms_index'),
-        },
-        {
-          name: 'WhatsApp',
-          label: t('SIDEBAR.WHATSAPP'),
-          to: accountScopedRoute('campaigns_whatsapp_index'),
-        },
-      ],
+      name: 'Settings Account Settings',
+      label: t('SIDEBAR.ACCOUNT_SETTINGS'),
+      icon: 'i-lucide-briefcase',
+      to: accountScopedRoute('general_settings_index'),
     },
     {
-      name: 'Portals',
-      label: t('SIDEBAR.HELP_CENTER.TITLE'),
-      icon: h(
-        'svg',
-        {
-          class: 'size-4',
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          xmlns: 'http://www.w3.org/2000/svg',
-        },
-        [
-          h('path', {
-            d: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('path', {
-            d: 'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('line', {
-            x1: '9',
-            y1: '7',
-            x2: '15',
-            y2: '7',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-          h('line', {
-            x1: '9',
-            y1: '11',
-            x2: '15',
-            y2: '11',
-            stroke: 'currentColor',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-            'stroke-linejoin': 'round',
-          }),
-        ]
-      ),
-      children: [
-        {
-          name: 'Articles',
-          label: t('SIDEBAR.HELP_CENTER.ARTICLES'),
-          activeOn: [
-            'portals_articles_index',
-            'portals_articles_new',
-            'portals_articles_edit',
-          ],
-          to: accountScopedRoute('portals_index', {
-            navigationPath: 'portals_articles_index',
-          }),
-        },
-        {
-          name: 'Categories',
-          label: t('SIDEBAR.HELP_CENTER.CATEGORIES'),
-          activeOn: [
-            'portals_categories_index',
-            'portals_categories_articles_index',
-            'portals_categories_articles_edit',
-          ],
-          to: accountScopedRoute('portals_index', {
-            navigationPath: 'portals_categories_index',
-          }),
-        },
-        {
-          name: 'Locales',
-          label: t('SIDEBAR.HELP_CENTER.LOCALES'),
-          activeOn: ['portals_locales_index'],
-          to: accountScopedRoute('portals_index', {
-            navigationPath: 'portals_locales_index',
-          }),
-        },
-        {
-          name: 'Settings',
-          label: t('SIDEBAR.HELP_CENTER.SETTINGS'),
-          activeOn: ['portals_settings_index'],
-          to: accountScopedRoute('portals_index', {
-            navigationPath: 'portals_settings_index',
-          }),
-        },
-      ],
+      name: 'Settings Agents',
+      label: t('SIDEBAR.AGENTS'),
+      icon: 'i-lucide-square-user',
+      to: accountScopedRoute('agent_list'),
     },
     {
-      name: 'Settings',
-      label: t('SIDEBAR.SETTINGS'),
-      icon: 'i-lucide-bolt',
-      children: [
-        {
-          name: 'Settings Account Settings',
-          label: t('SIDEBAR.ACCOUNT_SETTINGS'),
-          icon: 'i-lucide-briefcase',
-          to: accountScopedRoute('general_settings_index'),
-        },
-        {
-          name: 'Settings Agents',
-          label: t('SIDEBAR.AGENTS'),
-          icon: 'i-lucide-square-user',
-          to: accountScopedRoute('agent_list'),
-        },
-        {
-          name: 'Settings Teams',
-          label: t('SIDEBAR.TEAMS'),
-          icon: 'i-lucide-users',
-          to: accountScopedRoute('settings_teams_list'),
-        },
-        {
-          name: 'Settings Agent Assignment',
-          label: t('SIDEBAR.AGENT_ASSIGNMENT'),
-          icon: 'i-lucide-user-cog',
-          to: accountScopedRoute('assignment_policy_index'),
-        },
-        {
-          name: 'Settings Inboxes',
-          label: t('SIDEBAR.INBOXES'),
-          icon: 'i-lucide-inbox',
-          to: accountScopedRoute('settings_inbox_list'),
-        },
-        {
-          name: 'Settings Labels',
-          label: t('SIDEBAR.LABELS'),
-          icon: 'i-lucide-tags',
-          to: accountScopedRoute('labels_list'),
-        },
-        {
-          name: 'Settings Custom Attributes',
-          label: t('SIDEBAR.CUSTOM_ATTRIBUTES'),
-          icon: 'i-lucide-code',
-          to: accountScopedRoute('attributes_list'),
-        },
-        {
-          name: 'Settings Automation',
-          label: t('SIDEBAR.AUTOMATION'),
-          icon: 'i-lucide-workflow',
-          to: accountScopedRoute('automation_list'),
-        },
-        {
-          name: 'Settings Agent Bots',
-          label: t('SIDEBAR.AGENT_BOTS'),
-          icon: 'i-lucide-bot',
-          to: accountScopedRoute('agent_bots'),
-        },
-        {
-          name: 'Settings Macros',
-          label: t('SIDEBAR.MACROS'),
-          icon: 'i-lucide-toy-brick',
-          to: accountScopedRoute('macros_wrapper'),
-        },
-        {
-          name: 'Settings Canned Responses',
-          label: t('SIDEBAR.CANNED_RESPONSES'),
-          icon: 'i-lucide-message-square-quote',
-          to: accountScopedRoute('canned_list'),
-        },
-        {
-          name: 'Settings Integrations',
-          label: t('SIDEBAR.INTEGRATIONS'),
-          icon: 'i-lucide-blocks',
-          to: accountScopedRoute('settings_applications'),
-        },
-        {
-          name: 'Settings Audit Logs',
-          label: t('SIDEBAR.AUDIT_LOGS'),
-          icon: 'i-lucide-briefcase',
-          to: accountScopedRoute('auditlogs_list'),
-        },
-        {
-          name: 'Settings Custom Roles',
-          label: t('SIDEBAR.CUSTOM_ROLES'),
-          icon: 'i-lucide-shield-plus',
-          to: accountScopedRoute('custom_roles_list'),
-        },
-        {
-          name: 'Settings Sla',
-          label: t('SIDEBAR.SLA'),
-          icon: 'i-lucide-clock-alert',
-          to: accountScopedRoute('sla_list'),
-        },
-        {
-          name: 'Settings Security',
-          label: t('SIDEBAR.SECURITY'),
-          icon: 'i-lucide-shield',
-          to: accountScopedRoute('security_settings_index'),
-        },
-        {
-          name: 'Settings Billing',
-          label: t('SIDEBAR.BILLING'),
-          icon: 'i-lucide-credit-card',
-          to: accountScopedRoute('billing_settings_index'),
-        },
-        {
-          name: 'Settings Subscriptions',
-          label: 'Abonelikler',
-          icon: 'i-lucide-crown',
-          to: accountScopedRoute('subscriptions_index'),
-        },
-      ],
+      name: 'Settings Teams',
+      label: t('SIDEBAR.TEAMS'),
+      icon: 'i-lucide-users',
+      to: accountScopedRoute('settings_teams_list'),
+    },
+    {
+      name: 'Settings Agent Assignment',
+      label: t('SIDEBAR.AGENT_ASSIGNMENT'),
+      icon: 'i-lucide-user-cog',
+      to: accountScopedRoute('assignment_policy_index'),
+    },
+    {
+      name: 'Settings Inboxes',
+      label: 'Kanal Entegrasyonu',
+      icon: 'i-lucide-inbox',
+      to: accountScopedRoute('settings_inbox_list'),
+    },
+    {
+      name: 'Settings Labels',
+      label: t('SIDEBAR.LABELS'),
+      icon: 'i-lucide-tags',
+      to: accountScopedRoute('labels_list'),
+    },
+    {
+      name: 'Settings Audit Logs',
+      label: t('SIDEBAR.AUDIT_LOGS'),
+      icon: 'i-lucide-briefcase',
+      to: accountScopedRoute('auditlogs_list'),
+    },
+    {
+      name: 'Settings Custom Roles',
+      label: t('SIDEBAR.CUSTOM_ROLES'),
+      icon: 'i-lucide-shield-plus',
+      to: accountScopedRoute('custom_roles_list'),
+    },
+    {
+      name: 'Settings Sla',
+      label: t('SIDEBAR.SLA'),
+      icon: 'i-lucide-clock-alert',
+      to: accountScopedRoute('sla_list'),
+    },
+    {
+      name: 'Settings Security',
+      label: t('SIDEBAR.SECURITY'),
+      icon: 'i-lucide-shield',
+      to: accountScopedRoute('security_settings_index'),
+    },
+    {
+      name: 'Settings Subscriptions',
+      label: 'Abonelikler',
+      icon: 'i-lucide-crown',
+      to: accountScopedRoute('subscriptions_index'),
     },
   ];
 });
@@ -948,45 +700,12 @@ const menuItems = computed(() => {
       },
     ]"
   >
-    <section class="grid gap-2 mt-2 mb-4">
-      <div class="flex items-center min-w-0 gap-2 px-2">
-        <div class="grid flex-shrink-0 size-6 place-content-center">
-          <Logo class="size-4" />
-        </div>
-        <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
-        <SidebarAccountSwitcher
-          class="flex-grow min-w-0 -mx-1"
-          @show-create-account-modal="emit('showCreateAccountModal')"
-        />
-      </div>
-      <div class="flex gap-2 px-2">
-        <RouterLink
-          :to="{ name: 'search' }"
-          class="flex items-center w-full gap-2 px-2 py-1 rounded-lg h-7 outline outline-1 outline-n-weak bg-n-solid-3 dark:bg-n-black/30"
-        >
-          <span class="flex-shrink-0 i-lucide-search size-4 text-n-slate-11" />
-          <span class="flex-grow text-left">
-            {{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}
-          </span>
-          <span
-            class="hidden tracking-wide pointer-events-none select-none text-n-slate-10"
-          >
-            {{ searchShortcut }}
-          </span>
-        </RouterLink>
-        <ComposeConversation align-position="right">
-          <template #trigger="{ toggle }">
-            <Button
-              icon="i-lucide-pen-line"
-              color="slate"
-              size="sm"
-              class="!h-7 !bg-n-solid-3 dark:!bg-n-black/30 !outline-n-weak !text-n-slate-11"
-              @click="toggle"
-            />
-          </template>
-        </ComposeConversation>
-      </div>
+    <!-- Logo Section - Full Width at Top -->
+    <section class="px-4 py-4 border-b border-n-weak">
+      <Logo class="w-full h-auto max-h-12" />
     </section>
+
+    <!-- Navigation Menu -->
     <nav class="grid flex-grow gap-2 px-2 pb-5 overflow-y-scroll no-scrollbar">
       <ul class="flex flex-col gap-1.5 m-0 list-none">
         <SidebarGroup
@@ -996,9 +715,18 @@ const menuItems = computed(() => {
         />
       </ul>
     </nav>
+
+    <!-- Bottom Section - Account Switcher, Plan, Profile -->
     <section
-      class="p-1 border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)] flex-shrink-0 flex justify-between gap-2 items-center"
+      class="p-2 border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)] flex-shrink-0 flex flex-col gap-2"
     >
+      <!-- Account Switcher -->
+      <SidebarAccountSwitcher
+        class="w-full"
+        @show-create-account-modal="emit('showCreateAccountModal')"
+      />
+
+      <!-- Profile Menu (includes subscription plan) -->
       <SidebarProfileMenu
         @open-key-shortcut-modal="emit('openKeyShortcutModal')"
       />

@@ -1,4 +1,7 @@
 class Twilio::IncomingMessageService
+
+  RESOLVED_THRESHOLD = 24.hours
+  UNRESOLVED_THRESHOLD = 7.days
   include ::FileTypeHelper
 
   pattr_initialize [:params!]
@@ -77,15 +80,49 @@ class Twilio::IncomingMessageService
   end
 
   def set_conversation
-    # if lock to single conversation is disabled, we will create a new conversation if previous conversation is resolved
+
     @conversation = if @inbox.lock_to_single_conversation
-                      @contact_inbox.conversations.last
+                      # Kilitli ise her zaman son conversation
+                      @contact_inbox.conversations.order(created_at: :desc).first
                     else
-                      @contact_inbox.conversations.where
-                                    .not(status: :resolved).last
+                      # Önce resolved olmayan conversation'ları kontrol et
+                      unresolved = @contact_inbox.conversations
+                                                   .where.not(status: :resolved)
+                                                   .order(created_at: :desc)
+                                                   .first
+
+                      if unresolved
+                        # Resolved olmayan conversation var
+                        # Son aktiviteden 48 saat geçmişse yeni aç, değilse mevcut olanı kullan
+                        if unresolved.last_activity_at < UNRESOLVED_THRESHOLD.ago
+                          nil # Yeni conversation açılacak
+                        else
+                          unresolved
+                        end
+                      else
+                        # Resolved olmayan conversation yok, resolved conversation'ları kontrol et
+                        resolved = @contact_inbox.conversations
+                                                  .resolved
+                                                  .order(created_at: :desc)
+                                                  .first
+
+                        if resolved
+                          # Son aktiviteden 24 saat geçmişse yeni aç, değilse mevcut olanı aç
+                          if resolved.last_activity_at < RESOLVED_THRESHOLD.ago
+                            nil # Yeni conversation açılacak
+                          else
+                            resolved.open! # Resolved'dan open'a çevir
+                            resolved
+                          end
+                        else
+                          nil # Hiç conversation yok, yeni açılacak
+                        end
+                      end
                     end
+
     return if @conversation
 
+    # Yeni conversation aç
     @conversation = ::Conversation.create!(conversation_params)
   end
 

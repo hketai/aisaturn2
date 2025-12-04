@@ -133,13 +133,14 @@ const handleSortChange = value => {
 <template>
   <div class="relative flex">
     <NextButton
-      v-tooltip.right="$t('CHAT_LIST.SORT_TOOLTIP_LABEL')"
       icon="i-lucide-arrow-up-down"
       slate
       faded
       xs
       @click="toggleDropdown()"
-    />
+    >
+      Sıralama
+    </NextButton>
     <div
       v-if="showActionsDropdown"
       v-on-click-outside="() => toggleDropdown()"

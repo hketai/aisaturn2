@@ -16,4 +16,3 @@ class SubscriptionPlans extends ApiClient {
 }
 
 export default new SubscriptionPlans();
-

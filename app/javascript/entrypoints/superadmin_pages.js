@@ -4,10 +4,12 @@ import VueDOMPurifyHTML from 'vue-dompurify-html';
 
 import PlaygroundIndex from '../superadmin_pages/views/playground/Index.vue';
 import DashboardIndex from '../superadmin_pages/views/dashboard/Index.vue';
+import SaturnAnalyticsIndex from '../superadmin_pages/views/saturn_analytics/Index.vue';
 
 const ComponentMapping = {
   PlaygroundIndex: PlaygroundIndex,
   DashboardIndex: DashboardIndex,
+  SaturnAnalyticsIndex: SaturnAnalyticsIndex,
 };
 
 const renderComponent = (componentName, props) => {
