@@ -57,27 +57,33 @@ class Saturn::MultiIntentDetectionService
   end
 
   # Ana metod - intent tespiti yapar, sonucu döndürür
-  # Sonuç: { intents: [...], confidence: N, product_keywords: [...], ... }
+  # Basitleştirilmiş akış: Sadece basit selamlama kontrolü + LLM
   def detect
     return empty_result if @messages.empty?
 
-    combined_message = @messages.join(' ')
-
-    # Önce confidence score hesapla (bağlam olmadan)
-    confidence_result = calculate_product_confidence(combined_message)
-
-    # Tek mesaj ve basit pattern ise hızlı kontrol (selamlama, teşekkür vb.)
-    if @messages.size == 1 && simple_intent?(@messages.first) && confidence_result[:confidence] < CONFIDENCE_MEDIUM
-      quick_result = quick_detect(@messages.first)
-      # Basit intent tespit edildiyse bağlam ekleme
-      if quick_result[:intents].any? { |i| %i[greeting farewell thanks confirmation].include?(i) }
-        Rails.logger.info "[INTENT] Simple intent detected: #{quick_result[:intents].inspect}, skipping context"
-        return quick_result
-      end
+    # Tek mesaj ve basit selamlama ise LLM'e gerek yok
+    if @messages.size == 1 && simple_greeting?(@messages.first)
+      Rails.logger.info "[INTENT] Simple greeting detected, skipping LLM"
+      return quick_detect(@messages.first)
     end
 
-    # LLM ile bağlam dahil analiz yap (LLM bağlamı kullanıp kullanmayacağına karar verir)
+    # Her şey için LLM kullan (bağlam dahil)
     llm_detect_with_context
+  end
+  
+  # Basit selamlama kontrolü (LLM'e gerek olmayan durumlar)
+  def simple_greeting?(message)
+    clean = message.strip.downcase
+    return false if clean.length > 20 # Uzun mesajlar selamlama değil
+    
+    greeting_patterns = [
+      /\A(merhaba|selam|hey|hi|hello|günaydın|iyi\s*günler|iyi\s*akşamlar)\s*[!.?]*\z/i,
+      /\A(teşekkür|sağol|thanks|eyvallah)\s*(ederim|ediyorum)?\s*[!.?]*\z/i,
+      /\A(görüşürüz|hoşça\s*kal|bye|güle\s*güle)\s*[!.?]*\z/i,
+      /\A(evet|hayır|tamam|ok|peki|olur|olmaz)\s*[!.?]*\z/i
+    ]
+    
+    greeting_patterns.any? { |pattern| clean.match?(pattern) }
   end
 
   # Netleştirme sorusu oluştur - detect sonucunu parametre olarak alır
@@ -335,40 +341,30 @@ class Saturn::MultiIntentDetectionService
     response.dig('choices', 0, 'message', 'content')
   end
 
+  # Basitleştirilmiş fallback - LLM hata verdiğinde
+  # clarification_needed KULLANMA çünkü yanlış netleştirme sorusu sormak kötü
   def fallback_detect(message)
+    Rails.logger.warn "[INTENT] Fallback triggered for: #{message.truncate(50)}"
+    
     intents = []
 
-    intents << :greeting if message.match?(/merhaba|selam|günaydın|iyi\s*günler/i)
-    intents << :thanks if message.match?(/teşekkür|sağol/i)
-    intents << :farewell if message.match?(/görüşürüz|hoşça\s*kal/i)
+    # Sadece kesin pattern'ler
+    intents << :greeting if message.match?(/\A\s*(merhaba|selam|günaydın|iyi\s*günler)\s*[!.?]*\z/i)
+    intents << :thanks if message.match?(/\A\s*(teşekkür|sağol)\s*[!.?]*\z/i)
+    intents << :farewell if message.match?(/\A\s*(görüşürüz|hoşça\s*kal)\s*[!.?]*\z/i)
     intents << :order_query if message.match?(/sipariş|kargo|teslimat/i)
     intents << :human_request if message.match?(/müşteri\s*temsilci|insan|canlı\s*destek/i)
 
-    confidence_result = calculate_product_confidence(message)
-
-    if confidence_result[:has_product_words]
-      if confidence_result[:confidence] >= CONFIDENCE_HIGH
-        intents << :product_query
-      else
-        intents << :clarification_needed
-      end
-    end
-
-    intents << :general_question if intents.empty? && message.match?(/\?/)
-    intents << :other if intents.empty?
-
-    keywords = (
-      confidence_result[:category_matches] +
-      confidence_result[:attribute_matches] +
-      confidence_result[:color_matches]
-    ).uniq
+    # Fallback'te clarification_needed KULLANMA - genel soru olarak işaretle
+    # Çünkü yanlış netleştirme sorusu sormak, hiç sormamaktan kötü
+    intents << :general_question if intents.empty?
 
     {
       intents: intents.uniq,
-      product_keywords: keywords.first(5),
+      product_keywords: [],
       combined_message: message,
-      confidence: confidence_result[:confidence],
-      confidence_details: confidence_result,
+      confidence: 0,
+      confidence_details: {},
       raw_analysis: nil
     }
   end
