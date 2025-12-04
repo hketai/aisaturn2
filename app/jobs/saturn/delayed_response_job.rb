@@ -281,11 +281,6 @@ class Saturn::DelayedResponseJob < ApplicationJob
       Rails.logger.info "[SATURN DELAYED] Products found - sending intro message + product cards"
       intro_message = product_intro_message(products.count)
       create_outgoing_message(message, { content: intro_message }, assistant)
-      
-      # Mesaj sıralamasının korunması için kısa gecikme
-      # (Intro mesajı platformda işlendikten sonra kartlar gönderilsin)
-      sleep(0.5)
-      
       send_product_cards_if_available
       Rails.logger.info "[SATURN DELAYED] Product cards sent for conversation #{@conversation.id}"
       return
@@ -311,7 +306,7 @@ class Saturn::DelayedResponseJob < ApplicationJob
   
   def product_cards_supported?
     channel_type = @conversation.inbox.channel_type
-    %w[Channel::FacebookPage Channel::Instagram].include?(channel_type)
+    %w[Channel::FacebookPage Channel::Instagram Channel::WhatsappWeb].include?(channel_type)
   end
   
   def send_product_cards_if_available
