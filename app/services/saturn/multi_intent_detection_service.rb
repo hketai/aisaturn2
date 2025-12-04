@@ -182,15 +182,19 @@ class Saturn::MultiIntentDetectionService
     
     Rails.logger.info "[INTENT] LLM result: intents=#{intents.inspect}, keywords=#{keywords.inspect}, uses_context=#{uses_context}"
     
-    # Confidence hesapla - keywords'e göre
+    # Confidence hesapla
+    # LLM product_query diyorsa güveniyoruz (sektörden bağımsız çalışması için)
     combined_for_confidence = keywords.any? ? keywords.join(' ') : original_message
     confidence_result = calculate_product_confidence(combined_for_confidence)
+    
+    # LLM product_query derse → confidence: 80 (yüksek), aksi halde mevcut hesaplama
+    final_confidence = intents.include?(:product_query) ? 80 : confidence_result[:confidence]
 
     {
       intents: intents,
       product_keywords: keywords,
       combined_message: keywords.any? ? keywords.join(' ') : original_message,
-      confidence: confidence_result[:confidence],
+      confidence: final_confidence,
       confidence_details: confidence_result,
       uses_context: uses_context,
       summary: parsed['summary'],
