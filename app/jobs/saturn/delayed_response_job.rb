@@ -228,6 +228,13 @@ class Saturn::DelayedResponseJob < ApplicationJob
     assistant = @hook.account.saturn_assistants.find_by(id: @hook.settings['assistant_id'])
     return unless assistant
 
+    # AI cevap veremedi mi kontrol et
+    if ai_cannot_answer?(response)
+      mark_conversation_needs_human_response(assistant)
+      Rails.logger.info "[SATURN DELAYED] AI cannot answer - marked for human response: #{@conversation.id}"
+      return
+    end
+
     products = found_products
     has_product_cards = products.present? && product_cards_supported?
     
@@ -251,6 +258,47 @@ class Saturn::DelayedResponseJob < ApplicationJob
     create_outgoing_message(message, validated_response, assistant)
     
     Rails.logger.info "[SATURN DELAYED] Response sent for conversation #{@conversation.id}"
+  end
+
+  # AI cevap veremedi mi kontrol et
+  def ai_cannot_answer?(response)
+    return false if response.blank?
+
+    no_info_phrases = [
+      'elimde yeterli bilgi bulunmuyor',
+      'bu konuda bilgim yok',
+      'müşteri hizmetlerine',
+      'bilgi bulunamadı',
+      'net bir bilgi veremiyorum',
+      'bu soruyu yanıtlayamıyorum',
+      'yardımcı olamıyorum'
+    ]
+
+    normalized = response.downcase
+    no_info_phrases.any? { |phrase| normalized.include?(phrase) }
+  end
+
+  # Conversation'ı insan müdahalesi gerekiyor olarak işaretle
+  def mark_conversation_needs_human_response(assistant)
+    # Conversation'a ai_handoff_required flag ekle
+    current_attrs = @conversation.additional_attributes || {}
+    current_attrs['ai_handoff_required'] = true
+    current_attrs['ai_handoff_at'] = Time.current.iso8601
+
+    @conversation.update!(
+      additional_attributes: current_attrs,
+      status: :open # Bot'tan insana geçiş için open yap
+    )
+
+    # Private note oluştur (ajanlar görsün)
+    @conversation.messages.create!(
+      message_type: :outgoing,
+      private: true,
+      sender: assistant,
+      account: @conversation.account,
+      inbox: @conversation.inbox,
+      content: '🤖 AI asistan bu soruyu yanıtlayamadı. Müşteri temsilcisi müdahalesi gerekiyor.'
+    )
   end
   
   def found_products

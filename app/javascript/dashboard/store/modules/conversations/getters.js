@@ -102,6 +102,14 @@ const getters = {
       return isUnAssigned && shouldFilter;
     });
   },
+  getAiHandoffChats: _state => activeFilters => {
+    return _state.allConversations.filter(conversation => {
+      const isAiHandoff =
+        conversation.additional_attributes?.ai_handoff_required === true;
+      const shouldFilter = applyPageFilters(conversation, activeFilters);
+      return isAiHandoff && shouldFilter;
+    });
+  },
   getAllStatusChats: (_state, _, __, rootGetters) => activeFilters => {
     const currentUser = rootGetters.getCurrentUser;
     const currentUserId = rootGetters.getCurrentUser.id;

@@ -3,6 +3,7 @@ export default {
   ASSIGNEE_TYPE: {
     ME: 'me',
     UNASSIGNED: 'unassigned',
+    AI_HANDOFF: 'ai_handoff',
     ALL: 'all',
   },
   STATUS_TYPE: {

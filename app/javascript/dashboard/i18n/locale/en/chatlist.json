@@ -16,7 +16,7 @@
     "FILTER_ALL": "All",
     "ASSIGNEE_TYPE_TABS": {
       "me": "Mine",
-      "unassigned": "Unassigned",
+      "ai_handoff": "AI Handoff",
       "all": "All"
     },
     "CHAT_STATUS_FILTER_ITEMS": {
