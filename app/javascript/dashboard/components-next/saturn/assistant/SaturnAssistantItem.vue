@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import { getInboxIconByType } from 'dashboard/helper/inbox.js';
 
 const props = defineProps({
   assistantId: {
@@ -121,7 +122,10 @@ const handleHandoffSettings = () => {
           :key="inbox.id"
           class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-g-success-subtle text-g-success"
         >
-          <i class="i-lucide-check-circle size-3" />
+          <Icon
+            :icon="getInboxIconByType(inbox.channel_type, inbox.medium)"
+            class="size-3"
+          />
           {{ inbox.name }}
         </span>
       </div>
