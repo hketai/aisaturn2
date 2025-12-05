@@ -189,7 +189,7 @@ class Saturn::DelayedResponseJob < ApplicationJob
     # String içerikleri birleştir
     combined_parts.reject(&:blank?).join("\n\n")
   end
-  
+
   def format_message_history
     previous_messages = []
     
@@ -228,11 +228,60 @@ class Saturn::DelayedResponseJob < ApplicationJob
     assistant = @hook.account.saturn_assistants.find_by(id: @hook.settings['assistant_id'])
     return unless assistant
 
-    # Yanıtı doğrula ve işle
+    products = found_products
+    has_product_cards = products.present? && product_cards_supported?
+    
+    # Ürün kartları gönderilecekse (WhatsApp Web, Facebook, Instagram)
+    if has_product_cards
+      Rails.logger.info "[SATURN DELAYED] Products found (#{products.size}) - sending product cards"
+      
+      # Önce kısa intro mesajı gönder
+      intro_message = product_intro_message(products.size)
+      create_outgoing_message(message, { content: intro_message }, assistant)
+      
+      # Sonra ürün kartlarını gönder
+      send_product_cards_if_available(products)
+      
+      Rails.logger.info "[SATURN DELAYED] Product cards sent for conversation #{@conversation.id}"
+      return
+    end
+
+    # Normal metin yanıtı
     validated_response = validate_and_process_response(response, assistant)
     create_outgoing_message(message, validated_response, assistant)
     
     Rails.logger.info "[SATURN DELAYED] Response sent for conversation #{@conversation.id}"
+  end
+  
+  def found_products
+    @chat_service&.found_products || []
+  end
+  
+  def product_cards_supported?
+    channel_type = @conversation.inbox.channel_type
+    %w[Channel::FacebookPage Channel::Instagram Channel::WhatsappWeb].include?(channel_type)
+  end
+  
+  def product_intro_message(count)
+    if count == 1
+      'Aradığınız ürünü buldum 👇'
+    else
+      "Aradığınız ürünlerden #{count} tanesini buldum 👇"
+    end
+  end
+  
+  def send_product_cards_if_available(products)
+    return if products.blank?
+    
+    Rails.logger.info "[SATURN DELAYED] Sending #{products.size} product cards"
+    
+    product_cards_service = Saturn::ProductCardsService.new(
+      conversation: @conversation,
+      products: products
+    )
+    product_cards_service.send_product_cards
+  rescue StandardError => e
+    Rails.logger.error "[SATURN DELAYED] Error sending product cards: #{e.message}"
   end
 
   def validate_and_process_response(response, assistant)

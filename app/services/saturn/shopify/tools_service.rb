@@ -41,27 +41,27 @@ class Saturn::Shopify::ToolsService
     
     # Sipariş sorgulama tool tanımı
     def order_lookup_tool
-      {
-        type: 'function',
-        function: {
-          name: 'lookup_order',
-          description: 'Müşterinin sipariş durumunu sorgular. GÜVENLİK: Hem email adresi hem de sipariş numarası birlikte gereklidir. Müşteri "siparişim nerede", "kargom ne durumda" gibi sorular sorduğunda, önce email ve sipariş numarasını iste, sonra bu tool\'u kullan.',
-          parameters: {
-            type: 'object',
-            properties: {
-              email: {
-                type: 'string',
-                description: 'Müşterinin sipariş verirken kullandığı email adresi (örn: ornek@email.com)'
+        {
+          type: 'function',
+          function: {
+            name: 'lookup_order',
+            description: 'Müşterinin sipariş durumunu sorgular. GÜVENLİK: Hem email adresi hem de sipariş numarası birlikte gereklidir. Müşteri "siparişim nerede", "kargom ne durumda" gibi sorular sorduğunda, önce email ve sipariş numarasını iste, sonra bu tool\'u kullan.',
+            parameters: {
+              type: 'object',
+              properties: {
+                email: {
+                  type: 'string',
+                  description: 'Müşterinin sipariş verirken kullandığı email adresi (örn: ornek@email.com)'
+                },
+                order_number: {
+                  type: 'string',
+                  description: 'Sipariş numarası (örn: #1001 veya 1001). Müşteriye gönderilen sipariş onay emailinde bulunur.'
+                }
               },
-              order_number: {
-                type: 'string',
-                description: 'Sipariş numarası (örn: #1001 veya 1001). Müşteriye gönderilen sipariş onay emailinde bulunur.'
-              }
-            },
-            required: %w[email order_number]
+              required: %w[email order_number]
+            }
           }
         }
-      }
     end
     
     # Legacy: Sadece sipariş tool'ları
@@ -70,18 +70,20 @@ class Saturn::Shopify::ToolsService
     end
 
     # Tool çağrısını işle
+    # Returns: { content: String, products: Array (optional) }
     def execute_tool(tool_name:, arguments:, account:)
       case tool_name
       when 'search_products'
         execute_product_search(arguments, account)
       when 'lookup_order'
-        execute_order_lookup(arguments, account)
+        result = execute_order_lookup(arguments, account)
+        { content: result }
       else
-        { error: "Bilinmeyen tool: #{tool_name}" }
+        { content: "Bilinmeyen tool: #{tool_name}" }
       end
     rescue StandardError => e
       Rails.logger.error "[SHOPIFY TOOLS] Tool execution failed: #{e.message}"
-      { error: "İşlem sırasında hata oluştu" }
+      { content: "İşlem sırasında hata oluştu" }
     end
     
     # Ürün araması yapılabilir mi?
@@ -105,11 +107,12 @@ class Saturn::Shopify::ToolsService
     private
     
     # Ürün araması yap
+    # Returns: { content: String, products: Array<Shopify::Product> }
     def execute_product_search(arguments, account)
       query = arguments['query']
       
       if query.blank?
-        return "Ürün aramak için bir sorgu gerekli. Lütfen ne aradığınızı belirtin."
+        return { content: "Ürün aramak için bir sorgu gerekli. Lütfen ne aradığınızı belirtin." }
       end
       
       Rails.logger.info "[SHOPIFY TOOLS] Product search: #{query}"
@@ -118,11 +121,14 @@ class Saturn::Shopify::ToolsService
       products = product_service.search(query: query, limit: 5)
       
       if products.blank?
-        return "Aramanızla eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?"
+        return { content: "Aramanızla eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?" }
       end
       
-      # Ürünleri formatla
-      format_products_for_tool_response(products, account)
+      # Ürünleri formatla ve products'ı da döndür
+      {
+        content: format_products_for_tool_response(products, account),
+        products: products
+      }
     end
     
     # Ürünleri tool response formatında döndür

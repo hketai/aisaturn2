@@ -22,12 +22,15 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
   MAX_RELEVANT_FAQS = 5
   MAX_RELEVANT_CHUNKS = 5
   CONTEXT_MESSAGES_FOR_SEARCH = 10 # Semantic search için kaç mesaj bağlam kullanılacak
-
+  
+  attr_reader :found_products
+  
   def initialize(assistant: nil, user_message: nil, conversation_history: [])
     super()
     @assistant = assistant
     @user_message = user_message
     @conversation_history = conversation_history || []
+    @found_products = [] # Tool calling ile bulunan ürünler
     
     # API Usage Tracking için set et
     self.tracking_assistant = assistant
@@ -102,11 +105,23 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
         account: @assistant.account
       )
 
+      # Tool sonucu hash ise content ve products'ı ayır
+      if tool_result.is_a?(Hash)
+        content = tool_result[:content]
+        # Ürünleri kaydet (WhatsApp Web'de resimli mesaj için)
+        if tool_result[:products].present?
+          @found_products = tool_result[:products]
+          Rails.logger.info "[SHOPIFY TOOL] Found #{@found_products.size} products for carousel"
+        end
+      else
+        content = tool_result.to_s
+      end
+
       # Tool sonucunu mesajlara ekle
       messages << {
         role: 'tool',
         tool_call_id: tool_call['id'],
-        content: tool_result.to_s
+        content: content.to_s
       }
     end
 
