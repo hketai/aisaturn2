@@ -24,13 +24,17 @@ class Saturn::Shopify::ToolsService
         type: 'function',
         function: {
           name: 'search_products',
-          description: 'Mağazadaki ürünleri arar. Müşteri ürün sorduğunda, ürün önerisi istediğinde veya "X var mı?", "Y göster", "hangi ürünler var" gibi sorular sorduğunda bu tool\'u kullan. Önceki konuşmada bir ürün kategorisinden bahsedildiyse (örn: kolye) ve müşteri "kırmızısı var mı?" derse, o kategoride kırmızı ürün ara.',
+          description: 'Mağazadaki ürünleri arar. Ürün sorgusu, öneri isteği veya takip sorusu olduğunda kullan. BAĞLAM KURALI: Önceki konuşmada bir kategori varsa (yüzük, kolye vb.) takip sorularında o kategoriyi MUTLAKA query\'ye ekle. Örn: Önceki: "yüzük var mı" → Şimdi: "siyah taşlı olsun" → Query: "siyah taşlı yüzük". NEGATİF KOŞUL: "X olmasın/hariç/dışında" denirse, sorguya dahil etme ama sonuçları filtrele.',
           parameters: {
             type: 'object',
             properties: {
               query: {
                 type: 'string',
-                description: 'Arama sorgusu. Ürün adı, kategori, renk, özellik vb. içerebilir. Örn: "kırmızı kolye", "altın bileklik", "taşlı yüzük"'
+                description: 'Arama sorgusu. Kategori + özellik birlikte olmalı. Örn: "siyah taşlı yüzük", "gümüş kolye", "kırmızı bileklik". Takip sorularında önceki kategoriden gelen bilgiyi MUTLAKA ekle.'
+              },
+              exclude_terms: {
+                type: 'string',
+                description: 'Hariç tutulacak terimler. "X olmasın", "Y hariç", "Z dışında" denildiğinde kullan. Örn: "altın kaplama" (altın kaplama olmasın için)'
               }
             },
             required: ['query']
@@ -110,15 +114,32 @@ class Saturn::Shopify::ToolsService
     # Returns: { content: String, products: Array<Shopify::Product> }
     def execute_product_search(arguments, account)
       query = arguments['query']
+      exclude_terms = arguments['exclude_terms']
       
       if query.blank?
         return { content: "Ürün aramak için bir sorgu gerekli. Lütfen ne aradığınızı belirtin." }
       end
       
-      Rails.logger.info "[SHOPIFY TOOLS] Product search: #{query}"
+      Rails.logger.info "[SHOPIFY TOOLS] Product search: #{query}, exclude: #{exclude_terms}"
       
       product_service = Saturn::Shopify::ProductSearchService.new(account: account)
-      products = product_service.search(query: query, limit: 5)
+      products = product_service.search(query: query, limit: 10) # Filtreleme için fazla al
+      
+      # Hariç tutma filtresi uygula
+      if exclude_terms.present? && products.present?
+        exclude_list = exclude_terms.downcase.split(/[,\s]+/).reject(&:blank?)
+        original_count = products.size
+        
+        products = products.reject do |product|
+          text = "#{product.title} #{product.description}".downcase
+          exclude_list.any? { |term| text.include?(term) }
+        end
+        
+        Rails.logger.info "[SHOPIFY TOOLS] Filtered #{original_count} → #{products.size} (excluded: #{exclude_list.join(', ')})"
+      end
+      
+      # İlk 5'i al
+      products = products.first(5)
       
       if products.blank?
         return { content: "Aramanızla eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?" }

@@ -443,14 +443,27 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
       - Müşteri ürün sorduğunda: "kolye var mı?", "bileklik göster"
       - Ürün önerisi istediğinde: "ne önerirsin?", "hangi ürünler var?"
       - Özellik/renk belirttiğinde: "kırmızı taşlı kolye", "altın bileklik"
-      - Takip sorusu sorduğunda: "başka renk var mı?", "daha ucuzu var mı?"
+      - Takip sorusu sorduğunda: "başka renk var mı?", "daha ucuzu var mı?", "siyah taşlı olsun"
       
-      ÖNEMLİ: Önceki konuşmada bir ürün kategorisinden bahsedildiyse (örn: kolye) ve müşteri "kırmızısı var mı?" derse, arama sorgusuna kategoriyi dahil et: "kırmızı kolye"
-
-      Tool sonucunda ürün bulunursa:
-      - Ürün bilgilerini kısa ve öz paylaş
-      - Fiyat ve stok bilgisini belirt
-      - Ürün linkini ver
+      ⚠️ BAĞLAM KURALI (ÇOK ÖNEMLİ):
+      Takip sorularında önceki konuşmadaki KATEGORİYİ MUTLAKA ekle!
+      
+      Örnek 1:
+      - Önceki: "yüzük var mı" → Kategori: yüzük
+      - Şimdi: "siyah taşlı olsun"
+      - Query: "siyah taşlı yüzük" (sadece "siyah taşlı" DEĞİL!)
+      
+      Örnek 2:
+      - Önceki: "kolye göster" → Kategori: kolye
+      - Şimdi: "kırmızısı var mı"
+      - Query: "kırmızı kolye"
+      
+      ⚠️ NEGATİF KOŞUL KURALI:
+      "X olmasın", "Y hariç", "Z dışında" denildiğinde exclude_terms parametresini kullan!
+      
+      Örnek:
+      - "altın kaplama olmasın" → exclude_terms: "altın kaplama"
+      - "gümüş hariç" → exclude_terms: "gümüş"
 
       ### 📦 SİPARİŞ SORGULAMA (lookup_order tool)
 
