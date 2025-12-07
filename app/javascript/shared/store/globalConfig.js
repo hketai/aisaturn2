@@ -35,7 +35,7 @@ const state = {
   createNewAccountFromDashboard,
   directUploadsEnabled: parseBoolean(directUploadsEnabled),
   disableUserProfileUpdate: parseBoolean(disableUserProfileUpdate),
-  displayManifest,
+  displayManifest: parseBoolean(displayManifest),
   gitSha,
   hCaptchaSiteKey,
   installationName,

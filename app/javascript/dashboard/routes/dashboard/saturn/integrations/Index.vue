@@ -7,7 +7,6 @@ import shopifyAPI from 'dashboard/api/integrations/shopify';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
-import Switch from 'dashboard/components-next/switch/Switch.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -441,7 +440,8 @@ const handleResync = async () => {
   if (!confirmed) return;
 
   // Eğer daha önce sync yapılmışsa incremental, yoksa full sync
-  const hasCompletedSync = syncStatus.value?.status === 'completed' || totalSyncedProducts.value > 0;
+  const hasCompletedSync =
+    syncStatus.value?.status === 'completed' || totalSyncedProducts.value > 0;
   await handleShopifySync(hasCompletedSync);
 };
 
@@ -496,7 +496,8 @@ onUnmounted(() => {
           :key="integration.id"
           class="bg-n-slate-1 border border-n-slate-4 rounded-lg p-6 transition-colors relative"
           :class="{
-            'cursor-pointer hover:border-n-slate-6': !integration.comingSoon && !integration.connected,
+            'cursor-pointer hover:border-n-slate-6':
+              !integration.comingSoon && !integration.connected,
             'opacity-50 cursor-not-allowed': integration.comingSoon,
           }"
           @click="handleIntegrationClick(integration)"
@@ -630,14 +631,17 @@ onUnmounted(() => {
               </button>
 
               <!-- Status Display -->
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-n-slate-11">Durum:</span>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-n-slate-11">{{
+                  $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_LABEL')
+                }}</span>
                 <span
                   class="font-medium"
                   :class="{
                     'text-n-amber-11': syncStatus?.status === 'pending',
                     'text-n-blue-11': syncStatus?.status === 'syncing',
-                    'text-n-teal-11': syncStatus?.status === 'completed' || !syncStatus,
+                    'text-n-teal-11':
+                      syncStatus?.status === 'completed' || !syncStatus,
                     'text-n-ruby-11': syncStatus?.status === 'failed',
                   }"
                 >
@@ -671,7 +675,9 @@ onUnmounted(() => {
                 "
                 class="space-y-1"
               >
-                <div class="w-full bg-n-slate-3 rounded-full h-2 overflow-hidden">
+                <div
+                  class="w-full bg-n-slate-3 rounded-full h-2 overflow-hidden"
+                >
                   <div
                     class="h-full bg-n-blue-9 transition-all duration-300"
                     :style="{

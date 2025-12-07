@@ -11,6 +11,7 @@ import DocumentsIndex from './documents/Index.vue';
 import ResponsesIndex from './responses/Index.vue';
 import CustomToolsIndex from './tools/Index.vue';
 import IntegrationsIndex from './integrations/Index.vue';
+import ProductsIndex from './products/Index.vue';
 
 export const routes = [
   {
@@ -151,6 +152,20 @@ export const routes = [
     path: frontendURL('accounts/:accountId/saturn/integrations'),
     component: IntegrationsIndex,
     name: 'saturn_integrations_index',
+    meta: {
+      permissions: ['administrator', 'agent'],
+      featureFlag: FEATURE_FLAGS.SATURN,
+      installationTypes: [
+        INSTALLATION_TYPES.CLOUD,
+        INSTALLATION_TYPES.ENTERPRISE,
+        INSTALLATION_TYPES.COMMUNITY,
+      ],
+    },
+  },
+  {
+    path: frontendURL('accounts/:accountId/saturn/products'),
+    component: ProductsIndex,
+    name: 'saturn_products_index',
     meta: {
       permissions: ['administrator', 'agent'],
       featureFlag: FEATURE_FLAGS.SATURN,
