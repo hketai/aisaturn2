@@ -324,6 +324,10 @@
       "EMPTY_STATE_DESCRIPTION": "Add an integration to manage your integrations",
       "COMING_SOON": "Coming Soon",
       "STORE": "Store",
+      "DISCONNECT_CONFIRM": "Are you sure you want to disconnect this integration?",
+      "TEST_CONNECTION": "Test Connection",
+      "EDIT": "Edit",
+      "DISCONNECT": "Disconnect",
       "SHOPIFY": {
         "DISCONNECT_SUCCESS": "Shopify integration removed successfully",
         "DISCONNECT_ERROR": "An error occurred while removing Shopify integration",
@@ -350,7 +354,11 @@
         "STATUS_SYNCING": "Syncing",
         "STATUS_COMPLETED": "Completed",
         "STATUS_FAILED": "Failed",
-        "SYNC_PROGRESS": "{synced}/{total} products synced (%{percentage}%)"
+        "SYNC_PROGRESS": "{synced}/{total} products synced (%{percentage}%)",
+        "PRODUCTS": "products",
+        "RESYNC_PRODUCTS": "Resync Products",
+        "LAST_SYNC": "Last sync",
+        "RESYNC_CONFIRM": "Are you sure you want to resync products? This may take a while."
       },
       "TEST_ORDER": {
         "TITLE": "Test Order Query",
