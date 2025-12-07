@@ -249,6 +249,9 @@ class Saturn::DelayedResponseJob < ApplicationJob
       # Sonra ürün kartlarını gönder
       send_product_cards_if_available(products)
       
+      # Conversation'ı insan yanıtı gibi güncelle
+      mark_conversation_as_responded
+      
       Rails.logger.info "[SATURN DELAYED] Product cards sent for conversation #{@conversation.id}"
       return
     end
@@ -256,6 +259,9 @@ class Saturn::DelayedResponseJob < ApplicationJob
     # Normal metin yanıtı
     validated_response = validate_and_process_response(response, assistant)
     create_outgoing_message(message, validated_response, assistant)
+    
+    # Conversation'ı insan yanıtı gibi güncelle
+    mark_conversation_as_responded
     
     Rails.logger.info "[SATURN DELAYED] Response sent for conversation #{@conversation.id}"
   end
@@ -452,6 +458,24 @@ class Saturn::DelayedResponseJob < ApplicationJob
     Redis::Alfred.delete(redis_key)
   rescue StandardError => e
     Rails.logger.warn "[SATURN DELAYED] Redis clear failed: #{e.message}"
+  end
+
+  # AI mesaj gönderdikten sonra conversation'ı insan yanıtı gibi güncelle
+  def mark_conversation_as_responded
+    now = Time.current
+
+    updates = {
+      waiting_since: nil,
+      agent_last_seen_at: now
+    }
+
+    # İlk yanıtsa first_reply_created_at güncelle
+    updates[:first_reply_created_at] = now if @conversation.first_reply_created_at.blank?
+
+    @conversation.update!(updates)
+    Rails.logger.info "[SATURN DELAYED] Conversation marked as responded: #{@conversation.id}"
+  rescue StandardError => e
+    Rails.logger.error "[SATURN DELAYED] Failed to mark conversation as responded: #{e.message}"
   end
 
   def clean_response_tags(response, confidence_pattern = nil)
