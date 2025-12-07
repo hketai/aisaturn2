@@ -60,3 +60,10 @@ whatsapp_web_recovery_job:
   cron: '*/10 * * * *'
   class: 'WhatsappWeb::RecoveryJob'
   queue: scheduled_jobs
+
+# Shopify product sync - executed daily at 03:00 UTC
+# Syncs products for all connected Shopify stores
+shopify_daily_incremental_sync_job:
+  cron: '0 3 * * *'
+  class: 'Shopify::DailyIncrementalSyncJob'
+  queue: scheduled_jobs
