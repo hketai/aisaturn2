@@ -397,11 +397,6 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.SATURN_INTEGRATIONS'),
           to: accountScopedRoute('saturn_integrations_index'),
         },
-        {
-          name: 'Products',
-          label: t('SIDEBAR.SATURN_PRODUCTS'),
-          to: accountScopedRoute('saturn_products_index'),
-        },
       ],
     },
     {

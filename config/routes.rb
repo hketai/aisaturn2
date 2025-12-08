@@ -90,7 +90,6 @@ Rails.application.routes.draw do
             resources :responses, only: [:index, :show, :update, :destroy], param: :id
             resources :documents, only: [:index], param: :id
             resources :custom_tools
-            resources :products
           end
           resource :saml_settings, only: [:show, :create, :update, :destroy]
           resources :subscription_plans, only: [:index, :show]
