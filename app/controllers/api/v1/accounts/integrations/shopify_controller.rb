@@ -25,11 +25,13 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
       return render json: { error: 'Invalid shop domain format' }, status: :unprocessable_entity
     end
 
-    # Test the access token by making a simple API call
+    # Test the access token and get shop info
+    shop_info = nil
     begin
       test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
       test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
-      test_client.get(path: 'shop.json')
+      response = test_client.get(path: 'shop.json')
+      shop_info = response.body['shop']
     rescue StandardError => e
       return render json: { error: "Invalid access token: #{e.message}" }, status: :unprocessable_entity
     end
@@ -42,6 +44,15 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     hook.reference_id = shop_domain
     hook.access_token = access_token
     hook.status = :enabled
+
+    # Shop'un custom domain'ini settings'e kaydet
+    if shop_info.present?
+      custom_domain = shop_info['domain'] # Custom domain (örn: www.ovio.com.tr)
+      hook.settings ||= {}
+      hook.settings['custom_domain'] = custom_domain if custom_domain.present?
+      hook.settings['shop_name'] = shop_info['name']
+    end
+
     hook.save!
 
     render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }

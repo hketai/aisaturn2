@@ -196,7 +196,10 @@ class Saturn::Shopify::ToolsService
     
     def get_shop_domain(account)
       hook = Integrations::Hook.find_by(account: account, app_id: 'shopify')
-      hook&.reference_id
+      return nil unless hook
+
+      # Önce custom domain'e bak, yoksa myshopify domain'i kullan
+      hook.settings&.dig('custom_domain').presence || hook.reference_id
     end
 
     def execute_order_lookup(arguments, account)
