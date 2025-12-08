@@ -203,7 +203,14 @@ class Saturn::Shopify::ProductSearchService
   end
 
   def call_rerank_llm(prompt)
-    client = OpenAI::Client.new(access_token: ENV.fetch('OPENAI_API_KEY', nil))
+    api_key = GlobalConfigService.load('OPENAI_API_KEY', nil)
+    
+    if api_key.blank?
+      Rails.logger.error '[SHOPIFY RERANK] OPENAI_API_KEY not configured'
+      raise 'OpenAI API key not configured'
+    end
+    
+    client = OpenAI::Client.new(access_token: api_key)
 
     response = client.chat(
       parameters: {
