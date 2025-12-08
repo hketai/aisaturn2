@@ -113,14 +113,19 @@ class Saturn::Shopify::ProductSearchService
     # 3. Birleştir: Keyword önce, sonra vector (duplicate'leri kaldır)
     keyword_ids = keyword_products.map(&:id)
     unique_vector = vector_products.reject { |p| keyword_ids.include?(p.id) }
-    candidates = (keyword_products + unique_vector).first(candidates_limit)
+    all_candidates = (keyword_products + unique_vector)
+
+    # 4. Stoksuz ürünleri filtrele
+    candidates = all_candidates.select { |p| p.total_inventory.to_i.positive? }.first(candidates_limit)
+    out_of_stock_count = all_candidates.size - candidates.size
+    Rails.logger.info "[SHOPIFY RERANK] 📦 Filtered out #{out_of_stock_count} out-of-stock products" if out_of_stock_count.positive?
 
     if candidates.empty?
-      Rails.logger.info '[SHOPIFY RERANK] ❌ No candidates found'
+      Rails.logger.info '[SHOPIFY RERANK] ❌ No candidates found (all out of stock)'
       return []
     end
 
-    Rails.logger.info "[SHOPIFY RERANK] 📦 Total candidates: #{candidates.size} (#{keyword_products.size} keyword + #{unique_vector.size} vector)"
+    Rails.logger.info "[SHOPIFY RERANK] 📦 Total candidates: #{candidates.size} (after stock filter)"
 
     # Eğer final_limit veya daha az sonuç varsa, rerank'a gerek yok
     if candidates.size <= final_limit
