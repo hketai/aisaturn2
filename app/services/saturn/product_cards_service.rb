@@ -123,10 +123,9 @@ module Saturn
             type: 'image',
             payload: { url: image_url, is_reusable: true }
           }
-        },
-        messaging_type: 'RESPONSE'
+        }
       }
-      deliver_facebook_message(params)
+      deliver_instagram_message(params)
     rescue StandardError => e
       Rails.logger.error "[PRODUCT CARDS] Instagram image send error: #{e.message}"
       nil
@@ -135,12 +134,37 @@ module Saturn
     def send_instagram_text(recipient_id, text)
       params = {
         recipient: { id: recipient_id },
-        message: { text: text },
-        messaging_type: 'RESPONSE'
+        message: { text: text }
       }
-      deliver_facebook_message(params)
+      deliver_instagram_message(params)
     rescue StandardError => e
       Rails.logger.error "[PRODUCT CARDS] Instagram text send error: #{e.message}"
+      nil
+    end
+
+    # Instagram API ile mesaj gönder (Facebook Messenger API'den farklı)
+    def deliver_instagram_message(params)
+      access_token = @channel.access_token
+      instagram_id = @channel.instagram_id.presence || 'me'
+
+      response = HTTParty.post(
+        "https://graph.instagram.com/v22.0/#{instagram_id}/messages",
+        body: params.to_json,
+        headers: { 'Content-Type' => 'application/json' },
+        query: { access_token: access_token }
+      )
+
+      parsed = response.parsed_response
+      if response.success? && parsed['error'].blank?
+        Rails.logger.info "[PRODUCT CARDS] Instagram message sent: #{parsed['message_id']}"
+        parsed
+      else
+        error_msg = parsed.dig('error', 'message') || 'Unknown error'
+        Rails.logger.error "[PRODUCT CARDS] Instagram API error: #{error_msg}"
+        nil
+      end
+    rescue StandardError => e
+      Rails.logger.error "[PRODUCT CARDS] Instagram delivery error: #{e.message}"
       nil
     end
     
