@@ -16,4 +16,3 @@ export const SATURN_SECTORS = [
 ];
 
 export default SATURN_SECTORS;
-

@@ -62,7 +62,9 @@ useKeyboardEvents(keyboardEvents);
       <span
         v-if="item.count > 0"
         class="text-xs font-semibold"
-        :class="[activeTabIndex === index ? 'text-white/80' : 'text-n-slate-10']"
+        :class="[
+          activeTabIndex === index ? 'text-white/80' : 'text-n-slate-10',
+        ]"
       >
         {{ item.count }}
       </span>

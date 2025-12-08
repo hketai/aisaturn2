@@ -160,7 +160,8 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
           subscription_plan: plan,
           options: {
             auto_renew: true,
-            cancel_existing: false # Already canceled above
+            cancel_existing: false, # Already canceled above
+            bypass_active_check: true # Super admin can assign hidden plans
           }
         ).perform
         

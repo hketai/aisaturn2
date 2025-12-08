@@ -515,10 +515,7 @@ export default {
         :whatsapp-registration-incomplete="whatsappRegistrationIncomplete"
         :inbox="inbox"
       />
-      <WhatsappWebReauthorize
-        v-if="isWhatsappWebChannel"
-        :inbox="inbox"
-      />
+      <WhatsappWebReauthorize v-if="isWhatsappWebChannel" :inbox="inbox" />
       <DuplicateInboxBanner
         v-if="hasDuplicateInstagramInbox"
         :content="$t('INBOX_MGMT.ADD.INSTAGRAM.DUPLICATE_INBOX_BANNER')"

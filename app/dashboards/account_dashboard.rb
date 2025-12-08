@@ -37,7 +37,12 @@ class AccountDashboard < Administrate::BaseDashboard
     custom_attributes: Field::String,
     openai_api_key: Field::String.with_options(secret: true),
     subscription_plan_id: Field::Select.with_options(
-      collection: proc { SubscriptionPlan.active.ordered.map { |p| [p.name, p.id] } }
+      collection: proc {
+        SubscriptionPlan.ordered.map do |p|
+          label = p.is_active ? p.name : "#{p.name} (Gizli)"
+          [label, p.id]
+        end
+      }
     ),
     account_subscriptions: Field::HasMany
   }.merge(enterprise_attribute_types).freeze

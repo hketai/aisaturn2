@@ -58,7 +58,10 @@ const handleManageInboxes = ({ assistantId, assistantName }) => {
 };
 
 const handleManageIntegrations = ({ assistantId, assistantName }) => {
-  selectedAssistantForIntegrations.value = { id: assistantId, name: assistantName };
+  selectedAssistantForIntegrations.value = {
+    id: assistantId,
+    name: assistantName,
+  };
   nextTick(() => {
     if (integrationsModal.value) {
       integrationsModal.value.dialogRef.open();
@@ -122,7 +125,7 @@ const fetchAccountIntegrations = async () => {
   try {
     const shopifyResponse = await shopifyAPI.getHook();
     const shopifyHook = shopifyResponse.data?.hook || shopifyResponse.hook;
-    
+
     if (shopifyHook?.id) {
       accountIntegrations.value = [
         {
@@ -141,7 +144,7 @@ const fetchAccountIntegrations = async () => {
 };
 
 // Helper to get assistant-specific enabled integrations
-const getAssistantIntegrations = (assistant) => {
+const getAssistantIntegrations = assistant => {
   const enabledTypes = assistant.enabled_integrations || [];
   return accountIntegrations.value.filter(i => enabledTypes.includes(i.id));
 };

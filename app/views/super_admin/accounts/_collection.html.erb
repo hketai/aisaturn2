@@ -92,10 +92,8 @@ to display a collection of resources in an HTML table.
             <%= form_with url: polymorphic_path([namespace, resource]), method: :patch, local: true, class: "inline-form", data: { remote: false } do |f| %>
               <%= f.hidden_field :account_id, value: resource.id %>
               <%= select_tag "account[subscription_plan_id]",
-                  options_from_collection_for_select(
-                    SubscriptionPlan.active.ordered,
-                    :id,
-                    :name,
+                  options_for_select(
+                    SubscriptionPlan.ordered.map { |p| [p.is_active ? p.name : "#{p.name} (Gizli)", p.id] },
                     current_plan&.id
                   ),
                   {

@@ -23,9 +23,13 @@ const isLoading = ref(false);
 const qrCodeExpiresAt = ref(null);
 const qrCodePollingInterval = ref(null);
 
-const channelId = computed(() => props.inbox.channel_id || props.inbox.channel?.id);
+const channelId = computed(
+  () => props.inbox.channel_id || props.inbox.channel?.id
+);
 // Get accountId from route params (more reliable than inbox.account_id)
-const accountId = computed(() => route.params.accountId || props.inbox.account_id);
+const accountId = computed(
+  () => route.params.accountId || props.inbox.account_id
+);
 const isConnected = computed(() => status.value === 'connected');
 const isDisconnected = computed(() => status.value === 'disconnected');
 const showQrCode = computed(() => qrCode.value && !isConnected.value);
@@ -69,7 +73,10 @@ const startPollingQrCode = async () => {
         qrCodePollingInterval.value = null;
         qrCode.value = null;
         status.value = 'connected';
-        useAlert(t('INBOX_MGMT.EDIT.WHATSAPP_WEB.CONNECTED_SUCCESS') || 'WhatsApp Web bağlantısı başarılı!');
+        useAlert(
+          t('INBOX_MGMT.EDIT.WHATSAPP_WEB.CONNECTED_SUCCESS') ||
+            'WhatsApp Web bağlantısı başarılı!'
+        );
         // Reload page to reflect new status
         setTimeout(() => window.location.reload(), 1500);
         return;
@@ -78,7 +85,8 @@ const startPollingQrCode = async () => {
       status.value = statusData.status || 'disconnected';
 
       // Fetch QR code if expired or not available
-      const isExpired = qrCodeExpiresAt.value && new Date(qrCodeExpiresAt.value) < new Date();
+      const isExpired =
+        qrCodeExpiresAt.value && new Date(qrCodeExpiresAt.value) < new Date();
       if (!qrCode.value || isExpired) {
         try {
           const qrResponse = await whatsappWebChannelAPI.getQrCode({
@@ -128,7 +136,10 @@ const reconnect = async () => {
 
     status.value = 'connecting';
     await startPollingQrCode();
-    useAlert(t('INBOX_MGMT.EDIT.WHATSAPP_WEB.QR_GENERATING') || 'QR kodu oluşturuluyor...');
+    useAlert(
+      t('INBOX_MGMT.EDIT.WHATSAPP_WEB.QR_GENERATING') ||
+        'QR kodu oluşturuluyor...'
+    );
   } catch (error) {
     const errorMessage = error?.response?.data?.error || error?.message;
     useAlert(errorMessage || 'Bağlantı hatası');
@@ -169,12 +180,17 @@ onUnmounted(() => {
         class="w-6 h-6"
       />
       <h3 class="text-lg font-medium text-n-slate-12">
-        {{ isConnected ? 'WhatsApp Web Bağlı' : 'WhatsApp Web Bağlantısı Gerekli' }}
+        {{
+          isConnected ? 'WhatsApp Web Bağlı' : 'WhatsApp Web Bağlantısı Gerekli'
+        }}
       </h3>
     </div>
 
     <!-- Connected State -->
-    <div v-if="isConnected" class="p-4 rounded-lg bg-n-teal-9/20 border border-n-teal-9">
+    <div
+      v-if="isConnected"
+      class="p-4 rounded-lg bg-n-teal-9/20 border border-n-teal-9"
+    >
       <p class="text-sm text-n-teal-11">
         WhatsApp Web bağlantınız aktif. Mesaj gönderip alabilirsiniz.
       </p>
@@ -183,12 +199,15 @@ onUnmounted(() => {
     <!-- Disconnected State -->
     <div v-else>
       <p class="mb-4 text-sm text-n-slate-11">
-        WhatsApp Web bağlantınız kopmuş. Yeniden bağlanmak için aşağıdaki butona tıklayın ve QR kodu telefonunuzla tarayın.
+        WhatsApp Web bağlantınız kopmuş. Yeniden bağlanmak için aşağıdaki butona
+        tıklayın ve QR kodu telefonunuzla tarayın.
       </p>
 
       <!-- QR Code Display -->
       <div v-if="showQrCode" class="mb-4 text-center">
-        <div class="inline-block p-4 bg-white rounded-lg border-2 border-n-slate-4">
+        <div
+          class="inline-block p-4 bg-white rounded-lg border-2 border-n-slate-4"
+        >
           <img
             :src="`data:image/png;base64,${qrCode}`"
             alt="QR Code"
@@ -205,7 +224,10 @@ onUnmounted(() => {
         v-else-if="isLoading || status === 'connecting'"
         class="mb-4 flex flex-col items-center justify-center py-8"
       >
-        <Icon icon="i-lucide-loader-2" class="w-8 h-8 text-n-blue-11 mb-3 animate-spin" />
+        <Icon
+          icon="i-lucide-loader-2"
+          class="w-8 h-8 text-n-blue-11 mb-3 animate-spin"
+        />
         <p class="text-sm text-n-slate-11">QR kodu oluşturuluyor...</p>
       </div>
 
@@ -220,4 +242,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-

@@ -12,13 +12,10 @@ import subscriptionsAPI from 'dashboard/api/subscriptions';
 import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 
+const emit = defineEmits(['showCreateAccountModal']);
 // Logo URLs
 const LOGO_LIGHT = 'https://aisaturn.co/images/aisaturnkoyu-aciktemaicin.png';
 const LOGO_DARK = 'https://aisaturn.co/images/logo_wihte-koyutemaicin.png';
-
-const emit = defineEmits([
-  'showCreateAccountModal',
-]);
 
 const { accountScopedRoute } = useAccount();
 const store = useStore();
@@ -34,7 +31,7 @@ const isDarkMode = ref(false);
 
 // Dark mode detection
 const checkDarkMode = () => {
-  isDarkMode.value = 
+  isDarkMode.value =
     document.documentElement.classList.contains('dark') ||
     document.body.classList.contains('dark');
 };
@@ -58,12 +55,24 @@ const teams = useMapGetter('teams/getMyTeams');
 
 // Availability options
 const availabilityStatuses = [
-  { value: 'online', label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.ONLINE', color: 'bg-n-teal-9' },
-  { value: 'busy', label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.BUSY', color: 'bg-n-ruby-9' },
-  { value: 'offline', label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.OFFLINE', color: 'bg-n-slate-9' },
+  {
+    value: 'online',
+    label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.ONLINE',
+    color: 'bg-n-teal-9',
+  },
+  {
+    value: 'busy',
+    label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.BUSY',
+    color: 'bg-n-ruby-9',
+  },
+  {
+    value: 'offline',
+    label: 'PROFILE_SETTINGS.FORM.AVAILABILITY.STATUS.OFFLINE',
+    color: 'bg-n-slate-9',
+  },
 ];
 
-const setAvailability = async (availability) => {
+const setAvailability = async availability => {
   await store.dispatch('updateAvailability', {
     availability,
     account_id: currentAccountId.value,
@@ -93,20 +102,20 @@ onMounted(() => {
   store.dispatch('teams/get');
   store.dispatch('attributes/get');
   fetchCurrentSubscription();
-  
+
   // Check dark mode initially
   checkDarkMode();
-  
+
   // Watch for dark mode changes
   darkModeObserver = new MutationObserver(() => {
     checkDarkMode();
   });
-  
+
   darkModeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class'],
   });
-  
+
   darkModeObserver.observe(document.body, {
     attributes: true,
     attributeFilter: ['class'],
@@ -123,7 +132,7 @@ const sortedInboxes = computed(() =>
   inboxes.value.slice().sort((a, b) => a.name.localeCompare(b.name))
 );
 
-const toggleDropdown = (name) => {
+const toggleDropdown = name => {
   activeDropdown.value = activeDropdown.value === name ? null : name;
   settingsOpen.value = false;
   profileOpen.value = false;
@@ -147,7 +156,7 @@ const toggleProfile = () => {
   settingsOpen.value = false;
 };
 
-const navigateTo = (routeObj) => {
+const navigateTo = routeObj => {
   router.push(routeObj);
   closeDropdowns();
 };
@@ -306,9 +315,13 @@ const settingsItems = computed(() => [
   },
 ]);
 
-const subscriptionPlanName = computed(() => currentSubscription.value?.plan?.name || 'Free');
+const subscriptionPlanName = computed(
+  () => currentSubscription.value?.plan?.name || 'Free'
+);
 
-const userName = computed(() => currentUser.value?.available_name || currentUser.value?.name || 'User');
+const userName = computed(
+  () => currentUser.value?.available_name || currentUser.value?.name || 'User'
+);
 const userEmail = computed(() => currentUser.value?.email || '');
 const userAvatar = computed(() => currentUser.value?.avatar_url);
 const isSuperAdmin = computed(() => currentUser.value?.type === 'SuperAdmin');
@@ -351,25 +364,17 @@ const logout = () => {
   >
     <!-- Left: Logo -->
     <div class="flex items-center gap-2">
-      <div 
+      <div
         class="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
         @click="goToDashboard"
       >
-        <img 
-          :src="currentLogo" 
-          alt="AISATURN" 
-          class="h-5 w-auto"
-        />
+        <img :src="currentLogo" alt="AISATURN" class="h-5 w-auto" />
       </div>
     </div>
 
     <!-- Center: Main Navigation -->
     <nav class="flex items-center gap-1">
-      <div
-        v-for="item in mainMenuItems"
-        :key="item.name"
-        class="relative"
-      >
+      <div v-for="item in mainMenuItems" :key="item.name" class="relative">
         <!-- Direct link (no children) -->
         <button
           v-if="!item.children?.length"
@@ -378,7 +383,7 @@ const logout = () => {
           @click="navigateTo(item.to)"
         >
           <SaturnIcon v-if="item.icon === 'saturn'" class="size-4" />
-          <span v-else :class="[item.icon, 'size-4']" />
+          <span v-else class="size-4" :class="[item.icon]" />
           <span>{{ item.label }}</span>
         </button>
         <!-- Dropdown menu -->
@@ -389,9 +394,12 @@ const logout = () => {
           @click="toggleDropdown(item.name)"
         >
           <SaturnIcon v-if="item.icon === 'saturn'" class="size-4" />
-          <span v-else :class="[item.icon, 'size-4']" />
+          <span v-else class="size-4" :class="[item.icon]" />
           <span>{{ item.label }}</span>
-          <span class="i-lucide-chevron-down size-3 transition-transform" :class="{ 'rotate-180': activeDropdown === item.name }" />
+          <span
+            class="i-lucide-chevron-down size-3 transition-transform"
+            :class="{ 'rotate-180': activeDropdown === item.name }"
+          />
         </button>
 
         <!-- Dropdown -->
@@ -411,7 +419,12 @@ const logout = () => {
               v-for="child in item.children"
               :key="child.name"
               class="w-full text-left px-4 py-2.5 text-sm hover:bg-n-alpha-2 transition-colors flex items-center gap-2"
-              :class="{ 'bg-n-alpha-1 text-n-blue-text': isActiveRoute(child.to?.name, child.activeOn) }"
+              :class="{
+                'bg-n-alpha-1 text-n-blue-text': isActiveRoute(
+                  child.to?.name,
+                  child.activeOn
+                ),
+              }"
               @click="navigateTo(child.to)"
             >
               {{ child.label }}
@@ -432,7 +445,10 @@ const logout = () => {
         >
           <span class="i-lucide-settings size-4" />
           <span>{{ t('SIDEBAR.SETTINGS') }}</span>
-          <span class="i-lucide-chevron-down size-3 transition-transform" :class="{ 'rotate-180': settingsOpen }" />
+          <span
+            class="i-lucide-chevron-down size-3 transition-transform"
+            :class="{ 'rotate-180': settingsOpen }"
+          />
         </button>
 
         <Transition
@@ -453,7 +469,7 @@ const logout = () => {
               class="w-full text-left px-4 py-2.5 text-sm hover:bg-n-alpha-2 transition-colors flex items-center gap-2"
               @click="navigateTo(item.to)"
             >
-              <span :class="[item.icon, 'size-4']" />
+              <span class="size-4" :class="[item.icon]" />
               {{ item.label }}
             </button>
           </div>
@@ -466,7 +482,9 @@ const logout = () => {
         @click="goToSubscriptionPage"
       >
         <span class="i-lucide-crown size-4 text-n-amber-9" />
-        <span class="text-[10px] text-n-slate-11 mt-0.5">{{ subscriptionPlanName }}</span>
+        <span class="text-[10px] text-n-slate-11 mt-0.5">{{
+          subscriptionPlanName
+        }}</span>
       </button>
 
       <!-- Profile Dropdown -->
@@ -484,7 +502,10 @@ const logout = () => {
             class="flex-shrink-0"
             rounded-full
           />
-          <span class="i-lucide-chevron-down size-3 transition-transform" :class="{ 'rotate-180': profileOpen }" />
+          <span
+            class="i-lucide-chevron-down size-3 transition-transform"
+            :class="{ 'rotate-180': profileOpen }"
+          />
         </button>
 
         <Transition
@@ -514,16 +535,22 @@ const logout = () => {
 
             <!-- Availability Status -->
             <div class="px-4 py-2 border-b border-n-weak">
-              <p class="text-xs text-n-slate-11 mb-2">{{ t('PROFILE_SETTINGS.FORM.AVAILABILITY.LABEL') }}</p>
+              <p class="text-xs text-n-slate-11 mb-2">
+                {{ t('PROFILE_SETTINGS.FORM.AVAILABILITY.LABEL') }}
+              </p>
               <div class="flex gap-1">
                 <button
                   v-for="status in availabilityStatuses"
                   :key="status.value"
                   class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  :class="currentUserAvailability === status.value ? 'bg-n-alpha-3' : 'hover:bg-n-alpha-1'"
+                  :class="
+                    currentUserAvailability === status.value
+                      ? 'bg-n-alpha-3'
+                      : 'hover:bg-n-alpha-1'
+                  "
                   @click="setAvailability(status.value)"
                 >
-                  <span :class="[status.color, 'size-2 rounded-full']" />
+                  <span class="size-2 rounded-full" :class="[status.color]" />
                   {{ t(status.label) }}
                 </button>
               </div>
@@ -567,4 +594,3 @@ const logout = () => {
     </div>
   </header>
 </template>
-

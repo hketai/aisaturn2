@@ -136,7 +136,10 @@ const handleWhatsappWebReconnect = async inbox => {
   try {
     // Stop existing client first
     try {
-      await whatsappWebChannelAPI.stop({ accountId, channelId: String(channelId) });
+      await whatsappWebChannelAPI.stop({
+        accountId,
+        channelId: String(channelId),
+      });
     } catch (e) {
       // Ignore stop errors
     }
@@ -144,7 +147,10 @@ const handleWhatsappWebReconnect = async inbox => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Start client
-    await whatsappWebChannelAPI.start({ accountId, channelId: String(channelId) });
+    await whatsappWebChannelAPI.start({
+      accountId,
+      channelId: String(channelId),
+    });
 
     // Start polling for QR code
     startQrPolling(accountId, channelId);
@@ -190,7 +196,7 @@ const startQrPolling = async (accountId, channelId) => {
         qrPollingInterval.value = null;
         qrStatus.value = 'connected';
         useAlert('WhatsApp Web bağlantısı başarılı!');
-        
+
         // Refresh inboxes and close modal after delay
         await store.dispatch('inboxes/get');
         setTimeout(() => {
@@ -229,17 +235,23 @@ const closeQrModal = () => {
 
 const regenerateQr = async () => {
   if (!selectedWhatsappInbox.value) return;
-  
+
   qrCode.value = null;
   qrLoading.value = true;
-  
+
   const accountId = route.params.accountId;
   const channelId = selectedWhatsappInbox.value.channel_id;
 
   try {
-    await whatsappWebChannelAPI.stop({ accountId, channelId: String(channelId) });
+    await whatsappWebChannelAPI.stop({
+      accountId,
+      channelId: String(channelId),
+    });
     await new Promise(resolve => setTimeout(resolve, 1000));
-    await whatsappWebChannelAPI.start({ accountId, channelId: String(channelId) });
+    await whatsappWebChannelAPI.start({
+      accountId,
+      channelId: String(channelId),
+    });
     startQrPolling(accountId, channelId);
   } catch (error) {
     useAlert(error?.response?.data?.error || 'QR yenileme hatası');
@@ -398,14 +410,12 @@ onUnmounted(() => {
     />
 
     <!-- WhatsApp Web QR Modal -->
-    <Modal
-      v-model:show="showQrModal"
-      :on-close="closeQrModal"
-      size="small"
-    >
+    <Modal v-model:show="showQrModal" :on-close="closeQrModal" size="small">
       <div class="p-6">
         <div class="text-center mb-6">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-n-teal-9/20 mb-4">
+          <div
+            class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-n-teal-9/20 mb-4"
+          >
             <Icon icon="i-ri-whatsapp-fill" class="w-6 h-6 text-n-teal-11" />
           </div>
           <h3 class="text-lg font-semibold text-n-slate-12">
@@ -418,7 +428,10 @@ onUnmounted(() => {
 
         <!-- Connected State -->
         <div v-if="qrStatus === 'connected'" class="text-center py-8">
-          <Icon icon="i-lucide-check-circle" class="w-16 h-16 text-n-teal-11 mx-auto mb-4" />
+          <Icon
+            icon="i-lucide-check-circle"
+            class="w-16 h-16 text-n-teal-11 mx-auto mb-4"
+          />
           <p class="text-n-teal-11 font-medium">Bağlantı Başarılı!</p>
         </div>
 
@@ -426,13 +439,18 @@ onUnmounted(() => {
         <div v-else class="text-center">
           <!-- Loading -->
           <div v-if="qrLoading && !qrCode" class="py-12">
-            <Icon icon="i-lucide-loader-2" class="w-10 h-10 text-n-blue-11 mx-auto mb-4 animate-spin" />
+            <Icon
+              icon="i-lucide-loader-2"
+              class="w-10 h-10 text-n-blue-11 mx-auto mb-4 animate-spin"
+            />
             <p class="text-sm text-n-slate-11">QR kodu oluşturuluyor...</p>
           </div>
 
           <!-- QR Code -->
           <div v-else-if="qrCode" class="space-y-4">
-            <div class="inline-block p-4 bg-white rounded-xl border-2 border-n-slate-4">
+            <div
+              class="inline-block p-4 bg-white rounded-xl border-2 border-n-slate-4"
+            >
               <img
                 :src="`data:image/png;base64,${qrCode}`"
                 alt="WhatsApp QR Code"
@@ -463,11 +481,7 @@ onUnmounted(() => {
 
         <!-- Close Button -->
         <div class="mt-6 pt-4 border-t border-n-weak text-center">
-          <Button
-            variant="outline"
-            label="Kapat"
-            @click="closeQrModal"
-          />
+          <Button variant="outline" label="Kapat" @click="closeQrModal" />
         </div>
       </div>
     </Modal>

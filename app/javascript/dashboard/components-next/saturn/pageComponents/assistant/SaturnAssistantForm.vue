@@ -57,7 +57,9 @@ const validator = useVuelidate(rules, formData);
 const isSubmitting = computed(() => props.isSubmitting);
 
 const sortedInboxes = computed(() => {
-  return inboxes.value?.slice().sort((a, b) => a.name.localeCompare(b.name)) || [];
+  return (
+    inboxes.value?.slice().sort((a, b) => a.name.localeCompare(b.name)) || []
+  );
 });
 
 const getFieldError = (field, errorKey) => {
@@ -73,7 +75,7 @@ const fieldErrors = computed(() => ({
 
 const cancelForm = () => emit('cancel');
 
-const toggleInbox = (inboxId) => {
+const toggleInbox = inboxId => {
   const index = formData.selectedInboxIds.indexOf(inboxId);
   if (index === -1) {
     formData.selectedInboxIds.push(inboxId);
@@ -82,7 +84,7 @@ const toggleInbox = (inboxId) => {
   }
 };
 
-const isInboxSelected = (inboxId) => {
+const isInboxSelected = inboxId => {
   return formData.selectedInboxIds.includes(inboxId);
 };
 
@@ -153,7 +155,11 @@ watch(
             class="h-10 px-3 rounded-lg border border-n-weak bg-n-solid-2 text-sm text-n-slate-12 focus:outline-none focus:ring-2 focus:ring-n-blue-7 focus:border-transparent transition-all"
           >
             <option value="">Seçiniz</option>
-            <option v-for="sector in SATURN_SECTORS" :key="sector.value" :value="sector.value">
+            <option
+              v-for="sector in SATURN_SECTORS"
+              :key="sector.value"
+              :value="sector.value"
+            >
               {{ sector.label }}
             </option>
           </select>
@@ -196,7 +202,10 @@ watch(
       <div v-if="sortedInboxes.length > 0" class="flex flex-col gap-2">
         <label class="text-sm font-medium text-n-slate-12">
           Bağlı Kanallar
-          <span v-if="formData.selectedInboxIds.length > 0" class="text-n-blue-11 ml-1">
+          <span
+            v-if="formData.selectedInboxIds.length > 0"
+            class="text-n-blue-11 ml-1"
+          >
             ({{ formData.selectedInboxIds.length }})
           </span>
         </label>
@@ -206,13 +215,17 @@ watch(
             :key="inbox.id"
             type="button"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-            :class="isInboxSelected(inbox.id) 
-              ? 'bg-n-blue-9 text-white' 
-              : 'bg-n-slate-3 text-n-slate-11 hover:bg-n-slate-4'"
+            :class="
+              isInboxSelected(inbox.id)
+                ? 'bg-n-blue-9 text-white'
+                : 'bg-n-slate-3 text-n-slate-11 hover:bg-n-slate-4'
+            "
             @click="toggleInbox(inbox.id)"
           >
-            <i 
-              :class="isInboxSelected(inbox.id) ? 'i-lucide-check' : 'i-lucide-plus'" 
+            <i
+              :class="
+                isInboxSelected(inbox.id) ? 'i-lucide-check' : 'i-lucide-plus'
+              "
               class="size-3"
             />
             {{ inbox.name }}
@@ -222,7 +235,9 @@ watch(
     </div>
 
     <!-- Footer Actions -->
-    <div class="flex items-center justify-end gap-3 pt-4 border-t border-n-weak mt-auto">
+    <div
+      class="flex items-center justify-end gap-3 pt-4 border-t border-n-weak mt-auto"
+    >
       <Button
         type="button"
         variant="faded"

@@ -48,16 +48,16 @@ const handleDelete = () => {
 };
 
 const handleManageInboxes = () => {
-  emit('manageInboxes', { 
-    assistantId: props.assistantId, 
-    assistantName: props.assistantName 
+  emit('manageInboxes', {
+    assistantId: props.assistantId,
+    assistantName: props.assistantName,
   });
 };
 
 const handleManageIntegrations = () => {
-  emit('manageIntegrations', { 
-    assistantId: props.assistantId, 
-    assistantName: props.assistantName 
+  emit('manageIntegrations', {
+    assistantId: props.assistantId,
+    assistantName: props.assistantName,
   });
 };
 
@@ -116,7 +116,10 @@ const handleHandoffSettings = () => {
     <!-- Channel Status -->
     <div class="mt-3">
       <!-- Connected Channels -->
-      <div v-if="props.connectedInboxes.length > 0" class="flex flex-wrap gap-1.5">
+      <div
+        v-if="props.connectedInboxes.length > 0"
+        class="flex flex-wrap gap-1.5"
+      >
         <span
           v-for="inbox in props.connectedInboxes"
           :key="inbox.id"
@@ -135,7 +138,9 @@ const handleHandoffSettings = () => {
         class="flex flex-col gap-2 p-3 rounded-lg bg-n-amber-3 border border-n-amber-6"
       >
         <div class="flex items-center gap-2">
-          <i class="i-lucide-alert-triangle size-4 text-n-amber-11 flex-shrink-0" />
+          <i
+            class="i-lucide-alert-triangle size-4 text-n-amber-11 flex-shrink-0"
+          />
           <p class="text-xs font-medium text-n-amber-11">
             {{ $t('SATURN.ASSISTANTS.NO_CHANNEL_WARNING') }}
           </p>
@@ -154,7 +159,10 @@ const handleHandoffSettings = () => {
     <!-- Integrations Status -->
     <div class="mt-3">
       <!-- Connected Integrations -->
-      <div v-if="props.connectedIntegrations.length > 0" class="flex flex-wrap gap-1.5">
+      <div
+        v-if="props.connectedIntegrations.length > 0"
+        class="flex flex-wrap gap-1.5"
+      >
         <span
           v-for="integration in props.connectedIntegrations"
           :key="integration.id"

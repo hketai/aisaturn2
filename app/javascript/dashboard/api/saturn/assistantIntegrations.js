@@ -12,10 +12,13 @@ class SaturnAssistantIntegrationsAPI extends ApiClient {
   }
 
   toggleIntegration(assistantId, integrationType, enabled) {
-    return axios.post(`${this.url}/${assistantId}/assistant_integrations/toggle`, {
-      integration_type: integrationType,
-      enabled,
-    });
+    return axios.post(
+      `${this.url}/${assistantId}/assistant_integrations/toggle`,
+      {
+        integration_type: integrationType,
+        enabled,
+      }
+    );
   }
 
   enableIntegration(assistantId, integrationType) {
@@ -34,4 +37,3 @@ class SaturnAssistantIntegrationsAPI extends ApiClient {
 }
 
 export default new SaturnAssistantIntegrationsAPI();
-

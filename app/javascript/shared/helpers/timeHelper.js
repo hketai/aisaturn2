@@ -77,7 +77,8 @@ export const shortTimestamp = (time, withAgo = false) => {
   // The function also takes an optional boolean parameter withAgo
   // which will add the word "ago"/"önce" to the end of the time string
 
-  const isTurkish = time.includes('önce') || time.includes('dakika') || time.includes('saat');
+  const isTurkish =
+    time.includes('önce') || time.includes('dakika') || time.includes('saat');
   const suffix = withAgo ? (isTurkish ? ' önce' : ' ago') : '';
 
   // English mappings

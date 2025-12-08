@@ -49,7 +49,7 @@ const fetchIntegrations = async () => {
     // Check if Shopify is connected at account level
     let shopifyConnected = false;
     let shopifyReferenceId = null;
-    
+
     try {
       const shopifyResponse = await shopifyAPI.getHook();
       const shopifyHook = shopifyResponse.data?.hook || shopifyResponse.hook;
@@ -61,19 +61,23 @@ const fetchIntegrations = async () => {
 
     // Fetch assistant's integration settings
     try {
-      const assistantResponse = await assistantIntegrationsAPI.getIntegrations(props.assistantId);
-      assistantEnabledIntegrations.value = assistantResponse.data?.enabled_integrations || [];
+      const assistantResponse = await assistantIntegrationsAPI.getIntegrations(
+        props.assistantId
+      );
+      assistantEnabledIntegrations.value =
+        assistantResponse.data?.enabled_integrations || [];
     } catch {
       assistantEnabledIntegrations.value = [];
     }
-    
+
     integrations.value = availableIntegrations.map(integration => {
       if (integration.id === 'shopify') {
         return {
           ...integration,
           accountConnected: shopifyConnected,
           referenceId: shopifyReferenceId,
-          assistantEnabled: assistantEnabledIntegrations.value.includes('shopify'),
+          assistantEnabled:
+            assistantEnabledIntegrations.value.includes('shopify'),
         };
       }
       return integration;
@@ -92,9 +96,12 @@ const handleConnectIntegration = integration => {
   }
 };
 
-const handleToggleIntegration = async (integration) => {
+const handleToggleIntegration = async integration => {
   if (!integration.accountConnected) {
-    useAlert('Önce hesap düzeyinde entegrasyonu bağlamanız gerekiyor.', 'warning');
+    useAlert(
+      'Önce hesap düzeyinde entegrasyonu bağlamanız gerekiyor.',
+      'warning'
+    );
     return;
   }
 
@@ -106,20 +113,20 @@ const handleToggleIntegration = async (integration) => {
       integration.id,
       newEnabled
     );
-    
+
     // Update local state
     const idx = integrations.value.findIndex(i => i.id === integration.id);
     if (idx !== -1) {
       integrations.value[idx].assistantEnabled = newEnabled;
     }
-    
+
     useAlert(
-      newEnabled 
+      newEnabled
         ? `${integration.name} bu asistan için aktif edildi.`
         : `${integration.name} bu asistan için devre dışı bırakıldı.`,
       'success'
     );
-    
+
     emit('updated');
   } catch (error) {
     useAlert('Entegrasyon durumu güncellenirken bir hata oluştu.', 'error');
@@ -169,16 +176,20 @@ defineExpose({ dialogRef });
           class="flex items-center gap-4 p-4 rounded-lg border transition-all"
           :class="{
             'bg-n-solid-2 border-n-weak': !integration.accountConnected,
-            'bg-n-teal-2 border-n-teal-6': integration.accountConnected && integration.assistantEnabled,
-            'bg-n-slate-2 border-n-slate-5': integration.accountConnected && !integration.assistantEnabled,
+            'bg-n-teal-2 border-n-teal-6':
+              integration.accountConnected && integration.assistantEnabled,
+            'bg-n-slate-2 border-n-slate-5':
+              integration.accountConnected && !integration.assistantEnabled,
           }"
         >
           <div
             class="size-12 flex items-center justify-center rounded-lg"
             :class="{
               'bg-n-slate-3': !integration.accountConnected,
-              'bg-n-teal-3': integration.accountConnected && integration.assistantEnabled,
-              'bg-n-slate-4': integration.accountConnected && !integration.assistantEnabled,
+              'bg-n-teal-3':
+                integration.accountConnected && integration.assistantEnabled,
+              'bg-n-slate-4':
+                integration.accountConnected && !integration.assistantEnabled,
             }"
           >
             <Icon :icon="integration.icon" class="size-8" />
@@ -206,7 +217,7 @@ defineExpose({ dialogRef });
               Hesap düzeyinde bağlı değil
             </p>
           </div>
-          
+
           <!-- Connect Button (if not connected at account level) -->
           <Button
             v-if="!integration.accountConnected"
@@ -215,10 +226,10 @@ defineExpose({ dialogRef });
           >
             Bağlan
           </Button>
-          
+
           <!-- Toggle Switch (if connected at account level) -->
           <div v-else class="flex items-center gap-2">
-            <span 
+            <span
               class="text-xs font-medium"
               :class="{
                 'text-n-teal-11': integration.assistantEnabled,
@@ -236,11 +247,14 @@ defineExpose({ dialogRef });
         </div>
 
         <!-- Info Message -->
-        <div class="flex items-start gap-2 p-3 rounded-lg bg-n-blue-2 border border-n-blue-6 mt-2">
+        <div
+          class="flex items-start gap-2 p-3 rounded-lg bg-n-blue-2 border border-n-blue-6 mt-2"
+        >
           <i class="i-lucide-info size-4 text-n-blue-11 flex-shrink-0 mt-0.5" />
           <p class="text-xs text-n-blue-11">
-            Entegrasyonlar hesap düzeyinde bağlanır, ancak her asistan için ayrı ayrı aktif/pasif yapılabilir.
-            Örneğin, "Satış Asistanı" için Shopify açık, "Destek Asistanı" için kapalı olabilir.
+            Entegrasyonlar hesap düzeyinde bağlanır, ancak her asistan için ayrı
+            ayrı aktif/pasif yapılabilir. Örneğin, "Satış Asistanı" için Shopify
+            açık, "Destek Asistanı" için kapalı olabilir.
           </p>
         </div>
       </div>

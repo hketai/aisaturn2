@@ -23,6 +23,9 @@ class Subscriptions::CreateSubscriptionService
 
   def validate_plan!
     raise ArgumentError, 'Subscription plan is required' if subscription_plan.blank?
+    # Super admin can assign hidden plans, skip is_active check if bypass_active_check is true
+    return if options&.dig(:bypass_active_check)
+
     raise ArgumentError, 'Subscription plan is not active' unless subscription_plan.is_active?
   end
 

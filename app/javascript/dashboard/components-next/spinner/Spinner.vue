@@ -8,7 +8,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="aisa-spinner" :style="{ width: `${size}px`, height: `${size}px` }">
+  <div
+    class="aisa-spinner"
+    :style="{ width: `${size}px`, height: `${size}px` }"
+  >
     <div class="aisa-spinner-circle" />
   </div>
 </template>
@@ -25,7 +28,7 @@ defineProps({
   width: 60%;
   height: 60%;
   border-radius: 50%;
-  background-color: #2781F6;
+  background-color: #2781f6;
   animation: aisa-pulse 1.4s ease-in-out infinite;
 }
 

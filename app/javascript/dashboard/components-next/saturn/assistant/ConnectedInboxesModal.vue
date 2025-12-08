@@ -9,6 +9,19 @@ import saturnAssistantAPI from 'dashboard/api/saturn/assistant';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
+const props = defineProps({
+  assistantId: {
+    type: Number,
+    required: true,
+  },
+  assistantName: {
+    type: String,
+    default: '',
+  },
+});
+
+const emit = defineEmits(['close', 'updated']);
+
 // Hardcoded translations
 const translations = {
   TITLE: 'Kanal Yönetimi',
@@ -26,19 +39,6 @@ const translations = {
   SAVE: 'Kaydet',
 };
 
-const props = defineProps({
-  assistantId: {
-    type: Number,
-    required: true,
-  },
-  assistantName: {
-    type: String,
-    default: '',
-  },
-});
-
-const emit = defineEmits(['close', 'updated']);
-
 const store = useStore();
 
 const dialogRef = ref(null);
@@ -55,7 +55,7 @@ const fetchAllAssistants = async () => {
   try {
     const response = await saturnAssistantAPI.get();
     const assistants = Array.isArray(response.data) ? response.data : [];
-    
+
     // Build map of inbox -> assistant name (excluding current assistant)
     const map = {};
     assistants.forEach(assistant => {
@@ -72,12 +72,12 @@ const fetchAllAssistants = async () => {
 };
 
 // Check if inbox is used by another assistant
-const isUsedByOtherAssistant = (inboxId) => {
+const isUsedByOtherAssistant = inboxId => {
   return !!inboxToAssistantMap.value[inboxId];
 };
 
 // Get the assistant name that's using the inbox
-const getAssistantUsingInbox = (inboxId) => {
+const getAssistantUsingInbox = inboxId => {
   return inboxToAssistantMap.value[inboxId] || '';
 };
 
@@ -86,7 +86,7 @@ const fetchConnectedInboxes = async () => {
   isLoading.value = true;
   try {
     await fetchAllAssistants();
-    
+
     const response = await saturnInboxesAPI.get({
       assistantId: props.assistantId,
     });
@@ -103,21 +103,23 @@ const fetchConnectedInboxes = async () => {
 
 // Sorted inbox list
 const sortedInboxes = computed(() => {
-  return allInboxes.value?.slice().sort((a, b) => a.name.localeCompare(b.name)) || [];
+  return (
+    allInboxes.value?.slice().sort((a, b) => a.name.localeCompare(b.name)) || []
+  );
 });
 
 // Check if an inbox is selected
-const isSelected = (inboxId) => {
+const isSelected = inboxId => {
   return selectedInboxIds.value.includes(inboxId);
 };
 
 // Toggle inbox selection
-const toggleInbox = (inboxId) => {
+const toggleInbox = inboxId => {
   // Don't allow selecting inboxes used by other assistants
   if (isUsedByOtherAssistant(inboxId)) {
     return;
   }
-  
+
   const index = selectedInboxIds.value.indexOf(inboxId);
   if (index === -1) {
     selectedInboxIds.value.push(inboxId);
@@ -146,8 +148,12 @@ const handleSave = async () => {
   isSaving.value = true;
   try {
     // Find inboxes to add and remove
-    const toAdd = selectedInboxIds.value.filter(id => !connectedInboxIds.value.includes(id));
-    const toRemove = connectedInboxIds.value.filter(id => !selectedInboxIds.value.includes(id));
+    const toAdd = selectedInboxIds.value.filter(
+      id => !connectedInboxIds.value.includes(id)
+    );
+    const toRemove = connectedInboxIds.value.filter(
+      id => !selectedInboxIds.value.includes(id)
+    );
 
     // Add new connections
     for (const inboxId of toAdd) {
@@ -222,17 +228,17 @@ defineExpose({ dialogRef });
         <p class="text-xs text-n-slate-11 mb-2">
           {{ translations.SELECT_HINT }}
         </p>
-        
+
         <div
           v-for="inbox in sortedInboxes"
           :key="inbox.id"
           class="flex items-center gap-3 p-3 rounded-lg border transition-all"
           :class="[
-            isUsedByOtherAssistant(inbox.id) 
-              ? 'bg-n-slate-3 border-n-slate-5 cursor-not-allowed opacity-60' 
-              : isSelected(inbox.id) 
-                ? 'bg-n-blue-3 border-n-blue-7 cursor-pointer' 
-                : 'bg-n-solid-2 border-n-weak hover:border-n-slate-7 cursor-pointer'
+            isUsedByOtherAssistant(inbox.id)
+              ? 'bg-n-slate-3 border-n-slate-5 cursor-not-allowed opacity-60'
+              : isSelected(inbox.id)
+                ? 'bg-n-blue-3 border-n-blue-7 cursor-pointer'
+                : 'bg-n-solid-2 border-n-weak hover:border-n-slate-7 cursor-pointer',
           ]"
           @click="toggleInbox(inbox.id)"
         >
@@ -243,7 +249,7 @@ defineExpose({ dialogRef });
                 ? 'bg-n-slate-4 border-n-slate-6'
                 : isSelected(inbox.id)
                   ? 'bg-n-blue-9 border-n-blue-9'
-                  : 'bg-n-solid-1 border-n-slate-7'
+                  : 'bg-n-solid-1 border-n-slate-7',
             ]"
           >
             <i
@@ -256,9 +262,13 @@ defineExpose({ dialogRef });
             />
           </div>
           <div class="flex-1 min-w-0">
-            <p 
+            <p
               class="text-sm font-medium truncate"
-              :class="isUsedByOtherAssistant(inbox.id) ? 'text-n-slate-10' : 'text-n-slate-12'"
+              :class="
+                isUsedByOtherAssistant(inbox.id)
+                  ? 'text-n-slate-10'
+                  : 'text-n-slate-12'
+              "
             >
               {{ inbox.name }}
             </p>
@@ -292,7 +302,10 @@ defineExpose({ dialogRef });
         <span class="text-sm text-n-slate-11">
           {{ selectedInboxIds.length }} {{ translations.SELECTED }}
         </span>
-        <div v-if="hasChanges" class="flex items-center gap-1 text-xs text-n-amber-11">
+        <div
+          v-if="hasChanges"
+          class="flex items-center gap-1 text-xs text-n-amber-11"
+        >
           <i class="i-lucide-info size-3.5" />
           {{ translations.UNSAVED_CHANGES }}
         </div>
@@ -317,4 +330,3 @@ defineExpose({ dialogRef });
     </template>
   </Dialog>
 </template>
-
