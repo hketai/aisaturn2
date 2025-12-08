@@ -241,17 +241,19 @@ class Saturn::DelayedResponseJob < ApplicationJob
     # Ürün kartları gönderilecekse (WhatsApp Web, Facebook, Instagram)
     if has_product_cards
       Rails.logger.info "[SATURN DELAYED] Products found (#{products.size}) - sending product cards"
-      
-      # Önce kısa intro mesajı gönder
-      intro_message = product_intro_message(products.size)
-      create_outgoing_message(message, { content: intro_message }, assistant)
-      
-      # Sonra ürün kartlarını gönder
+
+      # 1. Önce ürün kartlarını gönder
       send_product_cards_if_available(products)
-      
+
+      # 2. Sonra LLM'in oluşturduğu açıklamayı gönder
+      # LLM zaten ürünleri değerlendirip açıklama yapıyor (hangisi tam eşleşme, hangisi öneri vs.)
+      if response.present?
+        create_outgoing_message(message, { content: response }, assistant)
+      end
+
       # Conversation'ı insan yanıtı gibi güncelle
       mark_conversation_as_responded
-      
+
       Rails.logger.info "[SATURN DELAYED] Product cards sent for conversation #{@conversation.id}"
       return
     end
