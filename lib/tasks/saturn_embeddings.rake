@@ -222,6 +222,76 @@ namespace :saturn do
     puts 'Embedding cache cleared successfully.'
   end
 
+  # ===== PRODUCT EMBEDDING TASKS =====
+
+  desc 'Backfill embeddings for Shopify products'
+  task backfill_product_embeddings: :environment do
+    puts 'Starting product embedding backfill...'
+
+    total = Shopify::Product.where(embedding: nil).count
+    puts "Found #{total} products without embeddings"
+
+    if total.zero?
+      puts 'No products to process. Done!'
+      exit
+    end
+
+    processed = 0
+    Shopify::Product.where(embedding: nil).find_each do |product|
+      Shopify::UpdateProductEmbeddingJob.perform_later(product.id)
+      processed += 1
+      print "\rQueued #{processed}/#{total} products..."
+    rescue StandardError => e
+      puts "\nError queueing product ##{product.id}: #{e.message}"
+    end
+
+    puts "\n\nBackfill complete! Queued: #{processed}"
+    puts 'Jobs running in background via Sidekiq.'
+  end
+
+  desc 'Check product embedding status'
+  task product_embedding_status: :environment do
+    total = Shopify::Product.count
+    with_embedding = Shopify::Product.where.not(embedding: nil).count
+    without_embedding = Shopify::Product.where(embedding: nil).count
+
+    puts 'Product Embedding Status:'
+    puts "  Total products: #{total}"
+    puts "  With embedding: #{with_embedding} (#{total.positive? ? (with_embedding.to_f / total * 100).round(1) : 0}%)"
+    puts "  Without embedding: #{without_embedding}"
+  end
+
+  desc 'Regenerate all product embeddings (includes variant info)'
+  task regenerate_product_embeddings: :environment do
+    puts 'WARNING: This will regenerate ALL product embeddings!'
+    puts 'This includes variant titles (colors, sizes, etc.) for better search.'
+    puts 'This may incur OpenAI API costs.'
+    print 'Continue? (yes/no): '
+
+    confirm = ENV['FORCE'] == 'true' ? 'yes' : $stdin.gets&.chomp
+
+    unless confirm == 'yes'
+      puts 'Aborted.'
+      exit
+    end
+
+    total = Shopify::Product.count
+    puts "Regenerating embeddings for #{total} products..."
+
+    processed = 0
+    Shopify::Product.find_each do |product|
+      # Embedding'i sil ve yeniden oluştur
+      product.update_column(:embedding, nil)
+      product.update_embedding!
+      processed += 1
+      print "\rProcessed #{processed}/#{total}..."
+    rescue StandardError => e
+      puts "\nError processing product ##{product.id}: #{e.message}"
+    end
+
+    puts "\n\nAll product embeddings regenerated!"
+  end
+
   # ===== COMBINED STATUS =====
 
   desc 'Show overall Saturn embedding status'
@@ -251,6 +321,13 @@ namespace :saturn do
                                           .where(saturn_document_chunks: { id: nil })
                                           .count
     puts "   Documents without chunks: #{docs_without_chunks}"
+
+    # Product Status
+    puts "\n🛍️ Product Embeddings:"
+    total_products = Shopify::Product.count
+    products_with_embedding = Shopify::Product.where.not(embedding: nil).count
+    puts "   Total products: #{total_products}"
+    puts "   With embedding: #{products_with_embedding} (#{total_products.positive? ? (products_with_embedding.to_f / total_products * 100).round(1) : 0}%)"
 
     # Cache Status
     puts "\n💾 Embedding Cache:"

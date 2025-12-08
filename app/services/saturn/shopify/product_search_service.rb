@@ -140,16 +140,16 @@ class Saturn::Shopify::ProductSearchService
     reranked
   end
 
-  # Keyword arama (rerank için)
+  # Keyword arama (rerank için) - title, description ve varyantlarda arar
   def keyword_search_for_rerank(query, limit)
     search_terms = extract_search_terms(query)
     return [] if search_terms.empty?
 
-    # Her keyword için ILIKE ile ara
+    # Her keyword için ILIKE ile ara (title, description VE variants içinde)
     conditions = search_terms.map do |term|
       sanitized = ActiveRecord::Base.sanitize_sql_like(term)
-      "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%')"
-    end.join(' AND ') # AND ile tüm keyword'ler eşleşmeli
+      "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%' OR LOWER(variants::text) LIKE '%#{sanitized}%')"
+    end.join(' AND ')
 
     results = Shopify::Product
               .for_account(@account.id)
@@ -161,7 +161,7 @@ class Saturn::Shopify::ProductSearchService
     if results.empty?
       or_conditions = search_terms.map do |term|
         sanitized = ActiveRecord::Base.sanitize_sql_like(term)
-        "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%')"
+        "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%' OR LOWER(variants::text) LIKE '%#{sanitized}%')"
       end.join(' OR ')
 
       results = Shopify::Product
@@ -171,6 +171,7 @@ class Saturn::Shopify::ProductSearchService
                 .to_a
     end
 
+    Rails.logger.info "[SHOPIFY RERANK] Keyword search found #{results.size} products (title, description, variants)"
     results
   rescue StandardError => e
     Rails.logger.error "[SHOPIFY RERANK] Keyword search failed: #{e.message}"

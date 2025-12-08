@@ -112,29 +112,42 @@ module Shopify
         Rails.logger.warn("[EMBEDDING] Product #{id} has no title or description, skipping")
         return false
       end
-      
-      text_content = [title, description].compact.join(' ')
-      
+
+      # Title, description ve varyant bilgilerini birleştir
+      text_parts = [title, description, variant_titles_text].compact.reject(&:blank?)
+      text_content = text_parts.join(' ')
+
       # Text çok kısaysa skip
       if text_content.length < 3
         Rails.logger.warn("[EMBEDDING] Product #{id} text too short, skipping")
         return false
       end
-      
+
       embedding_service = Saturn::Llm::EmbeddingService.new
       embedding_vector = embedding_service.create_vector_embedding(text_content)
-      
+
       if embedding_vector.blank?
         Rails.logger.error("[EMBEDDING] Product #{id}: Empty embedding returned")
         raise "Empty embedding returned for product #{id}"
       end
-      
+
       update_column(:embedding, embedding_vector)
       true
     rescue StandardError => e
       Rails.logger.error("[EMBEDDING] Failed to update embedding for product #{id}: #{e.class} - #{e.message}")
       # Hatayı yukarı fırlat ki job retry yapabilsin
       raise
+    end
+
+    # Varyant title'larını text olarak döndür (renk, beden vb. bilgileri içerir)
+    def variant_titles_text
+      return nil if variants.blank?
+
+      variant_list = variants.is_a?(String) ? JSON.parse(variants) : variants
+      titles = variant_list.map { |v| v['title'] }.compact.uniq
+      titles.join(' ')
+    rescue StandardError
+      nil
     end
     
     def mark_queried!
@@ -144,7 +157,7 @@ module Shopify
     private
 
     def should_update_embedding?
-      saved_change_to_title? || saved_change_to_description? || saved_change_to_product_type?
+      saved_change_to_title? || saved_change_to_description? || saved_change_to_product_type? || saved_change_to_variants?
     end
 
     def update_embedding_async
