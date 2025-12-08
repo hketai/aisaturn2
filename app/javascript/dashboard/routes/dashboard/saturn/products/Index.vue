@@ -6,7 +6,6 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import SaturnPageLayout from 'dashboard/components-next/saturn/SaturnPageLayout.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import Textarea from 'dashboard/components-next/textarea/Textarea.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import saturnProductAPI from 'dashboard/api/saturn/product';
 
@@ -379,12 +378,17 @@ onMounted(() => {
           :placeholder="$t('SATURN.PRODUCTS.FORM.TITLE_PLACEHOLDER')"
           required
         />
-        <Textarea
-          v-model="productForm.description"
-          :label="$t('SATURN.PRODUCTS.FORM.DESCRIPTION')"
-          :placeholder="$t('SATURN.PRODUCTS.FORM.DESCRIPTION_PLACEHOLDER')"
-          rows="3"
-        />
+        <div>
+          <label class="block text-sm font-medium text-n-slate-11 mb-1">
+            {{ $t('SATURN.PRODUCTS.FORM.DESCRIPTION') }}
+          </label>
+          <textarea
+            v-model="productForm.description"
+            :placeholder="$t('SATURN.PRODUCTS.FORM.DESCRIPTION_PLACEHOLDER')"
+            rows="3"
+            class="w-full px-3 py-2 border border-n-slate-6 rounded-lg bg-n-solid-2 text-n-slate-12 focus:outline-none focus:ring-2 focus:ring-n-brand resize-none"
+          />
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <Input
             v-model="productForm.min_price"
@@ -439,12 +443,17 @@ onMounted(() => {
           :placeholder="$t('SATURN.PRODUCTS.FORM.TITLE_PLACEHOLDER')"
           required
         />
-        <Textarea
-          v-model="productForm.description"
-          :label="$t('SATURN.PRODUCTS.FORM.DESCRIPTION')"
-          :placeholder="$t('SATURN.PRODUCTS.FORM.DESCRIPTION_PLACEHOLDER')"
-          rows="3"
-        />
+        <div>
+          <label class="block text-sm font-medium text-n-slate-11 mb-1">
+            {{ $t('SATURN.PRODUCTS.FORM.DESCRIPTION') }}
+          </label>
+          <textarea
+            v-model="productForm.description"
+            :placeholder="$t('SATURN.PRODUCTS.FORM.DESCRIPTION_PLACEHOLDER')"
+            rows="3"
+            class="w-full px-3 py-2 border border-n-slate-6 rounded-lg bg-n-solid-2 text-n-slate-12 focus:outline-none focus:ring-2 focus:ring-n-brand resize-none"
+          />
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <Input
             v-model="productForm.min_price"
