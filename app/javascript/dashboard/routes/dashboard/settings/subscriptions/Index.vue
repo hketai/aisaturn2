@@ -373,7 +373,7 @@ onMounted(async () => {
             </div>
             <div
               v-if="plan.isHidden"
-              class="absolute top-4 right-4 px-3 py-1 bg-n-amber-9 text-n-amber-1 text-xs font-semibold rounded-full"
+              class="absolute bottom-4 right-4 px-3 py-1 bg-n-amber-9 text-n-amber-1 text-xs font-semibold rounded-full"
             >
               Özel Plan
             </div>
