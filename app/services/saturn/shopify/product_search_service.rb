@@ -2,6 +2,10 @@
 class Saturn::Shopify::ProductSearchService
   MAX_PRODUCTS = 5
   MIN_SEMANTIC_SIMILARITY = 0.3 # Minimum cosine similarity threshold
+  
+  # Rerank sabitleri
+  RERANK_CANDIDATES = 10  # Vector search'den alınacak aday sayısı
+  RERANK_FINAL = 3        # LLM rerank sonrası döndürülecek ürün sayısı
 
   def initialize(account:)
     @account = account
@@ -80,7 +84,159 @@ class Saturn::Shopify::ProductSearchService
     formatted.join("\n\n")
   end
 
+  # ============================================================
+  # YENİ YAKLAŞIM: Vector Search + LLM Reranking
+  # ============================================================
+  # 1. Vector search ile 10 aday ürün bul (hızlı, geniş havuz)
+  # 2. LLM ile bu adayları kullanıcı niyetine göre rerank et
+  # 3. En alakalı 3 ürünü döndür
+  # ============================================================
+  def search_with_rerank(query:, candidates_limit: RERANK_CANDIDATES, final_limit: RERANK_FINAL)
+    return [] if query.blank?
+    return [] unless available?
+    return [] if product_count.zero?
+
+    clean_query = sanitize_query(query)
+    return [] if clean_query.blank?
+
+    Rails.logger.info "[SHOPIFY RERANK] 🔍 Query: '#{clean_query}'"
+
+    # 1. Vector search ile aday ürünleri bul
+    candidates = vector_only_search(clean_query, candidates_limit)
+
+    if candidates.empty?
+      Rails.logger.info '[SHOPIFY RERANK] ❌ No candidates found'
+      return []
+    end
+
+    Rails.logger.info "[SHOPIFY RERANK] 📦 Found #{candidates.size} candidates"
+
+    # Eğer final_limit veya daha az sonuç varsa, rerank'a gerek yok
+    if candidates.size <= final_limit
+      Rails.logger.info '[SHOPIFY RERANK] ⏭️ Skipping rerank (few candidates)'
+      return candidates
+    end
+
+    # 2. LLM ile rerank yap
+    reranked = llm_rerank_products(clean_query, candidates, final_limit)
+
+    Rails.logger.info "[SHOPIFY RERANK] ✅ Final results: #{reranked.size}"
+    reranked
+  end
+
   private
+
+  # Sadece vector/semantic search (rerank için)
+  def vector_only_search(query, limit)
+    query_embedding = @embedding_service.create_vector_embedding(query)
+
+    results = Shopify::Product
+              .for_account(@account.id)
+              .where.not(embedding: nil)
+              .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+              .limit(limit)
+              .to_a
+
+    # Similarity skorlarını logla
+    results.each do |product|
+      similarity = (1.0 - product.neighbor_distance) * 100
+      Rails.logger.debug "[SHOPIFY RERANK] 📊 Candidate: '#{product.title}' (similarity: #{similarity.round(1)}%)"
+    end
+
+    results
+  rescue StandardError => e
+    Rails.logger.error "[SHOPIFY RERANK] Vector search failed: #{e.message}"
+    []
+  end
+
+  # LLM ile ürünleri rerank et
+  def llm_rerank_products(query, products, limit)
+    prompt = build_rerank_prompt(query, products)
+
+    response = call_rerank_llm(prompt)
+    selected_ids = parse_rerank_response(response, products.map(&:id))
+
+    # Seçilen ID'lere göre ürünleri sırala
+    reranked = selected_ids.first(limit).filter_map do |id|
+      products.find { |p| p.id == id }
+    end
+
+    # Rerank sonucunu logla
+    Rails.logger.info '[SHOPIFY RERANK] 🏆 LLM Ranking:'
+    reranked.each_with_index do |p, i|
+      Rails.logger.info "[SHOPIFY RERANK]   #{i + 1}. '#{p.title}'"
+    end
+
+    reranked
+  rescue StandardError => e
+    Rails.logger.error "[SHOPIFY RERANK] LLM rerank failed: #{e.message}"
+    # Fallback: Vector sıralamasını kullan
+    products.first(limit)
+  end
+
+  def build_rerank_prompt(query, products)
+    products_text = products.map.with_index do |p, i|
+      price_text = if p.min_price == p.max_price
+                     "₺#{p.min_price}"
+                   else
+                     "₺#{p.min_price}-#{p.max_price}"
+                   end
+      desc_short = p.description.to_s.gsub(/<[^>]*>/, '').strip.truncate(100)
+      "#{i + 1}. [ID:#{p.id}] #{p.title} | #{p.vendor} | #{p.product_type} | #{price_text}\n   #{desc_short}"
+    end.join("\n")
+
+    <<~PROMPT
+      Kullanıcı şunu arıyor: "#{query}"
+
+      Aşağıdaki ürünlerden kullanıcının ihtiyacına EN UYGUN 3 tanesini seç.
+      Seçerken şunlara dikkat et:
+      - Kullanıcının aradığı özellikler (renk, tarz, kategori vb.)
+      - Ürün açıklaması ve başlığındaki eşleşmeler
+      - Fiyat ve marka uygunluğu
+
+      ÜRÜNLER:
+      #{products_text}
+
+      SADECE aşağıdaki JSON formatında yanıt ver, başka bir şey yazma:
+      {"selected_ids": [ID1, ID2, ID3], "reason": "seçim nedeni"}
+    PROMPT
+  end
+
+  def call_rerank_llm(prompt)
+    client = OpenAI::Client.new(access_token: ENV.fetch('OPENAI_API_KEY', nil))
+
+    response = client.chat(
+      parameters: {
+        model: 'gpt-4o-mini', # Hızlı ve ekonomik
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,     # Düşük = tutarlı sonuç
+        max_tokens: 200
+      }
+    )
+
+    response.dig('choices', 0, 'message', 'content')
+  end
+
+  def parse_rerank_response(response, valid_ids)
+    json_match = response.to_s.match(/\{[\s\S]*\}/)
+    return valid_ids.first(RERANK_FINAL) unless json_match
+
+    parsed = JSON.parse(json_match[0])
+    selected = parsed['selected_ids'] || []
+
+    Rails.logger.info "[SHOPIFY RERANK] 💡 LLM reason: #{parsed['reason']}"
+
+    # Sadece geçerli ID'leri döndür
+    valid_selected = selected.select { |id| valid_ids.include?(id) }
+
+    # Eğer LLM geçersiz ID verdiyse, fallback
+    return valid_ids.first(RERANK_FINAL) if valid_selected.empty?
+
+    valid_selected
+  rescue JSON::ParserError => e
+    Rails.logger.error "[SHOPIFY RERANK] JSON parse error: #{e.message}"
+    valid_ids.first(RERANK_FINAL)
+  end
 
   # Semantic search with similarity threshold
   def semantic_search_with_threshold(query, limit)

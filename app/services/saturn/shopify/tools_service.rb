@@ -111,6 +111,7 @@ class Saturn::Shopify::ToolsService
     private
     
     # Ürün araması yap
+    # YENİ YAKLAŞIM: Vector Search (10 aday) + LLM Rerank (3 sonuç)
     # Returns: { content: String, products: Array<Shopify::Product> }
     def execute_product_search(arguments, account)
       query = arguments['query']
@@ -120,10 +121,12 @@ class Saturn::Shopify::ToolsService
         return { content: "Ürün aramak için bir sorgu gerekli. Lütfen ne aradığınızı belirtin." }
       end
       
-      Rails.logger.info "[SHOPIFY TOOLS] Product search: #{query}, exclude: #{exclude_terms}"
+      Rails.logger.info "[SHOPIFY TOOLS] Product search (with rerank): #{query}, exclude: #{exclude_terms}"
       
       product_service = Saturn::Shopify::ProductSearchService.new(account: account)
-      products = product_service.search(query: query, limit: 10) # Filtreleme için fazla al
+      
+      # YENİ: search_with_rerank kullan (10 aday → LLM rerank → 3 sonuç)
+      products = product_service.search_with_rerank(query: query)
       
       # Hariç tutma filtresi uygula
       if exclude_terms.present? && products.present?
@@ -137,9 +140,6 @@ class Saturn::Shopify::ToolsService
         
         Rails.logger.info "[SHOPIFY TOOLS] Filtered #{original_count} → #{products.size} (excluded: #{exclude_list.join(', ')})"
       end
-      
-      # İlk 5'i al
-      products = products.first(5)
       
       if products.blank?
         return { content: "Aramanızla eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?" }
