@@ -170,39 +170,6 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     end
   end
 
-  def products
-    query = params[:query]
-    limit = params[:limit] || 20
-    
-    if query.present?
-      products = Shopify::Product.for_account(Current.account.id)
-                                  .text_search(query, account_id: Current.account.id, limit: limit)
-    else
-      products = Shopify::Product.for_account(Current.account.id)
-                                  .order(last_queried_at: :desc, created_at: :desc)
-                                  .limit(limit)
-    end
-    
-    render json: { 
-      products: products.map do |p|
-        {
-          id: p.id,
-          shopify_product_id: p.shopify_product_id,
-          title: p.title,
-          description: p.description,
-          handle: p.handle,
-          vendor: p.vendor,
-          product_type: p.product_type,
-          min_price: p.min_price,
-          max_price: p.max_price,
-          total_inventory: p.total_inventory,
-          images: p.images,
-          variants: p.variants
-        }
-      end
-    }
-  end
-
   private
 
   def redirect_uri

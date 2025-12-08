@@ -39,12 +39,6 @@ class ShopifyAPI extends ApiClient {
   getSyncStatus() {
     return axios.get(`${this.url}/sync_status`);
   }
-
-  getProducts(query, limit = 20) {
-    return axios.get(`${this.url}/products`, {
-      params: { query, limit },
-    });
-  }
 }
 
 export default new ShopifyAPI();

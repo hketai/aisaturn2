@@ -81,7 +81,12 @@ RUN apk update && apk add --no-cache \
   g++ \
   linux-headers \
   xz \
-  vips
+  vips \
+  yaml-dev \
+  rust \
+  cargo \
+  clang-dev \
+  llvm-dev
 RUN bundle config set --local force_ruby_platform true \
   && bundle config set timeout ${BUNDLE_TIMEOUT} \
   && if [ -n "${BUNDLE_MIRROR}" ]; then bundle config set mirror.https://rubygems.org "${BUNDLE_MIRROR}"; fi

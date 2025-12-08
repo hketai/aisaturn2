@@ -329,7 +329,6 @@ Rails.application.routes.draw do
                 get :test
                 post :sync_products
                 get :sync_status
-                get :products
               end
             end
             resource :linear, controller: 'linear', only: [] do
