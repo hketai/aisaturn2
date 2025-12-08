@@ -85,11 +85,12 @@ class Saturn::Shopify::ProductSearchService
   end
 
   # ============================================================
-  # YENİ YAKLAŞIM: Vector Search + LLM Reranking
+  # YENİ YAKLAŞIM: Keyword Boost + Vector Search + LLM Reranking
   # ============================================================
-  # 1. Vector search ile 10 aday ürün bul (hızlı, geniş havuz)
-  # 2. LLM ile bu adayları kullanıcı niyetine göre rerank et
-  # 3. En alakalı 3 ürünü döndür
+  # 1. Keyword match ürünleri bul (öncelikli - "siyah" kelimesi varsa)
+  # 2. Vector search ile aday ürün bul
+  # 3. İkisini birleştir (keyword öncelikli)
+  # 4. LLM ile rerank et
   # ============================================================
   def search_with_rerank(query:, candidates_limit: RERANK_CANDIDATES, final_limit: RERANK_FINAL)
     return [] if query.blank?
@@ -101,15 +102,25 @@ class Saturn::Shopify::ProductSearchService
 
     Rails.logger.info "[SHOPIFY RERANK] 🔍 Query: '#{clean_query}'"
 
-    # 1. Vector search ile aday ürünleri bul
-    candidates = vector_only_search(clean_query, candidates_limit)
+    # 1. Keyword match ürünleri bul (öncelikli)
+    keyword_products = keyword_search_for_rerank(clean_query, candidates_limit)
+    Rails.logger.info "[SHOPIFY RERANK] 🔑 Keyword match: #{keyword_products.size} products"
+
+    # 2. Vector search ile aday ürünleri bul
+    vector_products = vector_only_search(clean_query, candidates_limit)
+    Rails.logger.info "[SHOPIFY RERANK] 🧠 Vector search: #{vector_products.size} products"
+
+    # 3. Birleştir: Keyword önce, sonra vector (duplicate'leri kaldır)
+    keyword_ids = keyword_products.map(&:id)
+    unique_vector = vector_products.reject { |p| keyword_ids.include?(p.id) }
+    candidates = (keyword_products + unique_vector).first(candidates_limit)
 
     if candidates.empty?
       Rails.logger.info '[SHOPIFY RERANK] ❌ No candidates found'
       return []
     end
 
-    Rails.logger.info "[SHOPIFY RERANK] 📦 Found #{candidates.size} candidates"
+    Rails.logger.info "[SHOPIFY RERANK] 📦 Total candidates: #{candidates.size} (#{keyword_products.size} keyword + #{unique_vector.size} vector)"
 
     # Eğer final_limit veya daha az sonuç varsa, rerank'a gerek yok
     if candidates.size <= final_limit
@@ -117,11 +128,48 @@ class Saturn::Shopify::ProductSearchService
       return candidates
     end
 
-    # 2. LLM ile rerank yap
+    # 4. LLM ile rerank yap
     reranked = llm_rerank_products(clean_query, candidates, final_limit)
 
     Rails.logger.info "[SHOPIFY RERANK] ✅ Final results: #{reranked.size}"
     reranked
+  end
+
+  # Keyword arama (rerank için)
+  def keyword_search_for_rerank(query, limit)
+    search_terms = extract_search_terms(query)
+    return [] if search_terms.empty?
+
+    # Her keyword için ILIKE ile ara
+    conditions = search_terms.map do |term|
+      sanitized = ActiveRecord::Base.sanitize_sql_like(term)
+      "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%')"
+    end.join(' AND ') # AND ile tüm keyword'ler eşleşmeli
+
+    results = Shopify::Product
+              .for_account(@account.id)
+              .where(conditions)
+              .limit(limit)
+              .to_a
+
+    # AND eşleşme yoksa OR ile dene
+    if results.empty?
+      or_conditions = search_terms.map do |term|
+        sanitized = ActiveRecord::Base.sanitize_sql_like(term)
+        "(LOWER(title) LIKE '%#{sanitized}%' OR LOWER(description) LIKE '%#{sanitized}%')"
+      end.join(' OR ')
+
+      results = Shopify::Product
+                .for_account(@account.id)
+                .where(or_conditions)
+                .limit(limit)
+                .to_a
+    end
+
+    results
+  rescue StandardError => e
+    Rails.logger.error "[SHOPIFY RERANK] Keyword search failed: #{e.message}"
+    []
   end
 
   private
