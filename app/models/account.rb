@@ -106,6 +106,7 @@ class Account < ApplicationRecord
   has_many :saturn_assistant_responses, dependent: :destroy_async, class_name: 'Saturn::AssistantResponse'
   has_many :saturn_documents, dependent: :destroy_async, class_name: 'Saturn::Document'
   has_many :saturn_custom_tools, dependent: :destroy_async, class_name: 'Saturn::CustomTool'
+  has_many :shopify_products, dependent: :destroy_async, class_name: 'Shopify::Product'
   has_many :account_subscriptions, dependent: :destroy_async
   has_many :subscription_plans, through: :account_subscriptions
 
