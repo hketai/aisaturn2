@@ -24,20 +24,24 @@ class Saturn::Shopify::ToolsService
         type: 'function',
         function: {
           name: 'search_products',
-          description: 'Mağazadaki ürünleri arar. Ürün sorgusu, öneri isteği veya takip sorusu olduğunda kullan. BAĞLAM KURALI: Önceki konuşmada bir kategori varsa (yüzük, kolye vb.) takip sorularında o kategoriyi MUTLAKA query\'ye ekle. Örn: Önceki: "yüzük var mı" → Şimdi: "siyah taşlı olsun" → Query: "siyah taşlı yüzük". NEGATİF KOŞUL: "X olmasın/hariç/dışında" denirse, sorguya dahil etme ama sonuçları filtrele.',
+          description: 'Mağazadaki ürünleri arar. Metin sorgusu VEYA görsel URL\'si ile arama yapabilir. GÖRSEL ARAMA: Müşteri ürün resmi gönderip "bunu istiyorum", "bu var mı" derse, gönderilen resmin URL\'sini image_url parametresine ver. METIN ARAMA: Normal ürün sorgusu için query parametresini kullan. BAĞLAM KURALI: Takip sorularında önceki kategoriden gelen bilgiyi query\'ye ekle.',
           parameters: {
             type: 'object',
             properties: {
               query: {
                 type: 'string',
-                description: 'Arama sorgusu. Kategori + özellik birlikte olmalı. Örn: "siyah taşlı yüzük", "gümüş kolye", "kırmızı bileklik". Takip sorularında önceki kategoriden gelen bilgiyi MUTLAKA ekle.'
+                description: 'Metin arama sorgusu. Kategori + özellik birlikte olmalı. Örn: "siyah taşlı yüzük", "gümüş kolye". Görsel arama yapılıyorsa boş bırakılabilir.'
+              },
+              image_url: {
+                type: 'string',
+                description: 'Müşterinin gönderdiği ürün resminin URL\'si. Müşteri resim paylaşıp benzer ürün istediğinde kullan. Resim URL\'si conversation\'dan alınmalı.'
               },
               exclude_terms: {
                 type: 'string',
-                description: 'Hariç tutulacak terimler. "X olmasın", "Y hariç", "Z dışında" denildiğinde kullan. Örn: "altın kaplama" (altın kaplama olmasın için)'
+                description: 'Hariç tutulacak terimler. "X olmasın", "Y hariç" denildiğinde kullan.'
               }
             },
-            required: ['query']
+            required: []
           }
         }
       }
@@ -111,45 +115,64 @@ class Saturn::Shopify::ToolsService
     private
     
     # Ürün araması yap
-    # YENİ YAKLAŞIM: Vector Search (10 aday) + LLM Rerank (3 sonuç)
+    # Metin sorgusu VEYA görsel URL ile arama yapabilir
     # Returns: { content: String, products: Array<Shopify::Product> }
     def execute_product_search(arguments, account)
       query = arguments['query']
+      image_url = arguments['image_url']
       exclude_terms = arguments['exclude_terms']
-      
-      if query.blank?
-        return { content: "Ürün aramak için bir sorgu gerekli. Lütfen ne aradığınızı belirtin." }
+
+      # Görsel URL varsa önce resmi analiz et
+      if image_url.present?
+        Rails.logger.info "[SHOPIFY TOOLS] Image-based search: #{image_url}"
+        image_analysis = Saturn::ImageAnalysisService.new(account: account)
+        image_description = image_analysis.analyze_customer_image(image_url)
+
+        if image_description.present?
+          Rails.logger.info "[SHOPIFY TOOLS] Image analyzed: #{image_description}"
+          # Görsel açıklamasını query olarak kullan
+          query = image_description
+        else
+          Rails.logger.warn "[SHOPIFY TOOLS] Image analysis failed or not a product image"
+          return { content: 'Gönderdiğiniz resmi analiz edemedim. Lütfen aradığınız ürünü metin olarak tarif eder misiniz?' }
+        end
       end
-      
+
+      if query.blank?
+        return { content: 'Ürün aramak için bir sorgu veya görsel gerekli. Lütfen ne aradığınızı belirtin.' }
+      end
+
       Rails.logger.info "[SHOPIFY TOOLS] Product search (with rerank): #{query}, exclude: #{exclude_terms}"
-      
+
       product_service = Saturn::Shopify::ProductSearchService.new(account: account)
-      
-      # YENİ: search_with_rerank kullan (10 aday → LLM rerank → 3 sonuç)
       products = product_service.search_with_rerank(query: query)
-      
+
       # Hariç tutma filtresi uygula
       if exclude_terms.present? && products.present?
         exclude_list = exclude_terms.downcase.split(/[,\s]+/).reject(&:blank?)
         original_count = products.size
-        
+
         products = products.reject do |product|
           text = "#{product.title} #{product.description}".downcase
           exclude_list.any? { |term| text.include?(term) }
         end
-        
+
         Rails.logger.info "[SHOPIFY TOOLS] Filtered #{original_count} → #{products.size} (excluded: #{exclude_list.join(', ')})"
       end
-      
+
       if products.blank?
-        return { content: "Aramanızla eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?" }
+        return { content: 'Gönderdiğiniz görsel ile eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?' }
       end
-      
-      # Ürünleri formatla ve products'ı da döndür
-      {
-        content: format_products_for_tool_response(products, account),
-        products: products
-      }
+
+      # Görsel araması ise özel mesaj
+      content = if image_url.present?
+                  "Gönderdiğiniz görsele benzer #{products.size} ürün buldum:\n\n" +
+                    format_products_for_tool_response(products, account)
+                else
+                  format_products_for_tool_response(products, account)
+                end
+
+      { content: content, products: products }
     end
     
     # Ürünleri tool response formatında döndür

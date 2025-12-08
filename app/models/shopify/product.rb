@@ -113,8 +113,8 @@ module Shopify
         return false
       end
 
-      # Title, description ve varyant bilgilerini birleştir
-      text_parts = [title, description, variant_titles_text].compact.reject(&:blank?)
+      # Title, description, varyant ve görsel açıklamasını birleştir
+      text_parts = [title, description, variant_titles_text, image_description].compact.reject(&:blank?)
       text_content = text_parts.join(' ')
 
       # Text çok kısaysa skip
@@ -139,6 +139,26 @@ module Shopify
       raise
     end
 
+    # Ürün resmini GPT-4o ile analiz et ve açıklamasını kaydet
+    def analyze_image!
+      return false if images.blank?
+
+      first_image_url = images.is_a?(Array) ? images.first&.dig('src') : nil
+      return false if first_image_url.blank?
+
+      analysis_service = Saturn::ImageAnalysisService.new(account: account)
+      description_text = analysis_service.analyze_product_image(first_image_url)
+
+      return false if description_text.blank?
+
+      update_columns(image_description: description_text, image_analyzed_at: Time.current)
+      Rails.logger.info "[IMAGE ANALYSIS] Product #{id}: #{description_text}"
+      true
+    rescue StandardError => e
+      Rails.logger.error "[IMAGE ANALYSIS] Product #{id} failed: #{e.message}"
+      false
+    end
+
     # Varyant title'larını text olarak döndür (renk, beden vb. bilgileri içerir)
     def variant_titles_text
       return nil if variants.blank?
@@ -157,7 +177,7 @@ module Shopify
     private
 
     def should_update_embedding?
-      saved_change_to_title? || saved_change_to_description? || saved_change_to_product_type? || saved_change_to_variants?
+      saved_change_to_title? || saved_change_to_description? || saved_change_to_product_type? || saved_change_to_variants? || saved_change_to_image_description?
     end
 
     def update_embedding_async

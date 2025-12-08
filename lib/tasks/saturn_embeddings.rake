@@ -292,6 +292,77 @@ namespace :saturn do
     puts "\n\nAll product embeddings regenerated!"
   end
 
+  desc 'Analyze product images with GPT-4o (for visual search)'
+  task analyze_product_images: :environment do
+    puts 'Starting product image analysis with GPT-4o...'
+    puts 'This will analyze product images and create descriptions for visual search.'
+
+    # Resmi olan ama analiz edilmemiş ürünleri bul
+    products_to_analyze = Shopify::Product.where(image_analyzed_at: nil)
+                                          .where.not(images: nil)
+                                          .where.not(images: [])
+
+    total = products_to_analyze.count
+    puts "Found #{total} products to analyze"
+
+    if total.zero?
+      puts 'No products to analyze. Done!'
+      exit
+    end
+
+    print 'Continue? (yes/no): '
+    confirm = ENV['FORCE'] == 'true' ? 'yes' : $stdin.gets&.chomp
+
+    unless confirm == 'yes'
+      puts 'Aborted.'
+      exit
+    end
+
+    processed = 0
+    success = 0
+    errors = 0
+
+    products_to_analyze.find_each do |product|
+      result = product.analyze_image!
+      processed += 1
+
+      if result
+        success += 1
+        # Embedding'i de güncelle (image_description dahil)
+        product.update_embedding!
+      else
+        errors += 1
+      end
+
+      print "\rProcessed #{processed}/#{total} (#{success} success, #{errors} failed)..."
+
+      # Rate limit için kısa bekleme
+      sleep(0.5)
+    rescue StandardError => e
+      errors += 1
+      puts "\nError processing product ##{product.id}: #{e.message}"
+    end
+
+    puts "\n\n✅ Image analysis complete!"
+    puts "   Processed: #{processed}"
+    puts "   Success: #{success}"
+    puts "   Failed: #{errors}"
+  end
+
+  desc 'Check product image analysis status'
+  task image_analysis_status: :environment do
+    total = Shopify::Product.count
+    with_images = Shopify::Product.where.not(images: nil).where.not(images: []).count
+    analyzed = Shopify::Product.where.not(image_analyzed_at: nil).count
+    pending = with_images - analyzed
+
+    puts 'Product Image Analysis Status:'
+    puts "  Total products: #{total}"
+    puts "  With images: #{with_images}"
+    puts "  Analyzed: #{analyzed} (#{with_images.positive? ? (analyzed.to_f / with_images * 100).round(1) : 0}%)"
+    puts "  Pending: #{pending}"
+  end
+
   # ===== COMBINED STATUS =====
 
   desc 'Show overall Saturn embedding status'
@@ -328,6 +399,13 @@ namespace :saturn do
     products_with_embedding = Shopify::Product.where.not(embedding: nil).count
     puts "   Total products: #{total_products}"
     puts "   With embedding: #{products_with_embedding} (#{total_products.positive? ? (products_with_embedding.to_f / total_products * 100).round(1) : 0}%)"
+
+    # Image Analysis Status
+    puts "\n📷 Product Image Analysis:"
+    products_with_images = Shopify::Product.where.not(images: nil).where.not(images: []).count
+    products_analyzed = Shopify::Product.where.not(image_analyzed_at: nil).count
+    puts "   With images: #{products_with_images}"
+    puts "   Analyzed: #{products_analyzed} (#{products_with_images.positive? ? (products_analyzed.to_f / products_with_images * 100).round(1) : 0}%)"
 
     # Cache Status
     puts "\n💾 Embedding Cache:"
