@@ -70,8 +70,78 @@ module Saturn
     end
     
     def send_instagram_carousel
-      # Instagram uses the same format as Facebook Messenger
-      send_facebook_carousel
+      # Instagram DM API does NOT support carousel templates like Facebook Messenger
+      # Send individual product messages instead (image + caption)
+      instagram_products = @products.first(3) # Max 3 ürün UX için
+      return if instagram_products.blank?
+
+      Rails.logger.info "[PRODUCT CARDS] Sending #{instagram_products.count} products to Instagram DM"
+
+      sent_count = 0
+      instagram_products.each do |product|
+        product_data = normalize_product(product)
+        next if product_data[:title].blank?
+
+        result = send_instagram_product_message(product_data)
+        sent_count += 1 if result
+      end
+
+      Rails.logger.info "[PRODUCT CARDS] Successfully sent #{sent_count}/#{instagram_products.count} products to Instagram"
+      sent_count.positive? ? { sent: sent_count } : nil
+    end
+
+    def send_instagram_product_message(product_data)
+      recipient_id = contact_source_id
+      return nil if recipient_id.blank?
+
+      # Önce resim gönder (varsa)
+      if product_data[:image_url].present?
+        send_instagram_image(recipient_id, product_data[:image_url])
+      end
+
+      # Sonra ürün bilgisi gönder
+      caption = build_instagram_caption(product_data)
+      send_instagram_text(recipient_id, caption)
+    rescue StandardError => e
+      Rails.logger.error "[PRODUCT CARDS] Instagram product send error: #{e.message}"
+      nil
+    end
+
+    def build_instagram_caption(product_data)
+      parts = []
+      parts << "🛍️ #{product_data[:title]}"
+      parts << "💰 #{format_price(product_data[:price])}" if product_data[:price].present?
+      parts << "🔗 #{product_data[:url]}" if product_data[:url].present?
+      parts.compact.join("\n")
+    end
+
+    def send_instagram_image(recipient_id, image_url)
+      params = {
+        recipient: { id: recipient_id },
+        message: {
+          attachment: {
+            type: 'image',
+            payload: { url: image_url, is_reusable: true }
+          }
+        },
+        messaging_type: 'RESPONSE'
+      }
+      deliver_facebook_message(params)
+    rescue StandardError => e
+      Rails.logger.error "[PRODUCT CARDS] Instagram image send error: #{e.message}"
+      nil
+    end
+
+    def send_instagram_text(recipient_id, text)
+      params = {
+        recipient: { id: recipient_id },
+        message: { text: text },
+        messaging_type: 'RESPONSE'
+      }
+      deliver_facebook_message(params)
+    rescue StandardError => e
+      Rails.logger.error "[PRODUCT CARDS] Instagram text send error: #{e.message}"
+      nil
     end
     
     def send_whatsapp_web_products
