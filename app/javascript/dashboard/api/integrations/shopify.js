@@ -39,6 +39,10 @@ class ShopifyAPI extends ApiClient {
   getSyncStatus() {
     return axios.get(`${this.url}/sync_status`);
   }
+
+  updateSettings(settings) {
+    return axios.patch(`${this.url}/update_settings`, { settings });
+  }
 }
 
 export default new ShopifyAPI();

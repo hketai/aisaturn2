@@ -371,7 +371,10 @@
           "FEATURE_1": "Müşteriler ürün fotoğrafı göndererek benzer ürünleri bulabilir",
           "FEATURE_2": "Yapay zeka resimleri analiz eder ve eşleşen ürünleri anında bulur",
           "FEATURE_3": "Tüm senkronize edilmiş Shopify ürünlerinizle çalışır",
-          "CONTACT_INFO": "Bu özelliği hesabınız için etkinleştirmek için destek ile iletişime geçin"
+          "CONTACT_INFO": "Bu özelliği hesabınız için etkinleştirmek için destek ile iletişime geçin",
+          "ENABLED_SUCCESS": "Görsel arama aktifleştirildi",
+          "DISABLED_SUCCESS": "Görsel arama devre dışı bırakıldı",
+          "UPDATE_ERROR": "Görsel arama ayarı güncellenemedi"
         }
       },
       "TEST_ORDER": {

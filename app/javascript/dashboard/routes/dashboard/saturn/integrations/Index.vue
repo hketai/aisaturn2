@@ -462,17 +462,28 @@ const formatDate = dateString => {
 };
 
 // Image Search Toggle Handler
-const handleImageSearchToggle = () => {
-  if (imageSearchEnabled.value) {
-    // Zaten aktif - kapatmaya çalışıyor (bu durumda da popup göster)
-    if (imageSearchDialogRef.value) {
-      imageSearchDialogRef.value.open();
+const handleImageSearchToggle = async () => {
+  const newValue = !imageSearchEnabled.value;
+  
+  try {
+    await shopifyAPI.updateSettings({ image_search_enabled: newValue });
+    imageSearchEnabled.value = newValue;
+    
+    // Hook'u da güncelle
+    if (shopifyHook.value) {
+      shopifyHook.value.settings = {
+        ...shopifyHook.value.settings,
+        image_search_enabled: newValue,
+      };
     }
-  } else {
-    // Aktif değil - açmaya çalışıyor
-    if (imageSearchDialogRef.value) {
-      imageSearchDialogRef.value.open();
-    }
+    
+    useAlert(
+      newValue
+        ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.ENABLED_SUCCESS')
+        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DISABLED_SUCCESS')
+    );
+  } catch (error) {
+    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'));
   }
 };
 

@@ -371,7 +371,10 @@
           "FEATURE_1": "Customers can send product images to find similar items",
           "FEATURE_2": "AI analyzes images and finds matching products instantly",
           "FEATURE_3": "Works with all your synced Shopify products",
-          "CONTACT_INFO": "Contact support to enable this feature for your account"
+          "CONTACT_INFO": "Contact support to enable this feature for your account",
+          "ENABLED_SUCCESS": "Image search enabled",
+          "DISABLED_SUCCESS": "Image search disabled",
+          "UPDATE_ERROR": "Failed to update image search setting"
         }
       },
       "TEST_ORDER": {
