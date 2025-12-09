@@ -531,5 +531,86 @@ class Saturn::Shopify::ProductSearchService
 
     parts.join("\n   ")
   end
+
+  # ====== IMAGE SEARCH (Jina CLIP) ======
+  public
+
+  # Resim URL'si ile ürün ara (gerçek image embedding)
+  def search_by_image(image_url:, limit: RERANK_FINAL)
+    return [] if image_url.blank?
+    return [] unless available?
+
+    clip_service = Saturn::JinaClipService.new
+    return [] unless clip_service.api_key_present?
+
+    # Müşteri resmini embed et
+    query_embedding = clip_service.embed_image(image_url)
+    return [] if query_embedding.blank?
+
+    Rails.logger.info "[IMAGE SEARCH] Searching with image embedding (#{query_embedding.size} dims)"
+
+    # Image embedding ile arama yap
+    results = image_vector_search(query_embedding, limit * 2)
+
+    # Stokta olanları filtrele
+    in_stock = results.select { |p| p.total_inventory.to_i.positive? }
+
+    in_stock.first(limit)
+  rescue StandardError => e
+    Rails.logger.error "[IMAGE SEARCH] Error: #{e.message}"
+    []
+  end
+
+  # Image embedding ile hibrit arama (image + text rerank)
+  def search_by_image_with_rerank(image_url:, text_context: nil)
+    return [] if image_url.blank?
+    return [] unless available?
+
+    clip_service = Saturn::JinaClipService.new
+    return [] unless clip_service.api_key_present?
+
+    # Müşteri resmini embed et
+    query_embedding = clip_service.embed_image(image_url)
+    return [] if query_embedding.blank?
+
+    # Image embedding ile aday bul
+    candidates = image_vector_search(query_embedding, RERANK_CANDIDATES)
+
+    # Stokta olanları filtrele
+    candidates = candidates.select { |p| p.total_inventory.to_i.positive? }
+
+    return [] if candidates.empty?
+
+    # Text context varsa LLM ile rerank yap
+    if text_context.present?
+      reranked = llm_rerank_products(candidates, text_context)
+      return reranked if reranked.present?
+    end
+
+    # Rerank yapılamadıysa ilk 3'ü döndür
+    candidates.first(RERANK_FINAL)
+  rescue StandardError => e
+    Rails.logger.error "[IMAGE SEARCH] Error: #{e.message}"
+    []
+  end
+
+  private
+
+  # Image embedding ile vector search
+  def image_vector_search(query_embedding, limit)
+    return [] if query_embedding.blank?
+
+    embedding_string = "[#{query_embedding.join(',')}]"
+
+    Shopify::Product
+      .for_account(@account.id)
+      .where.not(image_embedding: nil)
+      .order(Arel.sql("image_embedding <=> '#{embedding_string}'"))
+      .limit(limit)
+      .to_a
+  rescue StandardError => e
+    Rails.logger.error "[IMAGE SEARCH] Vector search error: #{e.message}"
+    []
+  end
 end
 

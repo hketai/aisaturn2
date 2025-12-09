@@ -122,18 +122,39 @@ class Saturn::Shopify::ToolsService
       image_url = arguments['image_url']
       exclude_terms = arguments['exclude_terms']
 
-      # Görsel URL varsa önce resmi analiz et
+      product_service = Saturn::Shopify::ProductSearchService.new(account: account)
+
+      # Görsel URL varsa image search yap
       if image_url.present?
         Rails.logger.info "[SHOPIFY TOOLS] Image-based search: #{image_url}"
+
+        # Image search aktif mi kontrol et
+        hook = Integrations::Hook.find_by(account: account, app_id: 'shopify')
+        image_search_enabled = hook&.settings&.dig('image_search_enabled') == true
+
+        if image_search_enabled
+          # Jina CLIP ile gerçek image search
+          products = product_service.search_by_image_with_rerank(
+            image_url: image_url,
+            text_context: query
+          )
+
+          if products.present?
+            Rails.logger.info "[SHOPIFY TOOLS] Jina CLIP found #{products.size} products"
+            return build_search_response(products, account, image_search: true, exclude_terms: exclude_terms)
+          end
+        end
+
+        # Image search pasif veya sonuç bulamadıysa GPT-4o ile text search
+        Rails.logger.info '[SHOPIFY TOOLS] Using GPT-4o text-based image analysis'
         image_analysis = Saturn::ImageAnalysisService.new(account: account)
         image_description = image_analysis.analyze_customer_image(image_url)
 
         if image_description.present?
-          Rails.logger.info "[SHOPIFY TOOLS] Image analyzed: #{image_description}"
-          # Görsel açıklamasını query olarak kullan
+          Rails.logger.info "[SHOPIFY TOOLS] GPT-4o analyzed: #{image_description}"
           query = image_description
         else
-          Rails.logger.warn "[SHOPIFY TOOLS] Image analysis failed or not a product image"
+          Rails.logger.warn '[SHOPIFY TOOLS] Image analysis failed'
           return { content: 'Gönderdiğiniz resmi analiz edemedim. Lütfen aradığınız ürünü metin olarak tarif eder misiniz?' }
         end
       end
@@ -142,11 +163,14 @@ class Saturn::Shopify::ToolsService
         return { content: 'Ürün aramak için bir sorgu veya görsel gerekli. Lütfen ne aradığınızı belirtin.' }
       end
 
-      Rails.logger.info "[SHOPIFY TOOLS] Product search (with rerank): #{query}, exclude: #{exclude_terms}"
-
-      product_service = Saturn::Shopify::ProductSearchService.new(account: account)
+      Rails.logger.info "[SHOPIFY TOOLS] Text search (with rerank): #{query}"
       products = product_service.search_with_rerank(query: query)
 
+      build_search_response(products, account, image_search: image_url.present?, exclude_terms: exclude_terms)
+    end
+
+    # Search response oluştur
+    def build_search_response(products, account, image_search: false, exclude_terms: nil)
       # Hariç tutma filtresi uygula
       if exclude_terms.present? && products.present?
         exclude_list = exclude_terms.downcase.split(/[,\s]+/).reject(&:blank?)
@@ -157,15 +181,15 @@ class Saturn::Shopify::ToolsService
           exclude_list.any? { |term| text.include?(term) }
         end
 
-        Rails.logger.info "[SHOPIFY TOOLS] Filtered #{original_count} → #{products.size} (excluded: #{exclude_list.join(', ')})"
+        Rails.logger.info "[SHOPIFY TOOLS] Filtered #{original_count} → #{products.size}"
       end
 
       if products.blank?
-        return { content: 'Gönderdiğiniz görsel ile eşleşen ürün bulunamadı. Farklı bir arama yapmak ister misiniz?' }
+        msg = image_search ? 'Gönderdiğiniz görsel ile eşleşen ürün bulunamadı.' : 'Aramanızla eşleşen ürün bulunamadı.'
+        return { content: "#{msg} Farklı bir arama yapmak ister misiniz?" }
       end
 
-      # Görsel araması ise özel mesaj
-      content = if image_url.present?
+      content = if image_search
                   "Gönderdiğiniz görsele benzer #{products.size} ürün buldum:\n\n" +
                     format_products_for_tool_response(products, account)
                 else

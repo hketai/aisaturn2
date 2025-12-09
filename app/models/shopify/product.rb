@@ -139,7 +139,39 @@ module Shopify
       raise
     end
 
-    # Ürün resmini GPT-4o ile analiz et ve açıklamasını kaydet
+    # Jina CLIP ile gerçek image embedding oluştur
+    def create_image_embedding!
+      return false if images.blank?
+
+      img_url = images.is_a?(Array) ? images.first&.dig('src') : nil
+      return false if img_url.blank?
+
+      clip_service = Saturn::JinaClipService.new
+      embedding = clip_service.embed_image(img_url)
+
+      return false if embedding.blank?
+
+      # Vector tipine uygun format (pgvector için)
+      embedding_string = "[#{embedding.join(',')}]"
+      self.class.connection.execute(
+        "UPDATE shopify_products SET image_embedding = '#{embedding_string}', image_embedded_at = NOW() WHERE id = #{id}"
+      )
+
+      Rails.logger.info "[JINA CLIP] Product #{id} image embedded (#{embedding.size} dims)"
+      true
+    rescue StandardError => e
+      Rails.logger.error "[JINA CLIP] Product #{id} failed: #{e.message}"
+      false
+    end
+
+    # İlk resim URL'sini al
+    def first_image_url
+      return nil if images.blank?
+
+      images.is_a?(Array) ? images.first&.dig('src') : nil
+    end
+
+    # DEPRECATED: GPT-4o ile analiz (text-based yaklaşım)
     def analyze_image!
       return false if images.blank?
 

@@ -7,7 +7,14 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
   def show
     hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
     if hook
-      render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
+      render json: {
+        hook: {
+          id: hook.id,
+          reference_id: hook.reference_id,
+          enabled: hook.enabled?,
+          settings: hook.settings || {}
+        }
+      }
     else
       render json: { hook: nil }, status: :not_found
     end

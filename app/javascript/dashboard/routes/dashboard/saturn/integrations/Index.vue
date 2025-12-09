@@ -61,6 +61,10 @@ const isSyncing = ref(false);
 const syncInterval = ref(null);
 const totalSyncedProducts = ref(0);
 
+// Image Search Feature
+const imageSearchEnabled = ref(false);
+const imageSearchDialogRef = ref(null);
+
 const isEmpty = computed(() => {
   return allIntegrations.value.length === 0;
 });
@@ -78,7 +82,10 @@ const fetchIntegrations = async () => {
         id: hookData.id,
         reference_id: hookData.reference_id,
         enabled: hookData.enabled !== false,
+        settings: hookData.settings || {},
       };
+      // Image search durumunu güncelle
+      imageSearchEnabled.value = hookData.settings?.image_search_enabled || false;
 
       // Update allIntegrations
       const shopifyIntegration = allIntegrations.value.find(
@@ -454,6 +461,21 @@ const formatDate = dateString => {
   }).format(date);
 };
 
+// Image Search Toggle Handler
+const handleImageSearchToggle = () => {
+  if (imageSearchEnabled.value) {
+    // Zaten aktif - kapatmaya çalışıyor (bu durumda da popup göster)
+    if (imageSearchDialogRef.value) {
+      imageSearchDialogRef.value.open();
+    }
+  } else {
+    // Aktif değil - açmaya çalışıyor
+    if (imageSearchDialogRef.value) {
+      imageSearchDialogRef.value.open();
+    }
+  }
+};
+
 onMounted(async () => {
   await fetchIntegrations();
   await fetchSyncStatus();
@@ -710,6 +732,39 @@ onUnmounted(() => {
               >
                 {{ syncStatus.error_message }}
               </div>
+
+              <!-- Image Search Feature Toggle -->
+              <div class="pt-3 border-t border-n-slate-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-slate-11" />
+                    <span class="text-sm font-medium text-n-slate-12">
+                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    :class="imageSearchEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                    @click.stop="handleImageSearchToggle"
+                  >
+                    <span
+                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                      :class="imageSearchEnabled ? 'translate-x-6' : 'translate-x-1'"
+                    />
+                  </button>
+                </div>
+                <p class="text-xs text-n-slate-10 mt-1">
+                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
+                </p>
+                <div
+                  v-if="imageSearchEnabled"
+                  class="mt-2 flex items-center gap-1 text-xs text-n-teal-11"
+                >
+                  <Icon icon="i-lucide-check-circle" class="w-3 h-3" />
+                  <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.ACTIVE') }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -766,6 +821,47 @@ onUnmounted(() => {
             shopifyError && shopifyError.includes('Access') ? 'error' : 'info'
           "
         />
+      </div>
+    </Dialog>
+
+    <!-- Image Search Info Dialog -->
+    <Dialog
+      ref="imageSearchDialogRef"
+      :title="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DIALOG_TITLE')"
+      :confirm-text="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DIALOG_CONFIRM')"
+      @confirm="() => imageSearchDialogRef?.close()"
+    >
+      <div class="space-y-4">
+        <div class="flex items-center justify-center">
+          <div class="w-16 h-16 bg-n-amber-3 rounded-full flex items-center justify-center">
+            <Icon icon="i-lucide-image-search" class="w-8 h-8 text-n-amber-11" />
+          </div>
+        </div>
+        <p class="text-center text-n-slate-12">
+          {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DIALOG_MESSAGE') }}
+        </p>
+        <div class="bg-n-slate-2 p-4 rounded-lg">
+          <h4 class="font-medium text-n-slate-12 mb-2">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.FEATURES_TITLE') }}
+          </h4>
+          <ul class="space-y-2 text-sm text-n-slate-11">
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-check" class="w-4 h-4 text-n-teal-11 mt-0.5" />
+              <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.FEATURE_1') }}</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-check" class="w-4 h-4 text-n-teal-11 mt-0.5" />
+              <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.FEATURE_2') }}</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-check" class="w-4 h-4 text-n-teal-11 mt-0.5" />
+              <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.FEATURE_3') }}</span>
+            </li>
+          </ul>
+        </div>
+        <p class="text-xs text-n-slate-10 text-center">
+          {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.CONTACT_INFO') }}
+        </p>
       </div>
     </Dialog>
 

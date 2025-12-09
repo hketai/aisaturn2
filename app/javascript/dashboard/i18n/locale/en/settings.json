@@ -359,7 +359,20 @@
         "PRODUCTS": "products",
         "RESYNC_PRODUCTS": "Resync Products",
         "LAST_SYNC": "Last sync",
-        "RESYNC_CONFIRM": "Are you sure you want to resync products? This may take a while."
+        "RESYNC_CONFIRM": "Are you sure you want to resync products? This may take a while.",
+        "IMAGE_SEARCH": {
+          "TITLE": "Image Search",
+          "DESCRIPTION": "Find products by customer images using AI visual search",
+          "ACTIVE": "Image search is active",
+          "DIALOG_TITLE": "Image Search Feature",
+          "DIALOG_MESSAGE": "To activate Image Search, please contact your account administrator.",
+          "DIALOG_CONFIRM": "OK",
+          "FEATURES_TITLE": "What you can do with Image Search:",
+          "FEATURE_1": "Customers can send product images to find similar items",
+          "FEATURE_2": "AI analyzes images and finds matching products instantly",
+          "FEATURE_3": "Works with all your synced Shopify products",
+          "CONTACT_INFO": "Contact support to enable this feature for your account"
+        }
       },
       "TEST_ORDER": {
         "TITLE": "Test Order Query",

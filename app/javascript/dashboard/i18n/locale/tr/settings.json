@@ -359,7 +359,20 @@
         "PRODUCTS": "ürün",
         "RESYNC_PRODUCTS": "Ürünleri Yeniden Senkronize Et",
         "LAST_SYNC": "Son senkronizasyon",
-        "RESYNC_CONFIRM": "Ürünleri yeniden senkronize etmek istediğinizden emin misiniz? Bu biraz zaman alabilir."
+        "RESYNC_CONFIRM": "Ürünleri yeniden senkronize etmek istediğinizden emin misiniz? Bu biraz zaman alabilir.",
+        "IMAGE_SEARCH": {
+          "TITLE": "Görsel ile Arama",
+          "DESCRIPTION": "Yapay zeka görsel arama ile müşteri resimlerinden ürün bul",
+          "ACTIVE": "Görsel arama aktif",
+          "DIALOG_TITLE": "Görsel ile Arama Özelliği",
+          "DIALOG_MESSAGE": "Görsel ile Arama özelliğini aktifleştirmek için hesap yöneticiniz ile iletişime geçin.",
+          "DIALOG_CONFIRM": "Tamam",
+          "FEATURES_TITLE": "Görsel Arama ile neler yapabilirsiniz:",
+          "FEATURE_1": "Müşteriler ürün fotoğrafı göndererek benzer ürünleri bulabilir",
+          "FEATURE_2": "Yapay zeka resimleri analiz eder ve eşleşen ürünleri anında bulur",
+          "FEATURE_3": "Tüm senkronize edilmiş Shopify ürünlerinizle çalışır",
+          "CONTACT_INFO": "Bu özelliği hesabınız için etkinleştirmek için destek ile iletişime geçin"
+        }
       },
       "TEST_ORDER": {
         "TITLE": "Sipariş Sorgulamayı Test Et",
