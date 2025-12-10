@@ -100,6 +100,7 @@ class Saturn::Shopify::ToolsService
       
       hook = Integrations::Hook.find_by(account: account, app_id: 'shopify')
       return false unless hook&.enabled?
+      return false if hook.settings&.dig('product_query_enabled') == false
       
       Shopify::Product.for_account(account.id).exists?
     end
@@ -109,7 +110,10 @@ class Saturn::Shopify::ToolsService
       return false unless account.present?
       
       hook = Integrations::Hook.find_by(account: account, app_id: 'shopify')
-      hook&.enabled? && hook&.access_token.present?
+      return false unless hook&.enabled? && hook&.access_token.present?
+      return false if hook.settings&.dig('order_query_enabled') == false
+      
+      true
     end
 
     private
