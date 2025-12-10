@@ -953,90 +953,90 @@ onUnmounted(() => {
                 </h4>
                 
                 <!-- Order Query Toggle -->
-                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-shopping-bag" class="w-4 h-4 text-n-blue-11" />
-                    </div>
-                    <div>
+                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="w-8 h-8 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon icon="i-lucide-shopping-bag" class="w-4 h-4 text-n-blue-11" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-3">
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.TITLE') }}
                       </span>
-                      <p class="text-xs text-n-slate-10 mt-0.5">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
-                      </p>
+                      <button
+                        type="button"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                        :class="orderQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                        :disabled="isUpdatingSettings"
+                        @click.stop="handleOrderQueryToggle"
+                      >
+                        <span
+                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                          :class="orderQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
+                        />
+                      </button>
                     </div>
+                    <p class="text-xs text-n-slate-10 mt-1">
+                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                    :class="orderQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
-                    :disabled="isUpdatingSettings"
-                    @click.stop="handleOrderQueryToggle"
-                  >
-                    <span
-                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                      :class="orderQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
-                    />
-                  </button>
                 </div>
                 
                 <!-- Product Query Toggle -->
-                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-package-search" class="w-4 h-4 text-n-amber-11" />
-                    </div>
-                    <div>
+                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="w-8 h-8 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon icon="i-lucide-package-search" class="w-4 h-4 text-n-amber-11" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-3">
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.TITLE') }}
                       </span>
-                      <p class="text-xs text-n-slate-10 mt-0.5">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
-                      </p>
+                      <button
+                        type="button"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                        :class="productQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                        :disabled="isUpdatingSettings"
+                        @click.stop="handleProductQueryToggle"
+                      >
+                        <span
+                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                          :class="productQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
+                        />
+                      </button>
                     </div>
+                    <p class="text-xs text-n-slate-10 mt-1">
+                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                    :class="productQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
-                    :disabled="isUpdatingSettings"
-                    @click.stop="handleProductQueryToggle"
-                  >
-                    <span
-                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                      :class="productQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
-                    />
-                  </button>
                 </div>
                 
                 <!-- Image Search Toggle -->
-                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-violet-11" />
-                    </div>
-                    <div>
+                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="w-8 h-8 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-violet-11" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-3">
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
                       </span>
-                      <p class="text-xs text-n-slate-10 mt-0.5">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
-                      </p>
+                      <button
+                        type="button"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                        :class="imageSearchEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                        :disabled="isUpdatingSettings"
+                        @click.stop="handleImageSearchToggle"
+                      >
+                        <span
+                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                          :class="imageSearchEnabled ? 'translate-x-6' : 'translate-x-1'"
+                        />
+                      </button>
                     </div>
+                    <p class="text-xs text-n-slate-10 mt-1">
+                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                    :class="imageSearchEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
-                    :disabled="isUpdatingSettings"
-                    @click.stop="handleImageSearchToggle"
-                  >
-                    <span
-                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                      :class="imageSearchEnabled ? 'translate-x-6' : 'translate-x-1'"
-                    />
-                  </button>
                 </div>
               </div>
             </div>
