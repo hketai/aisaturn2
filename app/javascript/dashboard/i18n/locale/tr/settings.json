@@ -331,6 +331,7 @@
       "SHOPIFY": {
         "STATUS_LABEL": "Durum:",
         "DISCONNECT_SUCCESS": "Shopify entegrasyonu başarıyla kaldırıldı",
+        "DISCONNECT_CONFIRM_WITH_PRODUCTS": "Shopify bağlantısını kaldırmak istediğinize emin misiniz? Bu işlem {count} senkronize edilmiş ürünü de silecektir.",
         "DISCONNECT_ERROR": "Shopify entegrasyonu kaldırılırken bir hata oluştu",
         "TEST_SUCCESS": "Bağlantı başarıyla test edildi",
         "TEST_ERROR": "Bağlantı testi başarısız oldu",

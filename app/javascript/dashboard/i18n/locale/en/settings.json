@@ -331,6 +331,7 @@
       "SHOPIFY": {
         "STATUS_LABEL": "Status:",
         "DISCONNECT_SUCCESS": "Shopify integration removed successfully",
+        "DISCONNECT_CONFIRM_WITH_PRODUCTS": "Are you sure you want to disconnect Shopify? This will also delete {count} synced products.",
         "DISCONNECT_ERROR": "An error occurred while removing Shopify integration",
         "TEST_SUCCESS": "Connection tested successfully",
         "TEST_ERROR": "Connection test failed",

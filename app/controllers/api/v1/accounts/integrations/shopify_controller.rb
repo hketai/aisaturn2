@@ -149,9 +149,27 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
   end
 
   def destroy
+    hook_id = @hook.id
+    account_id = Current.account.id
+    
+    # Önce ürünleri sil (async olarak büyük veri setleri için)
+    deleted_products_count = Shopify::Product.where(account_id: account_id, hook_id: hook_id).count
+    Shopify::Product.where(account_id: account_id, hook_id: hook_id).delete_all
+    
+    # Sync status kayıtlarını sil
+    Shopify::SyncStatus.where(account_id: account_id, hook_id: hook_id).delete_all
+    
+    # Hook'u sil
     @hook.destroy!
-    head :ok
+    
+    Rails.logger.info "[Shopify] Integration disconnected for account #{account_id}. Deleted #{deleted_products_count} products."
+    
+    render json: { 
+      success: true, 
+      message: "Shopify entegrasyonu kaldırıldı ve #{deleted_products_count} ürün silindi." 
+    }
   rescue StandardError => e
+    Rails.logger.error "[Shopify] Error destroying integration: #{e.message}"
     render json: { error: e.message }, status: :unprocessable_entity
   end
 

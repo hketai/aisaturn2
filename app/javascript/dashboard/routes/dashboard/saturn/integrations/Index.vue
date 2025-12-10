@@ -150,9 +150,16 @@ const openShopifyDialog = () => {
 
 const handleShopifyDisconnect = async () => {
   try {
-    await shopifyAPI.disconnect();
+    const response = await shopifyAPI.disconnect();
     await fetchIntegrations();
-    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_SUCCESS'), 'success');
+    
+    // Silinen ürün sayısını göster
+    const message = response.data?.message || t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_SUCCESS');
+    useAlert(message, 'success');
+    
+    // Sync durumunu sıfırla
+    syncStatus.value = null;
+    totalSyncedProducts.value = 0;
   } catch (error) {
     useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_ERROR'), 'error');
   }
@@ -182,9 +189,16 @@ const handleEditIntegration = integration => {
 };
 
 const handleDisconnectIntegration = async integration => {
-  const confirmed = window.confirm(
-    t('SIDEBAR.INTEGRATIONS.DISCONNECT_CONFIRM')
-  );
+  let confirmMessage = t('SIDEBAR.INTEGRATIONS.DISCONNECT_CONFIRM');
+  
+  // Shopify için özel uyarı - ürünlerin de silineceğini belirt
+  if (integration.id === 'shopify' && totalSyncedProducts.value > 0) {
+    confirmMessage = t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_CONFIRM_WITH_PRODUCTS', {
+      count: totalSyncedProducts.value
+    });
+  }
+  
+  const confirmed = window.confirm(confirmMessage);
   if (!confirmed) return;
 
   if (integration.id === 'shopify') {
