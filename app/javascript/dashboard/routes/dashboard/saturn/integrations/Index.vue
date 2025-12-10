@@ -221,9 +221,14 @@ const testConnection = async integration => {
   }
 };
 
-const validateStoreUrl = url => {
-  const pattern = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
-  return pattern.test(url);
+const validateStoreName = name => {
+  // Sadece store adını doğrula (myshopify.com olmadan)
+  const pattern = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/;
+  return pattern.test(name) && name.length >= 3;
+};
+
+const getFullStoreUrl = storeName => {
+  return `${storeName}.myshopify.com`;
 };
 
 const startSyncStatusPolling = () => {
@@ -323,18 +328,23 @@ const fetchSyncStatus = async () => {
 const handleShopifyConnect = async () => {
   try {
     shopifyError.value = '';
-    if (!validateStoreUrl(shopifyStoreUrl.value)) {
-      shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_URL_MESSAGE');
+    
+    // Store adını doğrula
+    if (!shopifyStoreUrl.value || !validateStoreName(shopifyStoreUrl.value)) {
+      shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.INVALID_STORE_NAME');
       return;
     }
+    
+    // Access key doğrula
     if (!shopifyAccessKey.value || shopifyAccessKey.value.trim().length === 0) {
       shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_MESSAGE');
       return;
     }
 
     isConnectingShopify.value = true;
+    const fullStoreUrl = getFullStoreUrl(shopifyStoreUrl.value);
     const { data } = await shopifyAPI.connectWithAccessKey({
-      shopDomain: shopifyStoreUrl.value,
+      shopDomain: fullStoreUrl,
       accessKey: shopifyAccessKey.value,
     });
 
@@ -368,10 +378,22 @@ const handleShopifyConnect = async () => {
       fetchSyncStatus();
     }, 500);
   } catch (error) {
-    shopifyError.value =
-      error.response?.data?.error ||
-      error.message ||
-      t('SIDEBAR.INTEGRATIONS.SHOPIFY.CONNECTION_ERROR');
+    const errorMessage = error.response?.data?.error || error.message || '';
+    
+    // API'den gelen hata mesajına göre spesifik hata göster
+    if (errorMessage.toLowerCase().includes('access') || 
+        errorMessage.toLowerCase().includes('token') ||
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        error.response?.status === 401) {
+      shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.INVALID_ACCESS_KEY');
+    } else if (errorMessage.toLowerCase().includes('store') ||
+               errorMessage.toLowerCase().includes('shop') ||
+               errorMessage.toLowerCase().includes('domain') ||
+               error.response?.status === 404) {
+      shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.INVALID_STORE_NAME');
+    } else {
+      shopifyError.value = errorMessage || t('SIDEBAR.INTEGRATIONS.SHOPIFY.CONNECTION_ERROR');
+    }
   } finally {
     isConnectingShopify.value = false;
   }
@@ -801,36 +823,46 @@ onUnmounted(() => {
       "
     >
       <div class="space-y-4">
-        <Input
-          v-model="shopifyStoreUrl"
-          :label="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_URL_LABEL')"
-          :placeholder="
-            $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_URL_PLACEHOLDER')
-          "
-          :message="
-            shopifyError && shopifyError.includes('URL')
-              ? shopifyError
-              : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_URL_MESSAGE')
-          "
-          :message-type="
-            shopifyError && shopifyError.includes('URL') ? 'error' : 'info'
-          "
-        />
+        <div>
+          <label class="block text-sm font-medium text-n-slate-12 mb-1">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_URL_LABEL') }}
+          </label>
+          <div class="flex items-center">
+            <input
+              v-model="shopifyStoreUrl"
+              type="text"
+              class="flex-1 px-3 py-2 border border-n-weak rounded-l-lg focus:outline-none focus:ring-2 focus:ring-n-brand focus:border-transparent bg-n-alpha-1 text-n-slate-12"
+              :placeholder="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_NAME_PLACEHOLDER')"
+              @input="shopifyError = ''"
+            />
+            <span class="px-3 py-2 bg-n-alpha-3 border border-l-0 border-n-weak rounded-r-lg text-n-slate-11 text-sm whitespace-nowrap">
+              .myshopify.com
+            </span>
+          </div>
+          <p
+            v-if="shopifyError && (shopifyError.includes('mağaza') || shopifyError.includes('store'))"
+            class="mt-1 text-sm text-n-ruby-9"
+          >
+            {{ shopifyError }}
+          </p>
+          <p v-else class="mt-1 text-sm text-n-slate-11">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_NAME_MESSAGE') }}
+          </p>
+        </div>
         <Input
           v-model="shopifyAccessKey"
           :label="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_LABEL')"
           type="password"
-          :placeholder="
-            $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_PLACEHOLDER')
-          "
+          :placeholder="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_PLACEHOLDER')"
           :message="
-            shopifyError && shopifyError.includes('Access')
+            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar'))
               ? shopifyError
               : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_MESSAGE')
           "
           :message-type="
-            shopifyError && shopifyError.includes('Access') ? 'error' : 'info'
+            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar')) ? 'error' : 'info'
           "
+          @input="shopifyError = ''"
         />
       </div>
     </Dialog>
