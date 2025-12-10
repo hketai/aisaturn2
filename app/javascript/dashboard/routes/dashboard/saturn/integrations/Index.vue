@@ -49,6 +49,11 @@ const shopifyAccessKey = ref('');
 const isConnectingShopify = ref(false);
 const shopifyError = ref('');
 
+// Shopify disconnect dialog
+const disconnectDialogRef = ref(null);
+const isDisconnecting = ref(false);
+const disconnectIntegration = ref(null);
+
 // Test order query
 const testOrderDialogRef = ref(null);
 const testContactId = ref('');
@@ -224,21 +229,31 @@ const handleEditIntegration = integration => {
   }
 };
 
-const handleDisconnectIntegration = async integration => {
-  let confirmMessage = t('SIDEBAR.INTEGRATIONS.DISCONNECT_CONFIRM');
-  
-  // Shopify için özel uyarı - ürünlerin de silineceğini belirt
-  if (integration.id === 'shopify' && totalSyncedProducts.value > 0) {
-    confirmMessage = t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_CONFIRM_WITH_PRODUCTS', {
-      count: totalSyncedProducts.value
-    });
+const handleDisconnectIntegration = integration => {
+  // Dialog'u aç
+  disconnectIntegration.value = integration;
+  if (disconnectDialogRef.value) {
+    disconnectDialogRef.value.open();
   }
-  
-  const confirmed = window.confirm(confirmMessage);
-  if (!confirmed) return;
+};
 
-  if (integration.id === 'shopify') {
-    await handleShopifyDisconnect();
+const handleConfirmDisconnect = async () => {
+  if (!disconnectIntegration.value) return;
+  
+  isDisconnecting.value = true;
+  
+  try {
+    if (disconnectIntegration.value.id === 'shopify') {
+      await handleShopifyDisconnect();
+    }
+    
+    // Dialog'u kapat
+    if (disconnectDialogRef.value) {
+      disconnectDialogRef.value.close();
+    }
+  } finally {
+    isDisconnecting.value = false;
+    disconnectIntegration.value = null;
   }
 };
 
@@ -1018,6 +1033,68 @@ onUnmounted(() => {
         <p class="text-xs text-n-slate-10 text-center">
           {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.CONTACT_INFO') }}
         </p>
+      </div>
+    </Dialog>
+
+    <!-- Disconnect Confirmation Dialog -->
+    <Dialog
+      ref="disconnectDialogRef"
+      :title="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.TITLE')"
+      :confirm-text="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.CONFIRM')"
+      :cancel-text="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.CANCEL')"
+      :is-loading="isDisconnecting"
+      confirm-variant="danger"
+      @confirm="handleConfirmDisconnect"
+      @close="() => { disconnectIntegration = null; }"
+    >
+      <div class="space-y-4">
+        <!-- Warning Icon -->
+        <div class="flex items-center justify-center">
+          <div class="w-16 h-16 bg-n-ruby-3 rounded-full flex items-center justify-center">
+            <Icon icon="i-lucide-alert-triangle" class="w-8 h-8 text-n-ruby-11" />
+          </div>
+        </div>
+        
+        <!-- Warning Message -->
+        <div class="text-center space-y-2">
+          <p class="text-n-slate-12 font-medium">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.WARNING') }}
+          </p>
+          <p class="text-sm text-n-slate-11">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.DESCRIPTION') }}
+          </p>
+        </div>
+        
+        <!-- Impact List -->
+        <div class="bg-n-ruby-2 border border-n-ruby-6 p-4 rounded-lg">
+          <h4 class="font-medium text-n-ruby-11 mb-2">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.IMPACT_TITLE') }}
+          </h4>
+          <ul class="space-y-2 text-sm text-n-ruby-11">
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-trash-2" class="w-4 h-4 mt-0.5" />
+              <span>
+                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.IMPACT_PRODUCTS', { count: totalSyncedProducts }) }}
+              </span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-bot" class="w-4 h-4 mt-0.5" />
+              <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.IMPACT_ASSISTANT') }}</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon icon="i-lucide-image-off" class="w-4 h-4 mt-0.5" />
+              <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.IMPACT_IMAGE_SEARCH') }}</span>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Store Info -->
+        <div v-if="disconnectIntegration?.hook?.reference_id" class="text-center">
+          <p class="text-xs text-n-slate-10">
+            {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.DISCONNECT_DIALOG.STORE_LABEL') }}
+            <span class="font-medium text-n-slate-11">{{ disconnectIntegration.hook.reference_id }}</span>
+          </p>
+        </div>
       </div>
     </Dialog>
 

@@ -332,6 +332,18 @@
         "STATUS_LABEL": "Status:",
         "DISCONNECT_SUCCESS": "Shopify integration removed successfully",
         "DISCONNECT_CONFIRM_WITH_PRODUCTS": "Are you sure you want to disconnect Shopify? This will also delete {count} synced products.",
+        "DISCONNECT_DIALOG": {
+          "TITLE": "Disconnect Shopify Integration",
+          "CONFIRM": "Yes, Disconnect",
+          "CANCEL": "Cancel",
+          "WARNING": "Are you sure you want to disconnect?",
+          "DESCRIPTION": "This action cannot be undone. All synced data will be permanently deleted.",
+          "IMPACT_TITLE": "This will affect:",
+          "IMPACT_PRODUCTS": "{count} synced products will be deleted",
+          "IMPACT_ASSISTANT": "AI assistant may not be able to answer product-related questions",
+          "IMPACT_IMAGE_SEARCH": "Image search feature will be disabled",
+          "STORE_LABEL": "Store:"
+        },
         "DISCONNECT_ERROR": "An error occurred while removing Shopify integration",
         "TEST_SUCCESS": "Connection tested successfully",
         "TEST_ERROR": "Connection test failed",
