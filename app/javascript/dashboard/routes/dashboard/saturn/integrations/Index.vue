@@ -7,6 +7,7 @@ import shopifyAPI from 'dashboard/api/integrations/shopify';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -600,80 +601,78 @@ const formatDate = dateString => {
   }).format(date);
 };
 
-// Feature Toggle Handler - Generic
-const handleFeatureToggle = async (featureName, currentValue, setterFn) => {
+// Order Query Toggle Handler
+const handleOrderQueryToggle = async () => {
   if (isUpdatingSettings.value) return;
-  
-  const newValue = !currentValue;
   isUpdatingSettings.value = true;
   
+  const newValue = orderQueryEnabled.value;
+  
   try {
-    await shopifyAPI.updateSettings({ [featureName]: newValue });
-    setterFn(newValue);
+    await shopifyAPI.updateSettings({ order_query_enabled: newValue });
     
-    // Hook'u da güncelle
     if (shopifyHook.value) {
       shopifyHook.value.settings = {
         ...shopifyHook.value.settings,
-        [featureName]: newValue,
+        order_query_enabled: newValue,
       };
     }
     
-    return true;
+    useAlert(
+      newValue
+        ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.ENABLED')
+        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DISABLED'),
+      'success'
+    );
   } catch (error) {
+    orderQueryEnabled.value = !newValue;
     useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.SETTINGS_UPDATE_ERROR'), 'error');
-    return false;
   } finally {
     isUpdatingSettings.value = false;
   }
 };
 
-// Order Query Toggle Handler
-const handleOrderQueryToggle = async () => {
-  const success = await handleFeatureToggle(
-    'order_query_enabled',
-    orderQueryEnabled.value,
-    val => { orderQueryEnabled.value = val; }
-  );
-  
-  if (success) {
-    useAlert(
-      orderQueryEnabled.value
-        ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.ENABLED')
-        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DISABLED'),
-      'success'
-    );
-  }
-};
-
 // Product Query Toggle Handler
 const handleProductQueryToggle = async () => {
-  const success = await handleFeatureToggle(
-    'product_query_enabled',
-    productQueryEnabled.value,
-    val => { productQueryEnabled.value = val; }
-  );
+  if (isUpdatingSettings.value) return;
+  isUpdatingSettings.value = true;
   
-  if (success) {
+  const newValue = productQueryEnabled.value;
+  
+  try {
+    await shopifyAPI.updateSettings({ product_query_enabled: newValue });
+    
+    if (shopifyHook.value) {
+      shopifyHook.value.settings = {
+        ...shopifyHook.value.settings,
+        product_query_enabled: newValue,
+      };
+    }
+    
     useAlert(
-      productQueryEnabled.value
+      newValue
         ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.ENABLED')
         : t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DISABLED'),
       'success'
     );
+  } catch (error) {
+    productQueryEnabled.value = !newValue;
+    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.SETTINGS_UPDATE_ERROR'), 'error');
+  } finally {
+    isUpdatingSettings.value = false;
   }
 };
 
 // Image Search Toggle Handler
 const handleImageSearchToggle = async () => {
-  const newValue = !imageSearchEnabled.value;
+  if (isUpdatingSettings.value) return;
   isUpdatingSettings.value = true;
+  
+  const newValue = imageSearchEnabled.value;
   
   try {
     await shopifyAPI.updateSettings({ image_search_enabled: newValue });
-    imageSearchEnabled.value = newValue;
     
-    // Hook'u da güncelle
     if (shopifyHook.value) {
       shopifyHook.value.settings = {
         ...shopifyHook.value.settings,
@@ -684,10 +683,12 @@ const handleImageSearchToggle = async () => {
     useAlert(
       newValue
         ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.ENABLED_SUCCESS')
-        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DISABLED_SUCCESS')
+        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DISABLED_SUCCESS'),
+      'success'
     );
   } catch (error) {
-    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'));
+    imageSearchEnabled.value = !newValue;
+    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'), 'error');
   } finally {
     isUpdatingSettings.value = false;
   }
@@ -962,18 +963,11 @@ onUnmounted(() => {
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.TITLE') }}
                       </span>
-                      <button
-                        type="button"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                        :class="orderQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                      <Switch
+                        v-model="orderQueryEnabled"
                         :disabled="isUpdatingSettings"
-                        @click.stop="handleOrderQueryToggle"
-                      >
-                        <span
-                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                          :class="orderQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
-                        />
-                      </button>
+                        @change="handleOrderQueryToggle"
+                      />
                     </div>
                     <p class="text-xs text-n-slate-10 mt-1">
                       {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
@@ -991,18 +985,11 @@ onUnmounted(() => {
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.TITLE') }}
                       </span>
-                      <button
-                        type="button"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                        :class="productQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                      <Switch
+                        v-model="productQueryEnabled"
                         :disabled="isUpdatingSettings"
-                        @click.stop="handleProductQueryToggle"
-                      >
-                        <span
-                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                          :class="productQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
-                        />
-                      </button>
+                        @change="handleProductQueryToggle"
+                      />
                     </div>
                     <p class="text-xs text-n-slate-10 mt-1">
                       {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
@@ -1020,18 +1007,11 @@ onUnmounted(() => {
                       <span class="text-sm font-medium text-n-slate-12">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
                       </span>
-                      <button
-                        type="button"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
-                        :class="imageSearchEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                      <Switch
+                        v-model="imageSearchEnabled"
                         :disabled="isUpdatingSettings"
-                        @click.stop="handleImageSearchToggle"
-                      >
-                        <span
-                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                          :class="imageSearchEnabled ? 'translate-x-6' : 'translate-x-1'"
-                        />
-                      </button>
+                        @change="handleImageSearchToggle"
+                      />
                     </div>
                     <p class="text-xs text-n-slate-10 mt-1">
                       {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
