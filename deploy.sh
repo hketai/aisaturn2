@@ -1,6 +1,7 @@
 #!/bin/bash
 # CWAIS Deploy Script
-# Kullanım: ./deploy.sh
+# Kullanım: ./deploy.sh [--init]
+#   --init: İlk kurulum için (deploy scriptini sunucuya kopyalar)
 
 set -e
 
@@ -25,7 +26,14 @@ rsync -avz --progress \
   -e "sshpass -p '$PASSWORD' ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no" \
   "$LOCAL_PATH/" "$SERVER:$REMOTE_PATH/"
 
-# 2. Sunucuda deploy script'ini çalıştır
+# 2. İlk kurulumda veya --init flag'i varsa remote deploy scriptini kopyala
+if [ "$1" == "--init" ]; then
+  echo "📝 Sunucu deploy scripti kuruluyor..."
+  sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER" \
+    "cp $REMOTE_PATH/docker/scripts/remote-deploy.sh /root/deploy.sh && chmod +x /root/deploy.sh"
+fi
+
+# 3. Sunucuda deploy script'ini çalıştır
 echo "🔨 Build başlatılıyor (arka planda)..."
 sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no "$SERVER" \
   "nohup /root/deploy.sh > /tmp/deploy.log 2>&1 &"
@@ -37,4 +45,5 @@ echo "📋 Build durumunu takip etmek için:"
 echo "   sshpass -p '$PASSWORD' ssh $SERVER 'tail -f /tmp/deploy.log'"
 echo ""
 echo "⏱️  Build genellikle 3-5 dakika sürer."
-
+echo ""
+echo "🔧 İlk kurulum için: ./deploy.sh --init"

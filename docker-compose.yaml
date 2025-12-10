@@ -32,7 +32,6 @@ services:
       - redis
       - vite
       - mailhog
-      - sidekiq
       - whatsapp-web
     ports:
       - 3000:3000
@@ -68,6 +67,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - POSTGRES_HOST=postgres
       - WHATSAPP_WEB_NODE_SERVICE_URL=http://whatsapp-web:3001
+    entrypoint: docker/entrypoints/rails.sh
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
 
   vite:
