@@ -248,6 +248,27 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     end
   end
 
+  def update_settings
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+
+    settings = params[:settings] || {}
+    
+    # Mevcut settings'i al ve yeni değerlerle birleştir
+    current_settings = hook.settings || {}
+    new_settings = current_settings.merge(settings.to_unsafe_h)
+    
+    hook.update!(settings: new_settings)
+    
+    render json: { 
+      success: true, 
+      settings: new_settings 
+    }
+  rescue StandardError => e
+    Rails.logger.error "[Shopify] Error updating settings: #{e.message}"
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   private
 
   def redirect_uri

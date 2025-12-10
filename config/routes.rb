@@ -330,6 +330,7 @@ Rails.application.routes.draw do
                 get :test
                 post :sync_products
                 get :sync_status
+                patch :update_settings
               end
             end
             resource :linear, controller: 'linear', only: [] do
