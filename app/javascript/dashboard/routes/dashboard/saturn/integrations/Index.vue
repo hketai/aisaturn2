@@ -69,6 +69,42 @@ const isEmpty = computed(() => {
   return allIntegrations.value.length === 0;
 });
 
+// Sync işlemi devam ediyor mu?
+const isSyncInProgress = computed(() => {
+  return syncStatus.value?.status === 'pending' || 
+         syncStatus.value?.status === 'syncing' ||
+         isSyncing.value;
+});
+
+// Dinamik durum metni
+const syncStatusText = computed(() => {
+  if (!syncStatus.value) {
+    return totalSyncedProducts.value > 0 
+      ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_READY', { count: totalSyncedProducts.value })
+      : t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_NO_PRODUCTS');
+  }
+  
+  switch (syncStatus.value.status) {
+    case 'pending':
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_STARTING');
+    case 'syncing':
+      if (syncStatus.value.total_products > 0) {
+        return t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
+          synced: syncStatus.value.synced_products || 0,
+          total: syncStatus.value.total_products,
+          percentage: Math.round(syncStatus.value.progress_percentage || 0)
+        });
+      }
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_SYNCING');
+    case 'completed':
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_COMPLETED');
+    case 'failed':
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_FAILED');
+    default:
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_COMPLETED');
+  }
+});
+
 const fetchIntegrations = async () => {
   isFetching.value = true;
   try {
@@ -416,10 +452,25 @@ const handleShopifyConnect = async () => {
     if (shopifyDialogRef.value) {
       shopifyDialogRef.value.close();
     }
-    // Hook bağlandıktan sonra sync durumunu kontrol et
-    setTimeout(() => {
-      fetchSyncStatus();
-    }, 500);
+    
+    // İlk bağlantıda otomatik ürün senkronizasyonu başlat
+    syncStatus.value = {
+      status: 'pending',
+      synced_products: 0,
+      total_products: 0,
+      progress_percentage: 0
+    };
+    
+    try {
+      await shopifyAPI.syncProducts(false); // full sync
+      useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_STARTED'), 'info');
+      // Polling başlat
+      startSyncStatusPolling();
+    } catch (syncError) {
+      // Sync başlatılamazsa sadece uyarı göster, bağlantı başarılı
+      // eslint-disable-next-line no-console
+      console.error('[Shopify] Auto sync failed:', syncError);
+    }
   } catch (error) {
     const errorMessage = error.response?.data?.error || error.message || '';
     
@@ -712,50 +763,46 @@ onUnmounted(() => {
             <div v-if="integration.id === 'shopify'" class="space-y-3">
               <!-- Sync button -->
               <button
-                v-if="syncStatus?.status !== 'in_progress'"
-                class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-n-blue-11 bg-n-blue-3 hover:bg-n-blue-4 rounded-lg transition-colors"
-                :disabled="syncStatus?.status === 'in_progress'"
+                class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                :class="{
+                  'text-n-blue-11 bg-n-blue-3 hover:bg-n-blue-4': !isSyncInProgress,
+                  'text-n-slate-11 bg-n-slate-3 cursor-not-allowed': isSyncInProgress,
+                }"
+                :disabled="isSyncInProgress"
                 @click="handleResync"
               >
                 <Icon
-                  :icon="
-                    syncStatus?.status === 'in_progress'
-                      ? 'i-lucide-loader-2'
-                      : 'i-lucide-refresh-cw'
-                  "
-                  :class="{
-                    'animate-spin': syncStatus?.status === 'in_progress',
-                  }"
+                  :icon="isSyncInProgress ? 'i-lucide-loader-2' : 'i-lucide-refresh-cw'"
+                  :class="{ 'animate-spin': isSyncInProgress }"
                   class="w-4 h-4"
                 />
-                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.RESYNC_PRODUCTS') }}
+                {{ isSyncInProgress ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNCING') : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.RESYNC_PRODUCTS') }}
               </button>
 
               <!-- Status Display -->
-              <div class="flex items-center gap-1 text-xs">
+              <div class="flex items-center gap-2 text-xs">
                 <span class="text-n-slate-11">{{
                   $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_LABEL')
                 }}</span>
-                <span
-                  class="font-medium"
-                  :class="{
-                    'text-n-amber-11': syncStatus?.status === 'pending',
-                    'text-n-blue-11': syncStatus?.status === 'syncing',
-                    'text-n-teal-11':
-                      syncStatus?.status === 'completed' || !syncStatus,
-                    'text-n-ruby-11': syncStatus?.status === 'failed',
-                  }"
-                >
-                  {{
-                    syncStatus?.status === 'pending'
-                      ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_PENDING')
-                      : syncStatus?.status === 'syncing'
-                        ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_SYNCING')
-                        : syncStatus?.status === 'failed'
-                          ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_FAILED')
-                          : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_COMPLETED')
-                  }}
-                </span>
+                <div class="flex items-center gap-1">
+                  <Icon
+                    v-if="isSyncInProgress"
+                    icon="i-lucide-loader-2"
+                    class="w-3 h-3 animate-spin text-n-blue-11"
+                  />
+                  <span
+                    class="font-medium"
+                    :class="{
+                      'text-n-amber-11': syncStatus?.status === 'pending',
+                      'text-n-blue-11': syncStatus?.status === 'syncing',
+                      'text-n-teal-11': syncStatus?.status === 'completed' || (!syncStatus && totalSyncedProducts > 0),
+                      'text-n-ruby-11': syncStatus?.status === 'failed',
+                      'text-n-slate-11': !syncStatus && totalSyncedProducts === 0,
+                    }"
+                  >
+                    {{ syncStatusText }}
+                  </span>
+                </div>
               </div>
 
               <!-- Last sync time -->
