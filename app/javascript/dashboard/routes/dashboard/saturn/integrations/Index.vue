@@ -456,6 +456,7 @@ const handleShopifyConnect = async () => {
         id: hookData.id,
         reference_id: hookData.reference_id,
         enabled: hookData.enabled !== false,
+        settings: hookData.settings || {},
       };
       integrations.value = [
         {
@@ -464,6 +465,13 @@ const handleShopifyConnect = async () => {
           reference_id: shopifyHook.value.reference_id,
         },
       ];
+      
+      // allIntegrations'ı güncelle
+      const shopifyIntegration = allIntegrations.value.find(i => i.id === 'shopify');
+      if (shopifyIntegration) {
+        shopifyIntegration.connected = true;
+        shopifyIntegration.hook = shopifyHook.value;
+      }
     } else {
       // Fallback to fetch if response format is different
       await fetchIntegrations();
@@ -730,58 +738,68 @@ onUnmounted(() => {
     </template>
 
     <template #contentArea>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex flex-col gap-6 max-w-4xl mx-auto">
+        <!-- Integration Cards -->
         <div
           v-for="integration in allIntegrations"
           :key="integration.id"
-          class="bg-n-slate-1 border border-n-slate-4 rounded-lg p-6 transition-colors relative"
+          class="bg-n-slate-1 border border-n-slate-4 rounded-xl overflow-hidden transition-all duration-200"
           :class="{
-            'cursor-pointer hover:border-n-slate-6':
+            'hover:border-n-slate-6 hover:shadow-lg cursor-pointer':
               !integration.comingSoon && !integration.connected,
-            'opacity-50 cursor-not-allowed': integration.comingSoon,
+            'opacity-60': integration.comingSoon,
           }"
           @click="handleIntegrationClick(integration)"
         >
-          <div
-            v-if="integration.comingSoon"
-            class="absolute top-3 right-3 bg-n-amber-9/20 text-n-amber-11 text-xs font-medium px-2 py-1 rounded"
-          >
-            {{ $t('SIDEBAR.INTEGRATIONS.COMING_SOON') }}
-          </div>
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3 flex-1">
-              <div
-                class="w-12 h-12 bg-n-slate-2 rounded-lg flex items-center justify-center flex-shrink-0"
-              >
-                <Icon :icon="integration.icon" class="w-8 h-8" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-base font-semibold text-n-slate-12 truncate">
+          <!-- Card Header -->
+          <div class="p-5 flex items-center gap-4">
+            <!-- Logo -->
+            <div
+              class="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+              :class="integration.connected ? 'bg-n-teal-3' : 'bg-n-slate-3'"
+            >
+              <Icon :icon="integration.icon" class="w-9 h-9" />
+            </div>
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-semibold text-n-slate-12">
                   {{ integration.name }}
                 </h3>
-                <p class="text-sm text-n-slate-11 mt-1 line-clamp-2">
-                  {{ integration.description }}
-                </p>
+                <span
+                  v-if="integration.connected"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-n-teal-3 text-n-teal-11"
+                >
+                  <Icon icon="i-lucide-check-circle" class="w-3 h-3" />
+                  {{ $t('SIDEBAR.INTEGRATIONS.CONNECTED') }}
+                </span>
+                <span
+                  v-if="integration.comingSoon"
+                  class="px-2 py-0.5 rounded-full text-xs font-medium bg-n-amber-3 text-n-amber-11"
+                >
+                  {{ $t('SIDEBAR.INTEGRATIONS.COMING_SOON') }}
+                </span>
               </div>
+              <p class="text-sm text-n-slate-11 mt-0.5">
+                {{ integration.description }}
+              </p>
             </div>
+
+            <!-- Actions -->
             <div
               v-if="integration.connected && !integration.comingSoon"
-              class="flex-shrink-0 ml-2 flex items-center gap-2"
+              class="flex items-center gap-2"
             >
-              <!-- Connection Test Button -->
               <button
                 type="button"
-                class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                 :class="{
-                  'bg-n-teal-9/20 text-n-teal-11':
-                    connectionTestStatus[integration.id] === 'success',
-                  'bg-n-ruby-9/20 text-n-ruby-11':
-                    connectionTestStatus[integration.id] === 'error',
-                  'bg-n-slate-2 text-n-slate-11 hover:bg-n-slate-3':
-                    !connectionTestStatus[integration.id],
+                  'bg-n-teal-3 text-n-teal-11': connectionTestStatus[integration.id] === 'success',
+                  'bg-n-ruby-3 text-n-ruby-11': connectionTestStatus[integration.id] === 'error',
+                  'bg-n-slate-3 text-n-slate-11 hover:bg-n-slate-4': !connectionTestStatus[integration.id],
                 }"
                 :disabled="isTestingConnection[integration.id]"
-                :title="$t('SIDEBAR.INTEGRATIONS.TEST_CONNECTION')"
                 @click.stop="testConnection(integration)"
               >
                 <Icon
@@ -799,65 +817,115 @@ onUnmounted(() => {
                   icon="i-lucide-x"
                   class="w-4 h-4"
                 />
-                <Icon v-else icon="i-lucide-link" class="w-4 h-4" />
+                <Icon v-else icon="i-lucide-wifi" class="w-4 h-4" />
+                {{ $t('SIDEBAR.INTEGRATIONS.TEST_CONNECTION') }}
               </button>
-              <!-- Edit Button -->
               <button
                 type="button"
-                class="flex items-center justify-center w-8 h-8 rounded-lg bg-n-slate-2 text-n-slate-11 hover:bg-n-slate-3 transition-colors"
+                class="flex items-center justify-center w-9 h-9 rounded-lg bg-n-slate-3 text-n-slate-11 hover:bg-n-slate-4 transition-colors"
                 :title="$t('SIDEBAR.INTEGRATIONS.EDIT')"
                 @click.stop="handleEditIntegration(integration)"
               >
-                <Icon icon="i-lucide-pencil" class="w-4 h-4" />
+                <Icon icon="i-lucide-settings" class="w-4 h-4" />
               </button>
-              <!-- Disconnect Button -->
               <button
                 type="button"
-                class="flex items-center justify-center w-8 h-8 rounded-lg bg-n-ruby-3 text-n-ruby-11 hover:bg-n-ruby-4 transition-colors"
+                class="flex items-center justify-center w-9 h-9 rounded-lg bg-n-ruby-3 text-n-ruby-11 hover:bg-n-ruby-4 transition-colors"
                 :title="$t('SIDEBAR.INTEGRATIONS.DISCONNECT')"
                 @click.stop="handleDisconnectIntegration(integration)"
               >
                 <Icon icon="i-lucide-unplug" class="w-4 h-4" />
               </button>
             </div>
-            <div v-else-if="!integration.comingSoon" class="flex-shrink-0 ml-2">
-              <Icon
-                icon="i-lucide-chevron-right"
-                class="w-5 h-5 text-n-slate-9"
-              />
+            <div v-else-if="!integration.comingSoon" class="flex-shrink-0">
+              <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-n-brand text-white text-sm font-medium">
+                <Icon icon="i-lucide-plug" class="w-4 h-4" />
+                {{ $t('SIDEBAR.INTEGRATIONS.CONNECT') }}
+              </div>
             </div>
           </div>
+
+          <!-- Connected Integration Details -->
           <div
             v-if="integration.connected && integration.hook?.reference_id"
-            class="pt-4 border-t border-n-slate-4 space-y-3"
+            class="border-t border-n-slate-4"
           >
-            <div class="flex items-center justify-between">
-              <p class="text-xs text-n-slate-11">
-                <span class="font-medium">
-                  {{ $t('SIDEBAR.INTEGRATIONS.STORE') }}
+            <!-- Stats Row -->
+            <div class="px-5 py-4 bg-n-alpha-1 flex items-center gap-6 flex-wrap">
+              <!-- Store Info -->
+              <div class="flex items-center gap-2">
+                <Icon icon="i-lucide-store" class="w-4 h-4 text-n-slate-10" />
+                <span class="text-sm text-n-slate-11">
+                  {{ integration.hook.reference_id }}
                 </span>
-                {{ integration.hook.reference_id }}
-              </p>
-              <p
-                v-if="integration.id === 'shopify' && totalSyncedProducts > 0"
-                class="text-xs font-medium text-n-blue-11"
-              >
-                {{ totalSyncedProducts }}
-                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCTS') }}
-              </p>
-            </div>
+              </div>
 
-            <!-- Sync Section (only for Shopify) -->
-            <div v-if="integration.id === 'shopify'" class="space-y-3">
-              <!-- Sync button -->
+              <!-- Product Count -->
+              <div
+                v-if="integration.id === 'shopify' && totalSyncedProducts > 0"
+                class="flex items-center gap-2"
+              >
+                <Icon icon="i-lucide-package" class="w-4 h-4 text-n-blue-11" />
+                <span class="text-sm font-medium text-n-blue-11">
+                  {{ totalSyncedProducts.toLocaleString() }} {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCTS') }}
+                </span>
+              </div>
+
+              <!-- Sync Status -->
+              <div
+                v-if="integration.id === 'shopify'"
+                class="flex items-center gap-2"
+              >
+                <Icon
+                  v-if="isSyncInProgress"
+                  icon="i-lucide-loader-2"
+                  class="w-4 h-4 animate-spin text-n-blue-11"
+                />
+                <Icon
+                  v-else-if="syncStatus?.status === 'completed' || totalSyncedProducts > 0"
+                  icon="i-lucide-check-circle-2"
+                  class="w-4 h-4 text-n-teal-11"
+                />
+                <Icon
+                  v-else-if="syncStatus?.status === 'failed'"
+                  icon="i-lucide-alert-circle"
+                  class="w-4 h-4 text-n-ruby-11"
+                />
+                <span
+                  class="text-sm"
+                  :class="{
+                    'text-n-amber-11': syncStatus?.status === 'pending',
+                    'text-n-blue-11': syncStatus?.status === 'syncing',
+                    'text-n-teal-11': syncStatus?.status === 'completed' || (!syncStatus && totalSyncedProducts > 0),
+                    'text-n-ruby-11': syncStatus?.status === 'failed',
+                    'text-n-slate-11': !syncStatus && totalSyncedProducts === 0,
+                  }"
+                >
+                  {{ syncStatusText }}
+                </span>
+              </div>
+
+              <!-- Last Sync -->
+              <div
+                v-if="integration.id === 'shopify' && syncStatus?.completed_at"
+                class="flex items-center gap-2 ml-auto"
+              >
+                <Icon icon="i-lucide-clock" class="w-4 h-4 text-n-slate-10" />
+                <span class="text-sm text-n-slate-10">
+                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.LAST_SYNC') }}: {{ formatDate(syncStatus.completed_at) }}
+                </span>
+              </div>
+
+              <!-- Sync Button -->
               <button
-                class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                v-if="integration.id === 'shopify'"
+                class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ml-auto"
                 :class="{
                   'text-n-blue-11 bg-n-blue-3 hover:bg-n-blue-4': !isSyncInProgress,
                   'text-n-slate-11 bg-n-slate-3 cursor-not-allowed': isSyncInProgress,
                 }"
                 :disabled="isSyncInProgress"
-                @click="handleResync"
+                @click.stop="handleResync"
               >
                 <Icon
                   :icon="isSyncInProgress ? 'i-lucide-loader-2' : 'i-lucide-refresh-cw'"
@@ -866,157 +934,113 @@ onUnmounted(() => {
                 />
                 {{ isSyncInProgress ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNCING') : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.RESYNC_PRODUCTS') }}
               </button>
+            </div>
 
-              <!-- Status Display -->
-              <div class="flex items-center gap-2 text-xs">
-                <span class="text-n-slate-11">{{
-                  $t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_LABEL')
-                }}</span>
-                <div class="flex items-center gap-1">
-                  <Icon
-                    v-if="isSyncInProgress"
-                    icon="i-lucide-loader-2"
-                    class="w-3 h-3 animate-spin text-n-blue-11"
-                  />
-                  <span
-                    class="font-medium"
-                    :class="{
-                      'text-n-amber-11': syncStatus?.status === 'pending',
-                      'text-n-blue-11': syncStatus?.status === 'syncing',
-                      'text-n-teal-11': syncStatus?.status === 'completed' || (!syncStatus && totalSyncedProducts > 0),
-                      'text-n-ruby-11': syncStatus?.status === 'failed',
-                      'text-n-slate-11': !syncStatus && totalSyncedProducts === 0,
-                    }"
-                  >
-                    {{ syncStatusText }}
-                  </span>
-                </div>
+            <!-- Progress Bar (when syncing) -->
+            <div
+              v-if="integration.id === 'shopify' && syncStatus && (syncStatus.status === 'syncing' || syncStatus.status === 'pending')"
+              class="px-5 pb-4 bg-n-alpha-1"
+            >
+              <div class="w-full bg-n-slate-3 rounded-full h-1.5 overflow-hidden">
+                <div
+                  class="h-full bg-n-blue-9 transition-all duration-300"
+                  :style="{ width: `${syncStatus.progress_percentage || 0}%` }"
+                />
               </div>
-
-              <!-- Last sync time -->
-              <p
-                v-if="syncStatus?.completed_at"
-                class="text-xs text-n-slate-10 text-center"
-              >
-                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.LAST_SYNC') }}:
-                {{ formatDate(syncStatus.completed_at) }}
+              <p v-if="syncStatus.total_products > 0" class="text-xs text-n-slate-11 mt-1.5">
+                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
+                  synced: syncStatus.synced_products || 0,
+                  total: syncStatus.total_products,
+                  percentage: Math.round(syncStatus.progress_percentage || 0),
+                }) }}
               </p>
+            </div>
 
-              <!-- Progress Bar (when syncing) -->
-              <div
-                v-if="
-                  syncStatus &&
-                  (syncStatus.status === 'syncing' ||
-                    syncStatus.status === 'pending')
-                "
-                class="space-y-1"
-              >
-                <div
-                  class="w-full bg-n-slate-3 rounded-full h-2 overflow-hidden"
-                >
-                  <div
-                    class="h-full bg-n-blue-9 transition-all duration-300"
-                    :style="{
-                      width: `${syncStatus.progress_percentage || 0}%`,
-                    }"
-                  />
-                </div>
-                <div
-                  v-if="syncStatus.total_products > 0"
-                  class="text-xs text-n-slate-11 text-center"
-                >
-                  {{
-                    $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
-                      synced: syncStatus.synced_products || 0,
-                      total: syncStatus.total_products,
-                      percentage: Math.round(
-                        syncStatus.progress_percentage || 0
-                      ),
-                    })
-                  }}
-                </div>
-              </div>
-
-              <!-- Error Message -->
-              <div
-                v-if="
-                  syncStatus?.status === 'failed' && syncStatus?.error_message
-                "
-                class="text-xs text-n-ruby-11 bg-n-ruby-9/20 p-2 rounded"
-              >
+            <!-- Error Message -->
+            <div
+              v-if="integration.id === 'shopify' && syncStatus?.status === 'failed' && syncStatus?.error_message"
+              class="px-5 pb-4 bg-n-alpha-1"
+            >
+              <div class="flex items-center gap-2 p-3 rounded-lg bg-n-ruby-3 text-n-ruby-11 text-sm">
+                <Icon icon="i-lucide-alert-triangle" class="w-4 h-4 flex-shrink-0" />
                 {{ syncStatus.error_message }}
               </div>
+            </div>
 
-              <!-- AI Features Section -->
-              <div class="pt-3 border-t border-n-slate-4 space-y-4">
+            <!-- AI Features Section (only for Shopify) -->
+            <div v-if="integration.id === 'shopify'" class="p-5 bg-n-alpha-1 border-t border-n-slate-4">
+              <div class="flex items-center gap-2 mb-4">
+                <Icon icon="i-lucide-sparkles" class="w-5 h-5 text-n-violet-11" />
                 <h4 class="text-sm font-semibold text-n-slate-12">
                   {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.AI_FEATURES.TITLE') }}
                 </h4>
-                
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <!-- Order Query Toggle -->
-                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="w-8 h-8 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon icon="i-lucide-shopping-bag" class="w-4 h-4 text-n-blue-11" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="text-sm font-medium text-n-slate-12">
+                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-shopping-bag" class="w-5 h-5 text-n-blue-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12 block">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.TITLE') }}
                       </span>
-                      <Switch
-                        v-model="orderQueryEnabled"
-                        :disabled="isUpdatingSettings"
-                        @change="handleOrderQueryToggle"
-                      />
+                      <span class="text-xs text-n-slate-10">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
+                      </span>
                     </div>
-                    <p class="text-xs text-n-slate-10 mt-1">
-                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
-                    </p>
                   </div>
+                  <Switch
+                    v-model="orderQueryEnabled"
+                    :disabled="isUpdatingSettings"
+                    @change="handleOrderQueryToggle"
+                  />
                 </div>
-                
+
                 <!-- Product Query Toggle -->
-                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="w-8 h-8 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon icon="i-lucide-package-search" class="w-4 h-4 text-n-amber-11" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="text-sm font-medium text-n-slate-12">
+                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-package-search" class="w-5 h-5 text-n-amber-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12 block">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.TITLE') }}
                       </span>
-                      <Switch
-                        v-model="productQueryEnabled"
-                        :disabled="isUpdatingSettings"
-                        @change="handleProductQueryToggle"
-                      />
+                      <span class="text-xs text-n-slate-10">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
+                      </span>
                     </div>
-                    <p class="text-xs text-n-slate-10 mt-1">
-                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
-                    </p>
                   </div>
+                  <Switch
+                    v-model="productQueryEnabled"
+                    :disabled="isUpdatingSettings"
+                    @change="handleProductQueryToggle"
+                  />
                 </div>
-                
+
                 <!-- Image Search Toggle -->
-                <div class="flex items-start gap-3 p-3 bg-n-alpha-2 rounded-lg">
-                  <div class="w-8 h-8 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-violet-11" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="text-sm font-medium text-n-slate-12">
+                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-image-search" class="w-5 h-5 text-n-violet-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12 block">
                         {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
                       </span>
-                      <Switch
-                        v-model="imageSearchEnabled"
-                        :disabled="isUpdatingSettings"
-                        @change="handleImageSearchToggle"
-                      />
+                      <span class="text-xs text-n-slate-10">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
+                      </span>
                     </div>
-                    <p class="text-xs text-n-slate-10 mt-1">
-                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
-                    </p>
                   </div>
+                  <Switch
+                    v-model="imageSearchEnabled"
+                    :disabled="isUpdatingSettings"
+                    @change="handleImageSearchToggle"
+                  />
                 </div>
               </div>
             </div>
@@ -1056,9 +1080,8 @@ onUnmounted(() => {
               :placeholder="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.STORE_NAME_PLACEHOLDER')"
               @input="shopifyError = ''"
             />
-            <span class="px-3 py-2 bg-n-alpha-3 border border-l-0 border-n-weak rounded-r-lg text-n-slate-11 text-sm whitespace-nowrap">
-              .myshopify.com
-            </span>
+            <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
+            <span class="px-3 py-2 bg-n-alpha-3 border border-l-0 border-n-weak rounded-r-lg text-n-slate-11 text-sm whitespace-nowrap">.myshopify.com</span>
           </div>
           <p
             v-if="shopifyError && (shopifyError.includes('mağaza') || shopifyError.includes('store'))"

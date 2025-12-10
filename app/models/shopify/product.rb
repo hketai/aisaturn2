@@ -71,8 +71,12 @@ module Shopify
     scope :needs_sync, -> { where('last_synced_at < ? OR last_synced_at IS NULL', 24.hours.ago) }
     scope :with_embedding, -> { where.not(embedding: nil) }
 
-    # Callbacks
-    after_save :update_embedding_async, if: :should_update_embedding?
+    # Associations
+    has_many :product_embeddings, class_name: 'Shopify::ProductEmbedding', foreign_key: 'shopify_product_id', dependent: :destroy
+    has_many :product_image_embeddings, class_name: 'Shopify::ProductImageEmbedding', foreign_key: 'shopify_product_id', dependent: :destroy
+
+    # Callbacks - embedding artık gece job'ı ile yapılıyor
+    # after_save :update_embedding_async, if: :should_update_embedding?
 
     # Helper metodlar
     def shopify?
@@ -206,6 +210,52 @@ module Shopify
       update_column(:last_queried_at, Time.current)
     end
 
+    # Content hash hesaplama - ERP güncellemelerinden etkilenmemek için
+    def calculate_content_hash
+      content = [title, description, product_type, vendor]
+      if variants.present?
+        variant_list = variants.is_a?(String) ? JSON.parse(variants) : variants
+        variant_data = variant_list.map { |v| "#{v['title']}:#{v['price']}:#{v['sku']}" }
+        content += variant_data
+      end
+      Digest::MD5.hexdigest(content.compact.join('|'))
+    rescue StandardError
+      Digest::MD5.hexdigest([title, description].compact.join('|'))
+    end
+
+    # Image hash hesaplama - görsel değişikliklerini takip etmek için
+    def calculate_image_hash
+      return nil if images.blank?
+
+      image_list = images.is_a?(String) ? JSON.parse(images) : images
+      image_urls = image_list.map { |img| img['src'] }.compact
+      return nil if image_urls.empty?
+
+      Digest::MD5.hexdigest(image_urls.sort.join('|'))
+    rescue StandardError
+      nil
+    end
+
+    # Content değişti mi kontrolü
+    def content_changed?
+      calculate_content_hash != content_hash
+    end
+
+    # Image değişti mi kontrolü
+    def image_changed?
+      calculate_image_hash != image_hash
+    end
+
+    # Mevcut embedding'i al (yeni tablo üzerinden)
+    def current_embedding
+      product_embeddings.find_by(content_hash: content_hash)&.embedding
+    end
+
+    # Mevcut image embedding'i al (yeni tablo üzerinden)
+    def current_image_embedding
+      product_image_embeddings.find_by(image_hash: image_hash)&.embedding
+    end
+
     private
 
     def should_update_embedding?
@@ -213,7 +263,8 @@ module Shopify
     end
 
     def update_embedding_async
-      ::Shopify::UpdateProductEmbeddingJob.perform_later(id)
+      # DEPRECATED: Artık gece job'ı ile yapılıyor
+      # ::Shopify::UpdateProductEmbeddingJob.perform_later(id)
     end
   end
 end

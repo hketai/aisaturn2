@@ -323,6 +323,8 @@
       "EMPTY_STATE_TITLE": "No integrations yet",
       "EMPTY_STATE_DESCRIPTION": "Add an integration to manage your integrations",
       "COMING_SOON": "Coming Soon",
+      "CONNECTED": "Connected",
+      "CONNECT": "Connect",
       "STORE": "Store",
       "DISCONNECT_CONFIRM": "Are you sure you want to disconnect this integration?",
       "TEST_CONNECTION": "Test Connection",

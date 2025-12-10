@@ -1,7 +1,7 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::BaseController
   include Shopify::IntegrationHelper
   before_action :setup_shopify_context, only: [:orders, :test]
-  before_action :fetch_hook, except: [:auth, :connect, :show, :test]
+  before_action :fetch_hook, except: [:auth, :connect, :show, :test, :test_credentials]
   before_action :validate_contact, only: [:orders]
 
   def show
@@ -35,8 +35,9 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     # Test the access token and get shop info
     shop_info = nil
     begin
+      api_version = '2024-10'
       test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
-      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session, api_version: api_version)
       response = test_client.get(path: 'shop.json')
       shop_info = response.body['shop']
     rescue StandardError => e
@@ -111,11 +112,22 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
 
     # Test the access token by fetching shop info
     begin
-      test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
-      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
+      Rails.logger.info "[Shopify] Testing credentials for shop: #{shop_domain}"
+      
+      # API versiyonunu ayarla
+      api_version = '2024-10'
+      test_session = ShopifyAPI::Auth::Session.new(
+        shop: shop_domain, 
+        access_token: access_token
+      )
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(
+        session: test_session,
+        api_version: api_version
+      )
       response = test_client.get(path: 'shop.json')
       shop_info = response.body['shop']
 
+      Rails.logger.info "[Shopify] Successfully connected to shop: #{shop_info['name']}"
       render json: { 
         success: true, 
         shop: {
@@ -125,15 +137,17 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
         }
       }
     rescue ShopifyAPI::Errors::HttpResponseError => e
-      error_message = if e.response.code == 401
+      Rails.logger.error "[Shopify] HTTP Error: code=#{e.response&.code}, message=#{e.message}, body=#{e.response&.body}"
+      error_message = if e.response&.code == 401
                         'Erişim anahtarı geçersiz veya süresi dolmuş'
-                      elsif e.response.code == 404
-                        'Mağaza bulunamadı'
+                      elsif e.response&.code == 404
+                        'Mağaza bulunamadı veya API erişimi yok'
                       else
-                        "Bağlantı hatası: #{e.message}"
+                        "Bağlantı hatası (#{e.response&.code}): #{e.message}"
                       end
       render json: { error: error_message, success: false }, status: :unprocessable_entity
     rescue StandardError => e
+      Rails.logger.error "[Shopify] Error: #{e.class} - #{e.message}"
       render json: { error: "Bağlantı hatası: #{e.message}", success: false }, status: :unprocessable_entity
     end
   end

@@ -323,6 +323,8 @@
       "EMPTY_STATE_TITLE": "Henüz entegrasyon yok",
       "EMPTY_STATE_DESCRIPTION": "Entegrasyonlarınızı yönetmek için bir entegrasyon ekleyin",
       "COMING_SOON": "Yakında",
+      "CONNECTED": "Bağlı",
+      "CONNECT": "Bağlan",
       "STORE": "Mağaza",
       "DISCONNECT_CONFIRM": "Bu entegrasyonun bağlantısını kesmek istediğinizden emin misiniz?",
       "TEST_CONNECTION": "Bağlantıyı Test Et",

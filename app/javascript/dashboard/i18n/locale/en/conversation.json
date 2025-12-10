@@ -301,6 +301,13 @@
     "GREETING_AFTERNOON": "👋 Good afternoon, {name}. Welcome to {installationName}.",
     "GREETING_EVENING": "👋 Good evening, {name}. Welcome to {installationName}.",
     "READ_LATEST_UPDATES": "Read our latest updates",
+    "EMPTY_STATE": {
+      "TITLE": "Welcome, {name}!",
+      "DESCRIPTION": "You haven't added any channels yet. Add a channel to start receiving messages from your customers.",
+      "CHANNELS_INFO": "Connect WhatsApp, Email, Instagram, Web Chat and more to manage all your conversations in one place.",
+      "ADD_CHANNEL": "Add Your First Channel",
+      "HELP_TEXT": "Need help? Check out our documentation for step-by-step guides."
+    },
     "ALL_CONVERSATION": {
       "TITLE": "All your conversations in one place",
       "DESCRIPTION": "View all the conversations from your customers in one single dashboard. You can filter the conversations by the incoming channel, label and status.",

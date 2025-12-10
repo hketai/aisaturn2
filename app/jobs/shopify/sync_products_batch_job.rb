@@ -25,7 +25,7 @@ module Shopify
         shop: hook.reference_id,
         access_token: hook.access_token
       )
-      client = ShopifyAPI::Clients::Rest::Admin.new(session: session)
+      client = ShopifyAPI::Clients::Rest::Admin.new(session: session, api_version: '2024-10')
       
       # Cursor-based pagination ile ürünleri çek
       query_params = {
@@ -80,12 +80,16 @@ module Shopify
             total_inventory: calculate_total_inventory(shopify_product['variants']),
             last_synced_at: Time.current
           )
-          
+
+          # Content ve image hash'lerini hesapla (embedding için değişiklik takibi)
+          product.content_hash = product.calculate_content_hash
+          product.image_hash = product.calculate_image_hash
+
           product.save!
           synced_count += 1
-          
-          # Embedding'i background'da oluştur (öncelikli değil)
-          UpdateProductEmbeddingJob.set(queue: :low).perform_later(product.id)
+
+          # NOT: Embedding artık gece job'ı ile yapılıyor (NightlyEmbeddingUpdateJob)
+          # Bu sayede sync hızlı tamamlanır ve embedding maliyeti optimize edilir
           
         rescue StandardError => e
           Rails.logger.error "Failed to save product #{shopify_product['id']}: #{e.message}"

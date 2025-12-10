@@ -181,20 +181,41 @@ class Saturn::Shopify::ProductSearchService
   private
 
   # Sadece vector/semantic search (rerank için)
+  # YENİ: ProductEmbedding tablosunu kullanır, fallback olarak eski embedding'i dener
   def vector_only_search(query, limit)
     query_embedding = @embedding_service.create_vector_embedding(query)
 
-    results = Shopify::Product
-              .for_account(@account.id)
-              .where.not(embedding: nil)
-              .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
-              .limit(limit)
-              .to_a
+    # Önce yeni ProductEmbedding tablosundan ara
+    embedding_results = Shopify::ProductEmbedding
+                        .for_account(@account.id)
+                        .with_embedding
+                        .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                        .limit(limit)
+                        .includes(:shopify_product)
+
+    if embedding_results.any?
+      results = embedding_results.map do |pe|
+        product = pe.shopify_product
+        # neighbor_distance'ı ürüne ekle (uyumluluk için)
+        product.define_singleton_method(:neighbor_distance) { pe.neighbor_distance }
+        product
+      end
+    else
+      # Fallback: Eski embedding kolonunu kullan (geçiş dönemi için)
+      results = Shopify::Product
+                .for_account(@account.id)
+                .where.not(embedding: nil)
+                .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                .limit(limit)
+                .to_a
+    end
 
     # Similarity skorlarını logla
     results.each do |product|
-      similarity = (1.0 - product.neighbor_distance) * 100
-      Rails.logger.debug "[SHOPIFY RERANK] 📊 Candidate: '#{product.title}' (similarity: #{similarity.round(1)}%)"
+      if product.respond_to?(:neighbor_distance)
+        similarity = (1.0 - product.neighbor_distance) * 100
+        Rails.logger.debug "[SHOPIFY RERANK] 📊 Candidate: '#{product.title}' (similarity: #{similarity.round(1)}%)"
+      end
     end
 
     results
@@ -310,21 +331,40 @@ class Saturn::Shopify::ProductSearchService
   end
 
   # Semantic search with similarity threshold
+  # YENİ: ProductEmbedding tablosunu kullanır, fallback olarak eski embedding'i dener
   def semantic_search_with_threshold(query, limit)
     query_embedding = @embedding_service.create_vector_embedding(query)
 
-    results = Shopify::Product
-              .for_account(@account.id)
-              .where.not(embedding: nil)
-              .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
-              .limit(limit * 2) # Daha fazla al, filtreleyeceğiz
+    # Önce yeni ProductEmbedding tablosundan ara
+    embedding_results = Shopify::ProductEmbedding
+                        .for_account(@account.id)
+                        .with_embedding
+                        .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                        .limit(limit * 2)
+                        .includes(:shopify_product)
+
+    if embedding_results.any?
+      results = embedding_results.map do |pe|
+        product = pe.shopify_product
+        product.define_singleton_method(:neighbor_distance) { pe.neighbor_distance }
+        product
+      end
+    else
+      # Fallback: Eski embedding kolonunu kullan
+      results = Shopify::Product
+                .for_account(@account.id)
+                .where.not(embedding: nil)
+                .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                .limit(limit * 2)
+                .to_a
+    end
 
     # Cosine distance'ı similarity'ye çevir ve eşiği uygula
-    # Cosine distance = 1 - cosine_similarity
-    # Yani distance < 0.7 => similarity > 0.3
     max_distance = 1.0 - MIN_SEMANTIC_SIMILARITY
 
     filtered = results.select do |product|
+      next false unless product.respond_to?(:neighbor_distance)
+
       distance = product.neighbor_distance
       if distance <= max_distance
         true
@@ -345,6 +385,19 @@ class Saturn::Shopify::ProductSearchService
   def semantic_search(query, limit)
     query_embedding = @embedding_service.create_vector_embedding(query)
 
+    # Önce yeni ProductEmbedding tablosundan ara
+    embedding_results = Shopify::ProductEmbedding
+                        .for_account(@account.id)
+                        .with_embedding
+                        .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                        .limit(limit)
+                        .includes(:shopify_product)
+
+    if embedding_results.any?
+      return embedding_results.map(&:shopify_product)
+    end
+
+    # Fallback: Eski embedding kolonunu kullan
     Shopify::Product
       .for_account(@account.id)
       .where.not(embedding: nil)
@@ -597,17 +650,35 @@ class Saturn::Shopify::ProductSearchService
   private
 
   # Image embedding ile vector search
+  # YENİ: ProductImageEmbedding tablosunu kullanır, fallback olarak eski image_embedding'i dener
   def image_vector_search(query_embedding, limit)
     return [] if query_embedding.blank?
 
+    # Önce yeni ProductImageEmbedding tablosundan ara
+    image_embedding_results = Shopify::ProductImageEmbedding
+                              .for_account(@account.id)
+                              .with_embedding
+                              .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+                              .limit(limit)
+                              .includes(:shopify_product)
+
+    if image_embedding_results.any?
+      Rails.logger.info "[IMAGE SEARCH] Using ProductImageEmbedding table (#{image_embedding_results.size} results)"
+      return image_embedding_results.map(&:shopify_product)
+    end
+
+    # Fallback: Eski image_embedding kolonunu kullan
     embedding_string = "[#{query_embedding.join(',')}]"
 
-    Shopify::Product
-      .for_account(@account.id)
-      .where.not(image_embedding: nil)
-      .order(Arel.sql("image_embedding <=> '#{embedding_string}'"))
-      .limit(limit)
-      .to_a
+    results = Shopify::Product
+              .for_account(@account.id)
+              .where.not(image_embedding: nil)
+              .order(Arel.sql("image_embedding <=> '#{embedding_string}'"))
+              .limit(limit)
+              .to_a
+
+    Rails.logger.info "[IMAGE SEARCH] Using legacy image_embedding column (#{results.size} results)"
+    results
   rescue StandardError => e
     Rails.logger.error "[IMAGE SEARCH] Vector search error: #{e.message}"
     []

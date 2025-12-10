@@ -67,3 +67,17 @@ shopify_daily_incremental_sync_job:
   cron: '0 3 * * *'
   class: 'Shopify::DailyIncrementalSyncJob'
   queue: scheduled_jobs
+
+# Nightly text embedding update - executed daily at 04:00 UTC
+# Updates embeddings for products with changed content (content_hash based)
+shopify_nightly_embedding_update_job:
+  cron: '0 4 * * *'
+  class: 'Shopify::NightlyEmbeddingUpdateJob'
+  queue: scheduled_jobs
+
+# Nightly image embedding update - executed daily at 05:00 UTC
+# Updates image embeddings for accounts with image_search enabled (image_hash based)
+shopify_nightly_image_embedding_job:
+  cron: '0 5 * * *'
+  class: 'Shopify::NightlyImageEmbeddingJob'
+  queue: scheduled_jobs

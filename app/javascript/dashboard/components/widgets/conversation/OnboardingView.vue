@@ -1,80 +1,127 @@
 <script setup>
-import OnboardingFeatureCard from './OnboardingFeatureCard.vue';
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useStoreGetters } from 'dashboard/composables/store';
+import { useAccount } from 'dashboard/composables/useAccount';
 
+const router = useRouter();
 const getters = useStoreGetters();
-const { t } = useI18n();
-const globalConfig = computed(() => getters['globalConfig/get'].value);
+const { accountId } = useAccount();
+
 const currentUser = computed(() => getters.getCurrentUser.value);
 
-const greetingMessage = computed(() => {
-  const hours = new Date().getHours();
-  let translationKey;
-  if (hours < 12) {
-    translationKey = 'ONBOARDING.GREETING_MORNING';
-  } else if (hours < 18) {
-    translationKey = 'ONBOARDING.GREETING_AFTERNOON';
-  } else {
-    translationKey = 'ONBOARDING.GREETING_EVENING';
-  }
-  return t(translationKey, {
-    name: currentUser.value.name,
-    installationName: globalConfig.value.installationName,
+const navigateToInbox = () => {
+  router.push({
+    name: 'settings_inbox_new',
+    params: { accountId: accountId.value },
   });
-});
+};
 </script>
 
 <template>
   <div
-    class="min-h-screen lg:max-w-5xl max-w-4xl mx-auto grid grid-cols-2 grid-rows-[auto_1fr_1fr] auto-rows-min gap-4 p-8 w-full font-inter overflow-auto"
+    class="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-n-slate-2 via-n-slate-1 to-n-blue-2"
   >
-    <div class="col-span-full self-start">
-      <p
-        class="text-xl font-semibold text-n-slate-12 font-interDisplay tracking-[0.3px]"
+    <div
+      class="max-w-xl w-full text-center space-y-8"
+    >
+      <!-- Icon -->
+      <div class="flex justify-center">
+        <div
+          class="w-24 h-24 rounded-2xl bg-gradient-to-br from-n-blue-9 to-n-violet-9 flex items-center justify-center shadow-lg"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-12 h-12 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Welcome Text -->
+      <div class="space-y-3">
+        <h1
+          class="text-3xl font-bold text-n-slate-12 font-interDisplay tracking-tight"
+        >
+          {{ $t('ONBOARDING.EMPTY_STATE.TITLE', { name: currentUser.name }) }}
+        </h1>
+        <p class="text-n-slate-11 text-lg leading-relaxed max-w-md mx-auto">
+          {{ $t('ONBOARDING.EMPTY_STATE.DESCRIPTION') }}
+        </p>
+      </div>
+
+      <!-- Channel Info Card -->
+      <div
+        class="bg-white/60 dark:bg-n-slate-3/60 backdrop-blur-sm border border-n-slate-4 rounded-2xl p-6 space-y-4"
       >
-        {{ greetingMessage }}
-      </p>
-      <p class="text-n-slate-11 max-w-2xl text-base">
-        {{
-          $t('ONBOARDING.DESCRIPTION', {
-            installationName: globalConfig.installationName,
-          })
-        }}
+        <!-- eslint-disable vue/no-bare-strings-in-template -->
+        <div class="flex items-center justify-center gap-4 flex-wrap">
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-n-slate-2 rounded-lg text-sm text-n-slate-11"
+          >
+            <i class="i-ri-whatsapp-fill text-lg text-green-500" />
+            <span>WhatsApp</span>
+          </div>
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-n-slate-2 rounded-lg text-sm text-n-slate-11"
+          >
+            <i class="i-ri-mail-fill text-lg text-n-blue-9" />
+            <span>Email</span>
+          </div>
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-n-slate-2 rounded-lg text-sm text-n-slate-11"
+          >
+            <i class="i-ri-global-fill text-lg text-n-slate-9" />
+            <span>Web Chat</span>
+          </div>
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-n-slate-2 rounded-lg text-sm text-n-slate-11"
+          >
+            <i class="i-ri-instagram-fill text-lg text-pink-500" />
+            <span>Instagram</span>
+          </div>
+        </div>
+        <!-- eslint-enable vue/no-bare-strings-in-template -->
+        <p class="text-n-slate-10 text-sm">
+          {{ $t('ONBOARDING.EMPTY_STATE.CHANNELS_INFO') }}
+        </p>
+      </div>
+
+      <!-- CTA Button -->
+      <button
+        class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-n-blue-9 to-n-violet-9 hover:from-n-blue-10 hover:to-n-violet-10 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+        @click="navigateToInbox"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
+        </svg>
+        {{ $t('ONBOARDING.EMPTY_STATE.ADD_CHANNEL') }}
+      </button>
+
+      <!-- Help Text -->
+      <p class="text-n-slate-10 text-sm">
+        {{ $t('ONBOARDING.EMPTY_STATE.HELP_TEXT') }}
       </p>
     </div>
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/omnichannel-inbox.png"
-      image-alt="Omnichannel"
-      to="settings_inbox_new"
-      :title="$t('ONBOARDING.ALL_CONVERSATION.TITLE')"
-      :description="$t('ONBOARDING.ALL_CONVERSATION.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.ALL_CONVERSATION.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/teams.png"
-      image-alt="Teams"
-      to="settings_teams_new"
-      :title="$t('ONBOARDING.TEAM_MEMBERS.TITLE')"
-      :description="$t('ONBOARDING.TEAM_MEMBERS.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.TEAM_MEMBERS.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/canned-responses.png"
-      image-alt="Canned responses"
-      to="canned_list"
-      :title="$t('ONBOARDING.CANNED_RESPONSES.TITLE')"
-      :description="$t('ONBOARDING.CANNED_RESPONSES.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.CANNED_RESPONSES.NEW_LINK')"
-    />
-    <OnboardingFeatureCard
-      image-src="/dashboard/images/onboarding/labels.png"
-      image-alt="Labels"
-      to="labels_list"
-      :title="$t('ONBOARDING.LABELS.TITLE')"
-      :description="$t('ONBOARDING.LABELS.DESCRIPTION')"
-      :link-text="$t('ONBOARDING.LABELS.NEW_LINK')"
-    />
   </div>
 </template>

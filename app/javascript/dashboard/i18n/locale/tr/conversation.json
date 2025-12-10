@@ -297,10 +297,17 @@
   "ONBOARDING": {
     "TITLE": "Merhaba 👋, {installationName}'a hoş geldiniz!",
     "DESCRIPTION": "Üyeliğiniz için teşekkür ederiz. {installationName}'dan en iyi şekilde faydalanmanızı istiyoruz. Deneyimi daha keyifli hale getirmek için {installationName} içinde yapabileceğiniz birkaç şey var.",
-    "GREETING_MORNING": "👋 Good morning, {name}. Welcome to {installationName}.",
-    "GREETING_AFTERNOON": "👋 Good afternoon, {name}. Welcome to {installationName}.",
-    "GREETING_EVENING": "👋 Good evening, {name}. Welcome to {installationName}.",
+    "GREETING_MORNING": "👋 Günaydın, {name}. {installationName}'a hoş geldiniz.",
+    "GREETING_AFTERNOON": "👋 İyi günler, {name}. {installationName}'a hoş geldiniz.",
+    "GREETING_EVENING": "👋 İyi akşamlar, {name}. {installationName}'a hoş geldiniz.",
     "READ_LATEST_UPDATES": "En Son Güncellemeleri Okuyun",
+    "EMPTY_STATE": {
+      "TITLE": "Hoş geldiniz, {name}!",
+      "DESCRIPTION": "Henüz bir kanal eklemediniz. Müşterilerinizden mesaj almaya başlamak için bir kanal ekleyin.",
+      "CHANNELS_INFO": "WhatsApp, Email, Instagram, Web Chat ve daha fazlasını bağlayarak tüm konuşmalarınızı tek yerden yönetin.",
+      "ADD_CHANNEL": "İlk Kanalınızı Ekleyin",
+      "HELP_TEXT": "Yardıma mı ihtiyacınız var? Adım adım rehberler için dokümanlarımıza göz atın."
+    },
     "ALL_CONVERSATION": {
       "TITLE": "Tüm Konuşmalarınız Bir Arada",
       "DESCRIPTION": "Müşterilerinizden gelen tüm konuşmaları tek bir gösterge panelinde görüntüleyin. Gelen kanala, etikete ve duruma göre konuşmaları filtreleyebilirsiniz.",
@@ -317,9 +324,9 @@
       "NEW_LINK": "Etiket oluşturmak için buraya tıklayın"
     },
     "CANNED_RESPONSES": {
-      "TITLE": "Create canned responses",
-      "DESCRIPTION": "Pre-written quick reply templates help you quickly respond to a conversation. Agents can type the '/' character followed by the shortcode to insert a response.",
-      "NEW_LINK": "Click here to create a canned response"
+      "TITLE": "Hazır Yanıtlar Oluşturun",
+      "DESCRIPTION": "Önceden yazılmış hızlı yanıt şablonları, bir konuşmaya hızlıca yanıt vermenize yardımcı olur. Temsilciler '/' karakterini ve ardından kısa kodu yazarak bir yanıt ekleyebilir.",
+      "NEW_LINK": "Hazır yanıt oluşturmak için buraya tıklayın"
     }
   },
   "CONVERSATION_SIDEBAR": {

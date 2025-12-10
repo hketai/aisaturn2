@@ -42,7 +42,7 @@ module Shopify
           shop: hook.reference_id,
           access_token: hook.access_token
         )
-        client = ShopifyAPI::Clients::Rest::Admin.new(session: session)
+        client = ShopifyAPI::Clients::Rest::Admin.new(session: session, api_version: '2024-10')
         
         # Count endpoint'i ile toplam sayıyı al
         count_params = {}

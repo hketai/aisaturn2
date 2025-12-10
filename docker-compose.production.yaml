@@ -12,6 +12,7 @@ services:
       - storage_data:/app/storage
       - bundle_data:/gems
       - ./public/brand-assets:/app/public/brand-assets
+      - ./public/vite:/app/public/vite
 
   rails:
     <<: *base
