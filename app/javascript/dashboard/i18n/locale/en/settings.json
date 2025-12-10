@@ -382,6 +382,22 @@
         "RESYNC_PRODUCTS": "Resync Products",
         "LAST_SYNC": "Last sync",
         "RESYNC_CONFIRM": "Are you sure you want to resync products? This may take a while.",
+        "SETTINGS_UPDATE_ERROR": "Failed to update settings",
+        "AI_FEATURES": {
+          "TITLE": "AI Features"
+        },
+        "ORDER_QUERY": {
+          "TITLE": "Order Query",
+          "DESCRIPTION": "AI assistant can query and display customer orders",
+          "ENABLED": "Order query enabled",
+          "DISABLED": "Order query disabled"
+        },
+        "PRODUCT_QUERY": {
+          "TITLE": "Product Query",
+          "DESCRIPTION": "AI assistant can search and recommend products",
+          "ENABLED": "Product query enabled",
+          "DISABLED": "Product query disabled"
+        },
         "IMAGE_SEARCH": {
           "TITLE": "Image Search",
           "DESCRIPTION": "Find products by customer images using AI visual search",

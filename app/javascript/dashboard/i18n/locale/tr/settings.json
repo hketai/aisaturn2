@@ -382,6 +382,22 @@
         "RESYNC_PRODUCTS": "Ürünleri Yeniden Senkronize Et",
         "LAST_SYNC": "Son senkronizasyon",
         "RESYNC_CONFIRM": "Ürünleri yeniden senkronize etmek istediğinizden emin misiniz? Bu biraz zaman alabilir.",
+        "SETTINGS_UPDATE_ERROR": "Ayarlar güncellenemedi",
+        "AI_FEATURES": {
+          "TITLE": "AI Özellikleri"
+        },
+        "ORDER_QUERY": {
+          "TITLE": "Sipariş Sorgulama",
+          "DESCRIPTION": "AI asistan müşteri siparişlerini sorgulayıp gösterebilir",
+          "ENABLED": "Sipariş sorgulama aktif edildi",
+          "DISABLED": "Sipariş sorgulama devre dışı bırakıldı"
+        },
+        "PRODUCT_QUERY": {
+          "TITLE": "Ürün Sorgulama",
+          "DESCRIPTION": "AI asistan ürün arayabilir ve öneride bulunabilir",
+          "ENABLED": "Ürün sorgulama aktif edildi",
+          "DISABLED": "Ürün sorgulama devre dışı bırakıldı"
+        },
         "IMAGE_SEARCH": {
           "TITLE": "Görsel ile Arama",
           "DESCRIPTION": "Yapay zeka görsel arama ile müşteri resimlerinden ürün bul",

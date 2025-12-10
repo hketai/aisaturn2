@@ -66,9 +66,12 @@ const isSyncing = ref(false);
 const syncInterval = ref(null);
 const totalSyncedProducts = ref(0);
 
-// Image Search Feature
+// Feature Toggles
+const orderQueryEnabled = ref(true);
+const productQueryEnabled = ref(true);
 const imageSearchEnabled = ref(false);
 const imageSearchDialogRef = ref(null);
+const isUpdatingSettings = ref(false);
 
 const isEmpty = computed(() => {
   return allIntegrations.value.length === 0;
@@ -125,7 +128,9 @@ const fetchIntegrations = async () => {
         enabled: hookData.enabled !== false,
         settings: hookData.settings || {},
       };
-      // Image search durumunu güncelle
+      // Feature toggle durumlarını güncelle
+      orderQueryEnabled.value = hookData.settings?.order_query_enabled !== false; // varsayılan true
+      productQueryEnabled.value = hookData.settings?.product_query_enabled !== false; // varsayılan true
       imageSearchEnabled.value = hookData.settings?.image_search_enabled || false;
 
       // Update allIntegrations
@@ -595,9 +600,74 @@ const formatDate = dateString => {
   }).format(date);
 };
 
+// Feature Toggle Handler - Generic
+const handleFeatureToggle = async (featureName, currentValue, setterFn) => {
+  if (isUpdatingSettings.value) return;
+  
+  const newValue = !currentValue;
+  isUpdatingSettings.value = true;
+  
+  try {
+    await shopifyAPI.updateSettings({ [featureName]: newValue });
+    setterFn(newValue);
+    
+    // Hook'u da güncelle
+    if (shopifyHook.value) {
+      shopifyHook.value.settings = {
+        ...shopifyHook.value.settings,
+        [featureName]: newValue,
+      };
+    }
+    
+    return true;
+  } catch (error) {
+    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.SETTINGS_UPDATE_ERROR'), 'error');
+    return false;
+  } finally {
+    isUpdatingSettings.value = false;
+  }
+};
+
+// Order Query Toggle Handler
+const handleOrderQueryToggle = async () => {
+  const success = await handleFeatureToggle(
+    'order_query_enabled',
+    orderQueryEnabled.value,
+    val => { orderQueryEnabled.value = val; }
+  );
+  
+  if (success) {
+    useAlert(
+      orderQueryEnabled.value
+        ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.ENABLED')
+        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DISABLED'),
+      'success'
+    );
+  }
+};
+
+// Product Query Toggle Handler
+const handleProductQueryToggle = async () => {
+  const success = await handleFeatureToggle(
+    'product_query_enabled',
+    productQueryEnabled.value,
+    val => { productQueryEnabled.value = val; }
+  );
+  
+  if (success) {
+    useAlert(
+      productQueryEnabled.value
+        ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.ENABLED')
+        : t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DISABLED'),
+      'success'
+    );
+  }
+};
+
 // Image Search Toggle Handler
 const handleImageSearchToggle = async () => {
   const newValue = !imageSearchEnabled.value;
+  isUpdatingSettings.value = true;
   
   try {
     await shopifyAPI.updateSettings({ image_search_enabled: newValue });
@@ -618,6 +688,8 @@ const handleImageSearchToggle = async () => {
     );
   } catch (error) {
     useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'));
+  } finally {
+    isUpdatingSettings.value = false;
   }
 };
 
@@ -874,19 +946,90 @@ onUnmounted(() => {
                 {{ syncStatus.error_message }}
               </div>
 
-              <!-- Image Search Feature Toggle -->
-              <div class="pt-3 border-t border-n-slate-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-slate-11" />
-                    <span class="text-sm font-medium text-n-slate-12">
-                      {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
-                    </span>
+              <!-- AI Features Section -->
+              <div class="pt-3 border-t border-n-slate-4 space-y-4">
+                <h4 class="text-sm font-semibold text-n-slate-12">
+                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.AI_FEATURES.TITLE') }}
+                </h4>
+                
+                <!-- Order Query Toggle -->
+                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-shopping-bag" class="w-4 h-4 text-n-blue-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.TITLE') }}
+                      </span>
+                      <p class="text-xs text-n-slate-10 mt-0.5">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
+                      </p>
+                    </div>
                   </div>
                   <button
                     type="button"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                    :class="orderQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                    :disabled="isUpdatingSettings"
+                    @click.stop="handleOrderQueryToggle"
+                  >
+                    <span
+                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                      :class="orderQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
+                    />
+                  </button>
+                </div>
+                
+                <!-- Product Query Toggle -->
+                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-package-search" class="w-4 h-4 text-n-amber-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.TITLE') }}
+                      </span>
+                      <p class="text-xs text-n-slate-10 mt-0.5">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                    :class="productQueryEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                    :disabled="isUpdatingSettings"
+                    @click.stop="handleProductQueryToggle"
+                  >
+                    <span
+                      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                      :class="productQueryEnabled ? 'translate-x-6' : 'translate-x-1'"
+                    />
+                  </button>
+                </div>
+                
+                <!-- Image Search Toggle -->
+                <div class="flex items-center justify-between p-3 bg-n-alpha-2 rounded-lg">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Icon icon="i-lucide-image-search" class="w-4 h-4 text-n-violet-11" />
+                    </div>
+                    <div>
+                      <span class="text-sm font-medium text-n-slate-12">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
+                      </span>
+                      <p class="text-xs text-n-slate-10 mt-0.5">
+                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
                     :class="imageSearchEnabled ? 'bg-n-teal-9' : 'bg-n-slate-4'"
+                    :disabled="isUpdatingSettings"
                     @click.stop="handleImageSearchToggle"
                   >
                     <span
@@ -894,16 +1037,6 @@ onUnmounted(() => {
                       :class="imageSearchEnabled ? 'translate-x-6' : 'translate-x-1'"
                     />
                   </button>
-                </div>
-                <p class="text-xs text-n-slate-10 mt-1">
-                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
-                </p>
-                <div
-                  v-if="imageSearchEnabled"
-                  class="mt-2 flex items-center gap-1 text-xs text-n-teal-11"
-                >
-                  <Icon icon="i-lucide-check-circle" class="w-3 h-3" />
-                  <span>{{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.ACTIVE') }}</span>
                 </div>
               </div>
             </div>
