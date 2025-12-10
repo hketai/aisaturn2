@@ -983,6 +983,8 @@
     "ASSISTANTS": {
       "HEADER": "Asistanlar",
       "ADD_NEW": "Yeni Asistan",
+      "ACTIVE": "aktif",
+      "NO_CHANNEL_WARNING": "Asistan herhangi bir kanala bağlı değil. Mesaj yanıtlarını etkinleştirmek için bir kanal bağlayın.",
       "STATUS": {
         "ACTIVE": "Aktif"
       },
