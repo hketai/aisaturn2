@@ -325,9 +325,13 @@ const fetchSyncStatus = async () => {
   }
 };
 
+// Connection state message
+const connectionStatusMessage = ref('');
+
 const handleShopifyConnect = async () => {
   try {
     shopifyError.value = '';
+    connectionStatusMessage.value = '';
     
     // Store adını doğrula
     if (!shopifyStoreUrl.value || !validateStoreName(shopifyStoreUrl.value)) {
@@ -343,6 +347,31 @@ const handleShopifyConnect = async () => {
 
     isConnectingShopify.value = true;
     const fullStoreUrl = getFullStoreUrl(shopifyStoreUrl.value);
+    
+    // 1. Önce bağlantıyı test et
+    connectionStatusMessage.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.TESTING_CONNECTION');
+    
+    try {
+      const testResponse = await shopifyAPI.testCredentials({
+        shopDomain: fullStoreUrl,
+        accessKey: shopifyAccessKey.value,
+      });
+      
+      if (!testResponse.data?.success) {
+        shopifyError.value = testResponse.data?.error || t('SIDEBAR.INTEGRATIONS.SHOPIFY.CONNECTION_ERROR');
+        return;
+      }
+      
+      // Test başarılı - mağaza bilgisini göster
+      const shopName = testResponse.data?.shop?.name || fullStoreUrl;
+      connectionStatusMessage.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.TEST_SUCCESS_SAVING', { shopName });
+    } catch (testError) {
+      const errorMessage = testError.response?.data?.error || testError.message || '';
+      shopifyError.value = errorMessage || t('SIDEBAR.INTEGRATIONS.SHOPIFY.CONNECTION_ERROR');
+      return;
+    }
+    
+    // 2. Test başarılı, şimdi kaydet
     const { data } = await shopifyAPI.connectWithAccessKey({
       shopDomain: fullStoreUrl,
       accessKey: shopifyAccessKey.value,
@@ -384,11 +413,13 @@ const handleShopifyConnect = async () => {
     if (errorMessage.toLowerCase().includes('access') || 
         errorMessage.toLowerCase().includes('token') ||
         errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('erişim') ||
         error.response?.status === 401) {
       shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.INVALID_ACCESS_KEY');
     } else if (errorMessage.toLowerCase().includes('store') ||
                errorMessage.toLowerCase().includes('shop') ||
                errorMessage.toLowerCase().includes('domain') ||
+               errorMessage.toLowerCase().includes('mağaza') ||
                error.response?.status === 404) {
       shopifyError.value = t('SIDEBAR.INTEGRATIONS.SHOPIFY.INVALID_STORE_NAME');
     } else {
@@ -396,6 +427,7 @@ const handleShopifyConnect = async () => {
     }
   } finally {
     isConnectingShopify.value = false;
+    connectionStatusMessage.value = '';
   }
 };
 
@@ -855,15 +887,35 @@ onUnmounted(() => {
           type="password"
           :placeholder="$t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_PLACEHOLDER')"
           :message="
-            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar'))
+            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar') || shopifyError.includes('Erişim'))
               ? shopifyError
               : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ACCESS_KEY_MESSAGE')
           "
           :message-type="
-            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar')) ? 'error' : 'info'
+            shopifyError && (shopifyError.includes('Access') || shopifyError.includes('key') || shopifyError.includes('anahtar') || shopifyError.includes('Erişim')) ? 'error' : 'info'
           "
           @input="shopifyError = ''"
         />
+        
+        <!-- Connection Status Message -->
+        <div
+          v-if="connectionStatusMessage"
+          class="flex items-center gap-2 p-3 rounded-lg bg-n-alpha-2"
+        >
+          <div class="animate-spin">
+            <Icon icon="i-lucide-loader-2" class="w-4 h-4 text-n-brand" />
+          </div>
+          <span class="text-sm text-n-slate-11">{{ connectionStatusMessage }}</span>
+        </div>
+        
+        <!-- General Error Message -->
+        <div
+          v-if="shopifyError && !shopifyError.includes('mağaza') && !shopifyError.includes('store') && !shopifyError.includes('Access') && !shopifyError.includes('key') && !shopifyError.includes('anahtar') && !shopifyError.includes('Erişim')"
+          class="flex items-center gap-2 p-3 rounded-lg bg-n-ruby-3"
+        >
+          <Icon icon="i-lucide-alert-circle" class="w-4 h-4 text-n-ruby-9" />
+          <span class="text-sm text-n-ruby-11">{{ shopifyError }}</span>
+        </div>
       </div>
     </Dialog>
 

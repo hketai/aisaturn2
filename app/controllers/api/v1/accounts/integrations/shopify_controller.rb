@@ -96,6 +96,48 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     render json: { error: e.message, success: false }, status: :unprocessable_entity
   end
 
+  # Kaydetmeden önce credentials'ı test et
+  def test_credentials
+    shop_domain = params[:shop_domain]
+    access_token = params[:access_token]
+
+    return render json: { error: 'Mağaza adresi gerekli', success: false }, status: :unprocessable_entity if shop_domain.blank?
+    return render json: { error: 'Erişim anahtarı gerekli', success: false }, status: :unprocessable_entity if access_token.blank?
+
+    # Validate shop domain format
+    unless shop_domain.match?(/\A[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com\z/)
+      return render json: { error: 'Geçersiz mağaza adresi formatı', success: false }, status: :unprocessable_entity
+    end
+
+    # Test the access token by fetching shop info
+    begin
+      test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
+      response = test_client.get(path: 'shop.json')
+      shop_info = response.body['shop']
+
+      render json: { 
+        success: true, 
+        shop: {
+          name: shop_info['name'],
+          domain: shop_info['domain'],
+          email: shop_info['email']
+        }
+      }
+    rescue ShopifyAPI::Errors::HttpResponseError => e
+      error_message = if e.response.code == 401
+                        'Erişim anahtarı geçersiz veya süresi dolmuş'
+                      elsif e.response.code == 404
+                        'Mağaza bulunamadı'
+                      else
+                        "Bağlantı hatası: #{e.message}"
+                      end
+      render json: { error: error_message, success: false }, status: :unprocessable_entity
+    rescue StandardError => e
+      render json: { error: "Bağlantı hatası: #{e.message}", success: false }, status: :unprocessable_entity
+    end
+  end
+
   def orders
     customers = fetch_customers
     return render json: { orders: [] } if customers.empty?

@@ -325,6 +325,7 @@ Rails.application.routes.draw do
               collection do
                 post :auth
                 post :connect
+                post :test_credentials
                 get :orders
                 get :test
                 post :sync_products

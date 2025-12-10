@@ -32,6 +32,14 @@ class ShopifyAPI extends ApiClient {
     return axios.get(`${this.url}/test`);
   }
 
+  // Kaydetmeden önce credentials'ı test et
+  testCredentials({ shopDomain, accessKey }) {
+    return axios.post(`${this.url}/test_credentials`, {
+      shop_domain: shopDomain,
+      access_token: accessKey,
+    });
+  }
+
   syncProducts(incremental = false) {
     return axios.post(`${this.url}/sync_products`, { incremental });
   }

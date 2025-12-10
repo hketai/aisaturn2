@@ -338,6 +338,8 @@
         "CONNECTION_ERROR": "Bağlantı hatası",
         "INVALID_STORE_NAME": "Geçerli bir mağaza adı girin (en az 3 karakter, sadece harf, rakam ve tire)",
         "INVALID_ACCESS_KEY": "Girdiğiniz erişim anahtarı geçersiz. Lütfen kontrol edip tekrar deneyin.",
+        "TESTING_CONNECTION": "Bağlantı test ediliyor...",
+        "TEST_SUCCESS_SAVING": "Bağlantı başarılı! {shopName} kaydediliyor...",
         "STORE_URL_MESSAGE": "Geçerli bir Shopify mağaza URL'si girin (örn. your-store.myshopify.com)",
         "STORE_NAME_MESSAGE": "Sadece mağaza adını girin (.myshopify.com olmadan)",
         "ACCESS_KEY_MESSAGE": "Erişim anahtarı gerekli",

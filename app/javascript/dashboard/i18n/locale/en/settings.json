@@ -338,6 +338,8 @@
         "CONNECTION_ERROR": "Connection error",
         "INVALID_STORE_NAME": "Please enter a valid store name (at least 3 characters, letters, numbers and hyphens only)",
         "INVALID_ACCESS_KEY": "The access key you entered is invalid. Please check and try again.",
+        "TESTING_CONNECTION": "Testing connection...",
+        "TEST_SUCCESS_SAVING": "Connection successful! Saving {shopName}...",
         "STORE_URL_MESSAGE": "Enter a valid Shopify store URL (e.g., your-store.myshopify.com)",
         "STORE_NAME_MESSAGE": "Enter only the store name (without .myshopify.com)",
         "ACCESS_KEY_MESSAGE": "Access key is required",
