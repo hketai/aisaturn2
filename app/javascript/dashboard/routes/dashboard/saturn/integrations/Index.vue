@@ -67,10 +67,20 @@ const isSyncing = ref(false);
 const syncInterval = ref(null);
 const totalSyncedProducts = ref(0);
 
+// Embedding status
+const totalEmbeddings = ref(0);
+const embeddingInProgress = ref(false);
+
+// Image embedding status
+const totalImageEmbeddings = ref(0);
+const productsWithImages = ref(0);
+const imageEmbeddingInProgress = ref(false);
+
 // Feature Toggles
 const orderQueryEnabled = ref(true);
 const productQueryEnabled = ref(true);
 const imageSearchEnabled = ref(false);
+const imageSearchApproved = ref(false);
 const imageSearchDialogRef = ref(null);
 const isUpdatingSettings = ref(false);
 
@@ -85,33 +95,68 @@ const isSyncInProgress = computed(() => {
          isSyncing.value;
 });
 
+// Image embedding için tahmini kalan süre
+const imageEmbeddingEstimatedTime = computed(() => {
+  if (!imageEmbeddingInProgress.value) return null;
+  
+  const remaining = productsWithImages.value - totalImageEmbeddings.value;
+  if (remaining <= 0) return null;
+  
+  // Ortalama 20 saniye/görsel (CPU-only CLIP)
+  const secondsPerImage = 20;
+  const totalSeconds = remaining * secondsPerImage;
+  
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (hours > 0) {
+    return `~${hours} saat ${minutes} dakika`;
+  }
+  if (minutes > 0) {
+    return `~${minutes} dakika`;
+  }
+  return '< 1 dakika';
+});
+
 // Dinamik durum metni
 const syncStatusText = computed(() => {
-  if (!syncStatus.value) {
-    return totalSyncedProducts.value > 0 
-      ? t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_READY', { count: totalSyncedProducts.value })
-      : t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_NO_PRODUCTS');
+  // Sync devam ediyorsa
+  if (syncStatus.value?.status === 'pending') {
+    return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_STARTING');
   }
   
-  switch (syncStatus.value.status) {
-    case 'pending':
-      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_STARTING');
-    case 'syncing':
-      if (syncStatus.value.total_products > 0) {
-        return t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
-          synced: syncStatus.value.synced_products || 0,
-          total: syncStatus.value.total_products,
-          percentage: Math.round(syncStatus.value.progress_percentage || 0)
-        });
-      }
-      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_SYNCING');
-    case 'completed':
-      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_COMPLETED');
-    case 'failed':
-      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_FAILED');
-    default:
-      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_COMPLETED');
+  if (syncStatus.value?.status === 'syncing') {
+    if (syncStatus.value.total_products > 0) {
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
+        synced: syncStatus.value.synced_products || 0,
+        total: syncStatus.value.total_products,
+        percentage: Math.round(syncStatus.value.progress_percentage || 0)
+      });
+    }
+    return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_SYNCING');
   }
+  
+  if (syncStatus.value?.status === 'failed') {
+    return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_FAILED');
+  }
+  
+  // Sync tamamlandı, embedding durumunu kontrol et
+  if (embeddingInProgress.value && totalSyncedProducts.value > 0) {
+    return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_PREPARING_AI', {
+      current: totalEmbeddings.value,
+      total: totalSyncedProducts.value
+    });
+  }
+  
+  // Her şey tamamlandı
+  if (totalSyncedProducts.value > 0) {
+    if (totalEmbeddings.value >= totalSyncedProducts.value) {
+      return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_AI_READY', { count: totalSyncedProducts.value });
+    }
+    return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_READY', { count: totalSyncedProducts.value });
+  }
+  
+  return t('SIDEBAR.INTEGRATIONS.SHOPIFY.STATUS_NO_PRODUCTS');
 });
 
 const fetchIntegrations = async () => {
@@ -308,7 +353,7 @@ const startSyncStatusPolling = () => {
     clearInterval(syncInterval.value);
   }
 
-  // Her 3 saniyede bir sync durumunu kontrol et
+  // Her 3 saniyede bir sync ve embedding durumunu kontrol et
   syncInterval.value = setInterval(async () => {
     if (!shopifyHook.value?.id) {
       clearInterval(syncInterval.value);
@@ -318,30 +363,53 @@ const startSyncStatusPolling = () => {
     try {
       const { data } = await shopifyAPI.getSyncStatus();
       syncStatus.value = data.sync_status;
+      totalSyncedProducts.value = data.total_synced_products || 0;
+      totalEmbeddings.value = data.total_embeddings || 0;
+      embeddingInProgress.value = data.embedding_in_progress || false;
+      
+      // Image embedding değerlerini güncelle
+      totalImageEmbeddings.value = data.total_image_embeddings || 0;
+      productsWithImages.value = data.products_with_images || 0;
+      imageEmbeddingInProgress.value = data.image_embedding_in_progress || false;
 
-      // Sync tamamlandı veya başarısız olduysa polling'i durdur
-      if (
-        syncStatus.value &&
-        (syncStatus.value.status === 'completed' ||
-          syncStatus.value.status === 'failed')
-      ) {
+      const syncCompleted =
+        !syncStatus.value ||
+        syncStatus.value.status === 'completed' ||
+        syncStatus.value.status === 'failed';
+
+      // Önceki durum (değişiklik algılamak için)
+      const wasImageEmbeddingInProgress = imageEmbeddingInProgress.value;
+      
+      // Sync, text embedding ve image embedding tamamlandıysa polling'i durdur
+      if (syncCompleted && !embeddingInProgress.value && !data.image_embedding_in_progress) {
         clearInterval(syncInterval.value);
         syncInterval.value = null;
 
-        if (syncStatus.value.status === 'completed') {
+        // Başarı mesajı göster (sadece sync yeni tamamlandıysa)
+        if (syncStatus.value?.status === 'completed' && totalEmbeddings.value >= totalSyncedProducts.value) {
           useAlert(
             t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_COMPLETED', {
-              count: syncStatus.value.synced_products,
+              count: totalSyncedProducts.value,
             }),
             'success'
           );
-        } else if (syncStatus.value.status === 'failed') {
+        } else if (syncStatus.value?.status === 'failed') {
           const errorMsg = syncStatus.value.error_message
             ? `: ${syncStatus.value.error_message}`
             : '';
           useAlert(
             t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_FAILED') + errorMsg,
             'error'
+          );
+        }
+        
+        // Image embedding yeni tamamlandıysa mesaj göster
+        if (wasImageEmbeddingInProgress && !data.image_embedding_in_progress && data.total_image_embeddings > 0) {
+          useAlert(
+            t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.COMPLETED', {
+              count: data.total_image_embeddings,
+            }),
+            'success'
           );
         }
       }
@@ -356,6 +424,8 @@ const fetchSyncStatus = async () => {
   if (!shopifyHook.value?.id) {
     syncStatus.value = null;
     totalSyncedProducts.value = 0;
+    totalEmbeddings.value = 0;
+    embeddingInProgress.value = false;
     return;
   }
 
@@ -363,6 +433,12 @@ const fetchSyncStatus = async () => {
     const { data } = await shopifyAPI.getSyncStatus();
     syncStatus.value = data.sync_status;
     totalSyncedProducts.value = data.total_synced_products || 0;
+    totalEmbeddings.value = data.total_embeddings || 0;
+    embeddingInProgress.value = data.embedding_in_progress || false;
+    imageSearchApproved.value = data.image_search_approved || false;
+    totalImageEmbeddings.value = data.total_image_embeddings || 0;
+    productsWithImages.value = data.products_with_images || 0;
+    imageEmbeddingInProgress.value = data.image_embedding_in_progress || false;
 
     // Update integration object with product count
     const shopifyIntegration = allIntegrations.value.find(
@@ -377,14 +453,18 @@ const fetchSyncStatus = async () => {
     console.log('[Shopify] Sync status fetched:', {
       syncStatus: data.sync_status,
       totalProducts: data.total_synced_products,
-      integrationUpdated: !!shopifyIntegration,
+      totalEmbeddings: data.total_embeddings,
+      embeddingInProgress: data.embedding_in_progress,
+      imageEmbeddingInProgress: data.image_embedding_in_progress,
     });
 
-    // Eğer aktif bir sync varsa polling başlat
+    // Eğer aktif bir sync, embedding veya image embedding varsa polling başlat
     if (
-      syncStatus.value &&
-      (syncStatus.value.status === 'pending' ||
-        syncStatus.value.status === 'syncing')
+      (syncStatus.value &&
+        (syncStatus.value.status === 'pending' ||
+          syncStatus.value.status === 'syncing')) ||
+      embeddingInProgress.value ||
+      imageEmbeddingInProgress.value
     ) {
       startSyncStatusPolling();
     }
@@ -393,6 +473,8 @@ const fetchSyncStatus = async () => {
     console.error('[Shopify] Error fetching sync status:', error);
     syncStatus.value = null;
     totalSyncedProducts.value = 0;
+    totalEmbeddings.value = 0;
+    embeddingInProgress.value = false;
   }
 };
 
@@ -674,9 +756,19 @@ const handleProductQueryToggle = async () => {
 // Image Search Toggle Handler
 const handleImageSearchToggle = async () => {
   if (isUpdatingSettings.value) return;
-  isUpdatingSettings.value = true;
   
   const newValue = imageSearchEnabled.value;
+  
+  // Onay yoksa ve aktif etmeye çalışıyorsa dialog göster
+  if (newValue && !imageSearchApproved.value) {
+    imageSearchEnabled.value = false;
+    if (imageSearchDialogRef.value) {
+      imageSearchDialogRef.value.open();
+    }
+    return;
+  }
+  
+  isUpdatingSettings.value = true;
   
   try {
     await shopifyAPI.updateSettings({ image_search_enabled: newValue });
@@ -696,7 +788,15 @@ const handleImageSearchToggle = async () => {
     );
   } catch (error) {
     imageSearchEnabled.value = !newValue;
-    useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'), 'error');
+    // API'den gelen hata mesajını kontrol et
+    const errorData = error.response?.data;
+    if (errorData?.error === 'not_approved') {
+      if (imageSearchDialogRef.value) {
+        imageSearchDialogRef.value.open();
+      }
+    } else {
+      useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.UPDATE_ERROR'), 'error');
+    }
   } finally {
     isUpdatingSettings.value = false;
   }
@@ -845,151 +945,180 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Connected Integration Details -->
+          <!-- Connected Integration Details (Shopify) -->
           <div
-            v-if="integration.connected && integration.hook?.reference_id"
+            v-if="integration.connected && integration.hook?.reference_id && integration.id === 'shopify'"
             class="border-t border-n-slate-4"
           >
-            <!-- Stats Row -->
-            <div class="px-5 py-4 bg-n-alpha-1 flex items-center gap-6 flex-wrap">
-              <!-- Store Info -->
-              <div class="flex items-center gap-2">
-                <Icon icon="i-lucide-store" class="w-4 h-4 text-n-slate-10" />
-                <span class="text-sm text-n-slate-11">
-                  {{ integration.hook.reference_id }}
-                </span>
+            <!-- Stats Cards -->
+            <div class="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <!-- Store -->
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-n-slate-10 uppercase tracking-wide">Mağaza</span>
+                <div class="flex items-center gap-2">
+                  <Icon icon="i-lucide-store" class="w-4 h-4 text-n-slate-11" />
+                  <span class="text-sm font-medium text-n-slate-12 truncate">
+                    {{ integration.hook.reference_id }}
+                  </span>
+                </div>
               </div>
 
-              <!-- Product Count -->
-              <div
-                v-if="integration.id === 'shopify' && totalSyncedProducts > 0"
-                class="flex items-center gap-2"
-              >
-                <Icon icon="i-lucide-package" class="w-4 h-4 text-n-blue-11" />
-                <span class="text-sm font-medium text-n-blue-11">
-                  {{ totalSyncedProducts.toLocaleString() }} {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCTS') }}
-                </span>
+              <!-- Products -->
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-n-slate-10 uppercase tracking-wide">Ürünler</span>
+                <div class="flex items-center gap-2">
+                  <Icon icon="i-lucide-package" class="w-4 h-4 text-n-blue-11" />
+                  <span class="text-sm font-medium text-n-slate-12">
+                    {{ totalSyncedProducts.toLocaleString() }}
+                  </span>
+                </div>
               </div>
 
-              <!-- Sync Status -->
-              <div
-                v-if="integration.id === 'shopify'"
-                class="flex items-center gap-2"
-              >
-                <Icon
-                  v-if="isSyncInProgress"
-                  icon="i-lucide-loader-2"
-                  class="w-4 h-4 animate-spin text-n-blue-11"
-                />
-                <Icon
-                  v-else-if="syncStatus?.status === 'completed' || totalSyncedProducts > 0"
-                  icon="i-lucide-check-circle-2"
-                  class="w-4 h-4 text-n-teal-11"
-                />
-                <Icon
-                  v-else-if="syncStatus?.status === 'failed'"
-                  icon="i-lucide-alert-circle"
-                  class="w-4 h-4 text-n-ruby-11"
-                />
-                <span
-                  class="text-sm"
-                  :class="{
-                    'text-n-amber-11': syncStatus?.status === 'pending',
-                    'text-n-blue-11': syncStatus?.status === 'syncing',
-                    'text-n-teal-11': syncStatus?.status === 'completed' || (!syncStatus && totalSyncedProducts > 0),
-                    'text-n-ruby-11': syncStatus?.status === 'failed',
-                    'text-n-slate-11': !syncStatus && totalSyncedProducts === 0,
-                  }"
-                >
-                  {{ syncStatusText }}
-                </span>
+              <!-- Status -->
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-n-slate-10 uppercase tracking-wide">Durum</span>
+                <div class="flex items-center gap-2">
+                  <Icon
+                    v-if="isSyncInProgress"
+                    icon="i-lucide-loader-2"
+                    class="w-4 h-4 animate-spin text-n-blue-11"
+                  />
+                  <Icon
+                    v-else-if="embeddingInProgress || imageEmbeddingInProgress"
+                    icon="i-lucide-brain"
+                    class="w-4 h-4 text-n-violet-11"
+                  />
+                  <Icon
+                    v-else
+                    icon="i-lucide-check-circle-2"
+                    class="w-4 h-4 text-n-teal-11"
+                  />
+                  <span
+                    class="text-sm font-medium"
+                    :class="{
+                      'text-n-blue-11': isSyncInProgress,
+                      'text-n-violet-11': !isSyncInProgress && (embeddingInProgress || imageEmbeddingInProgress),
+                      'text-n-teal-11': !isSyncInProgress && !embeddingInProgress && !imageEmbeddingInProgress,
+                    }"
+                  >
+                    {{ isSyncInProgress ? 'Senkronize ediliyor' : (embeddingInProgress || imageEmbeddingInProgress) ? 'AI hazırlanıyor' : 'Hazır' }}
+                  </span>
+                </div>
               </div>
 
               <!-- Last Sync -->
-              <div
-                v-if="integration.id === 'shopify' && syncStatus?.completed_at"
-                class="flex items-center gap-2 ml-auto"
-              >
-                <Icon icon="i-lucide-clock" class="w-4 h-4 text-n-slate-10" />
-                <span class="text-sm text-n-slate-10">
-                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.LAST_SYNC') }}: {{ formatDate(syncStatus.completed_at) }}
-                </span>
+              <div class="flex flex-col gap-1">
+                <span class="text-xs text-n-slate-10 uppercase tracking-wide">Son Güncelleme</span>
+                <div class="flex items-center gap-2">
+                  <Icon icon="i-lucide-clock" class="w-4 h-4 text-n-slate-11" />
+                  <span class="text-sm font-medium text-n-slate-12">
+                    {{ syncStatus?.completed_at ? formatDate(syncStatus.completed_at) : '-' }}
+                  </span>
+                </div>
               </div>
-
-              <!-- Sync Button -->
-              <button
-                v-if="integration.id === 'shopify'"
-                class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ml-auto"
-                :class="{
-                  'text-n-blue-11 bg-n-blue-3 hover:bg-n-blue-4': !isSyncInProgress,
-                  'text-n-slate-11 bg-n-slate-3 cursor-not-allowed': isSyncInProgress,
-                }"
-                :disabled="isSyncInProgress"
-                @click.stop="handleResync"
-              >
-                <Icon
-                  :icon="isSyncInProgress ? 'i-lucide-loader-2' : 'i-lucide-refresh-cw'"
-                  :class="{ 'animate-spin': isSyncInProgress }"
-                  class="w-4 h-4"
-                />
-                {{ isSyncInProgress ? $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNCING') : $t('SIDEBAR.INTEGRATIONS.SHOPIFY.RESYNC_PRODUCTS') }}
-              </button>
             </div>
 
-            <!-- Progress Bar (when syncing) -->
+            <!-- Sync Progress -->
             <div
-              v-if="integration.id === 'shopify' && syncStatus && (syncStatus.status === 'syncing' || syncStatus.status === 'pending')"
-              class="px-5 pb-4 bg-n-alpha-1"
+              v-if="syncStatus && (syncStatus.status === 'syncing' || syncStatus.status === 'pending')"
+              class="px-5 pb-5"
             >
-              <div class="w-full bg-n-slate-3 rounded-full h-1.5 overflow-hidden">
-                <div
-                  class="h-full bg-n-blue-9 transition-all duration-300"
-                  :style="{ width: `${syncStatus.progress_percentage || 0}%` }"
-                />
+              <div class="p-4 bg-n-blue-2 rounded-xl border border-n-blue-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <Icon icon="i-lucide-loader-2" class="w-4 h-4 animate-spin text-n-blue-11" />
+                    <span class="text-sm font-medium text-n-blue-11">Ürünler senkronize ediliyor</span>
+                  </div>
+                  <span class="text-xs text-n-blue-10">
+                    {{ syncStatus.synced_products || 0 }}/{{ syncStatus.total_products || 0 }}
+                  </span>
+                </div>
+                <div class="w-full bg-n-blue-4 rounded-full h-2 overflow-hidden">
+                  <div
+                    class="h-full bg-n-blue-9 transition-all duration-300"
+                    :style="{ width: `${syncStatus.progress_percentage || 0}%` }"
+                  />
+                </div>
               </div>
-              <p v-if="syncStatus.total_products > 0" class="text-xs text-n-slate-11 mt-1.5">
-                {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.SYNC_PROGRESS', {
-                  synced: syncStatus.synced_products || 0,
-                  total: syncStatus.total_products,
-                  percentage: Math.round(syncStatus.progress_percentage || 0),
-                }) }}
-              </p>
+            </div>
+
+            <!-- AI Embedding Progress -->
+            <div
+              v-if="!isSyncInProgress && (embeddingInProgress || imageEmbeddingInProgress)"
+              class="px-5 pb-5"
+            >
+              <div class="p-4 bg-n-violet-2 rounded-xl border border-n-violet-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <Icon icon="i-lucide-brain" class="w-4 h-4 text-n-violet-11" />
+                    <span class="text-sm font-medium text-n-violet-11">
+                      {{ imageEmbeddingInProgress ? 'Görseller AI\'a aktarılıyor' : 'Ürünler AI\'a aktarılıyor' }}
+                    </span>
+                  </div>
+                  <span class="text-xs text-n-violet-10">
+                    {{ imageEmbeddingInProgress ? `${totalImageEmbeddings}/${productsWithImages}` : `${totalEmbeddings}/${totalSyncedProducts}` }}
+                  </span>
+                </div>
+                <div class="w-full bg-n-violet-4 rounded-full h-2 overflow-hidden">
+                  <div
+                    class="h-full bg-n-violet-9 transition-all duration-300"
+                    :style="{ width: imageEmbeddingInProgress 
+                      ? `${productsWithImages > 0 ? (totalImageEmbeddings / productsWithImages) * 100 : 0}%`
+                      : `${totalSyncedProducts > 0 ? (totalEmbeddings / totalSyncedProducts) * 100 : 0}%` 
+                    }"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- Error Message -->
             <div
-              v-if="integration.id === 'shopify' && syncStatus?.status === 'failed' && syncStatus?.error_message"
-              class="px-5 pb-4 bg-n-alpha-1"
+              v-if="syncStatus?.status === 'failed' && syncStatus?.error_message"
+              class="px-5 pb-5"
             >
-              <div class="flex items-center gap-2 p-3 rounded-lg bg-n-ruby-3 text-n-ruby-11 text-sm">
-                <Icon icon="i-lucide-alert-triangle" class="w-4 h-4 flex-shrink-0" />
-                {{ syncStatus.error_message }}
+              <div class="flex items-center gap-3 p-4 rounded-xl bg-n-ruby-2 border border-n-ruby-4">
+                <Icon icon="i-lucide-alert-triangle" class="w-5 h-5 text-n-ruby-11 flex-shrink-0" />
+                <span class="text-sm text-n-ruby-11">{{ syncStatus.error_message }}</span>
               </div>
             </div>
 
-            <!-- AI Features Section (only for Shopify) -->
-            <div v-if="integration.id === 'shopify'" class="p-5 bg-n-alpha-1 border-t border-n-slate-4">
-              <div class="flex items-center gap-2 mb-4">
-                <Icon icon="i-lucide-sparkles" class="w-5 h-5 text-n-violet-11" />
-                <h4 class="text-sm font-semibold text-n-slate-12">
-                  {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.AI_FEATURES.TITLE') }}
+            <!-- Actions & AI Features -->
+            <div class="p-5 border-t border-n-slate-4 space-y-5">
+              <!-- Action Row -->
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-n-slate-12 flex items-center gap-2">
+                  <Icon icon="i-lucide-sparkles" class="w-4 h-4 text-n-violet-11" />
+                  AI Özellikleri
                 </h4>
+                <button
+                  class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                  :class="{
+                    'text-n-slate-12 bg-n-slate-3 hover:bg-n-slate-4': !isSyncInProgress,
+                    'text-n-slate-10 bg-n-slate-2 cursor-not-allowed': isSyncInProgress,
+                  }"
+                  :disabled="isSyncInProgress"
+                  @click.stop="handleResync"
+                >
+                  <Icon
+                    :icon="isSyncInProgress ? 'i-lucide-loader-2' : 'i-lucide-refresh-cw'"
+                    :class="{ 'animate-spin': isSyncInProgress }"
+                    class="w-4 h-4"
+                  />
+                  {{ isSyncInProgress ? 'Senkronize ediliyor...' : 'Yeniden Senkronize Et' }}
+                </button>
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <!-- Order Query Toggle -->
-                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
+              <!-- Feature Toggles -->
+              <div class="space-y-3">
+                <!-- Order Query -->
+                <div class="flex items-center justify-between p-4 bg-n-slate-2 rounded-xl">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-n-blue-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-shopping-bag" class="w-5 h-5 text-n-blue-11" />
+                    <div class="w-9 h-9 bg-n-blue-3 rounded-lg flex items-center justify-center">
+                      <Icon icon="i-lucide-shopping-bag" class="w-4 h-4 text-n-blue-11" />
                     </div>
                     <div>
-                      <span class="text-sm font-medium text-n-slate-12 block">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.TITLE') }}
-                      </span>
-                      <span class="text-xs text-n-slate-10">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.ORDER_QUERY.DESCRIPTION') }}
-                      </span>
+                      <span class="text-sm font-medium text-n-slate-12">Sipariş Sorgulama</span>
+                      <p class="text-xs text-n-slate-10">AI asistan sipariş bilgilerini sorgulayabilir</p>
                     </div>
                   </div>
                   <Switch
@@ -999,19 +1128,15 @@ onUnmounted(() => {
                   />
                 </div>
 
-                <!-- Product Query Toggle -->
-                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
+                <!-- Product Query -->
+                <div class="flex items-center justify-between p-4 bg-n-slate-2 rounded-xl">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-n-amber-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-package-search" class="w-5 h-5 text-n-amber-11" />
+                    <div class="w-9 h-9 bg-n-amber-3 rounded-lg flex items-center justify-center">
+                      <Icon icon="i-lucide-package-search" class="w-4 h-4 text-n-amber-11" />
                     </div>
                     <div>
-                      <span class="text-sm font-medium text-n-slate-12 block">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.TITLE') }}
-                      </span>
-                      <span class="text-xs text-n-slate-10">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.PRODUCT_QUERY.DESCRIPTION') }}
-                      </span>
+                      <span class="text-sm font-medium text-n-slate-12">Ürün Sorgulama</span>
+                      <p class="text-xs text-n-slate-10">AI asistan ürün arayabilir ve öneride bulunabilir</p>
                     </div>
                   </div>
                   <Switch
@@ -1021,26 +1146,33 @@ onUnmounted(() => {
                   />
                 </div>
 
-                <!-- Image Search Toggle -->
-                <div class="flex items-center justify-between gap-3 p-4 bg-n-slate-2 rounded-xl border border-n-slate-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-n-violet-3 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon icon="i-lucide-image-search" class="w-5 h-5 text-n-violet-11" />
+                <!-- Image Search -->
+                <div class="p-4 bg-n-slate-2 rounded-xl">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 bg-n-violet-3 rounded-lg flex items-center justify-center">
+                        <Icon icon="i-lucide-scan-search" class="w-4 h-4 text-n-violet-11" />
+                      </div>
+                      <div>
+                        <span class="text-sm font-medium text-n-slate-12">Gelişmiş Görsel Arama</span>
+                        <p class="text-xs text-n-slate-10">Görselden benzer ürünleri bulur ve önerir</p>
+                      </div>
                     </div>
-                    <div>
-                      <span class="text-sm font-medium text-n-slate-12 block">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.TITLE') }}
-                      </span>
-                      <span class="text-xs text-n-slate-10">
-                        {{ $t('SIDEBAR.INTEGRATIONS.SHOPIFY.IMAGE_SEARCH.DESCRIPTION') }}
-                      </span>
-                    </div>
+                    <Switch
+                      v-model="imageSearchEnabled"
+                      :disabled="isUpdatingSettings || imageEmbeddingInProgress"
+                      @change="handleImageSearchToggle"
+                    />
                   </div>
-                  <Switch
-                    v-model="imageSearchEnabled"
-                    :disabled="isUpdatingSettings"
-                    @change="handleImageSearchToggle"
-                  />
+                  
+                  <!-- Image Search Status -->
+                  <div
+                    v-if="imageSearchEnabled && totalImageEmbeddings > 0 && !imageEmbeddingInProgress"
+                    class="mt-3 pt-3 border-t border-n-slate-4 flex items-center gap-2"
+                  >
+                    <Icon icon="i-lucide-check-circle" class="w-4 h-4 text-n-green-11" />
+                    <span class="text-xs text-n-green-11">{{ totalImageEmbeddings }} görsel hazır</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -139,6 +139,9 @@ module Shopify
         # Tüm ürünler çekildi
         sync_status.mark_completed
         Rails.logger.info "Sync #{sync_status_id} completed: #{current_synced} products (type: #{sync_status.sync_type})"
+        
+        # Sync tamamlandıktan hemen sonra embedding job'larını başlat
+        start_embedding_jobs(account_id, hook_id)
       end
       
     rescue ShopifyAPI::Errors::HttpResponseError => e
@@ -200,6 +203,25 @@ module Shopify
     def calculate_total_inventory(variants)
       return 0 if variants.blank?
       variants.sum { |v| v['inventory_quantity'].to_i || 0 }
+    end
+
+    def start_embedding_jobs(account_id, hook_id)
+      Rails.logger.info "[EMBEDDING] Starting embedding jobs for account #{account_id}"
+      
+      # Embedding'i olmayan veya content_hash'i değişmiş ürünleri bul
+      products_to_embed = Shopify::Product
+        .where(account_id: account_id)
+        .where(embedding: nil)
+        .or(Shopify::Product.where(account_id: account_id).where(content_hash: nil))
+      
+      count = 0
+      products_to_embed.find_each(batch_size: 100) do |product|
+        # Her ürün için embedding job'u kuyruğa ekle
+        EmbeddingUpdateWorkerJob.set(queue: :low).perform_later(product.id)
+        count += 1
+      end
+      
+      Rails.logger.info "[EMBEDDING] Queued #{count} products for embedding"
     end
   end
 end

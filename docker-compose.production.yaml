@@ -30,7 +30,7 @@ services:
       - RAILS_LOG_TO_STDOUT=true
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - REDIS_URL=redis://redis:6379
     entrypoint: docker/entrypoints/rails.sh
     command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
     restart: always
@@ -57,7 +57,7 @@ services:
       - RAILS_LOG_TO_STDOUT=true
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - REDIS_URL=redis://redis:6379
     entrypoint: docker/entrypoints/rails.sh
     command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
     restart: always
@@ -106,12 +106,12 @@ services:
   redis:
     image: redis:alpine
     restart: always
-    command: ['sh', '-c', 'redis-server --requirepass "$REDIS_PASSWORD"']
+    command: ['redis-server']
     env_file: .env
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -133,6 +133,28 @@ services:
       - PORT=3001
       - RAILS_API_URL=http://rails:3000
     env_file: .env
+
+  clip-service:
+    build:
+      context: ./clip-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '127.0.0.1:5000:5000'
+    volumes:
+      - clip_cache:/root/.cache
+    environment:
+      - CLIP_MODEL=clip-ViT-B-32
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
 volumes:
   storage_data:

@@ -458,50 +458,50 @@
         }
       },
       "AUTH": {
-        "TITLE": "Bir Kanal Seçin",
-        "DESC": "AISATURN, canlı sohbet widget'ları, Facebook Messenger, Twitter profilleri, WhatsApp, E-postalar vb. olarak kanalları destekler. Özel bir kanal oluşturmak istiyorsanız, API kanalını kullanarak bunu oluşturabilirsiniz. Başlamak için aşağıdaki kanallardan birini seçin.",
-        "TITLE_NEXT": "Kurulumu tamamlayın",
-        "TITLE_FINISH": "Voilà!",
+        "TITLE": "Kanal Seçin",
+        "DESC": "Müşterilerinizle iletişim kurmak için bir kanal ekleyin. WhatsApp, Instagram, Facebook, E-posta ve web siteniz için canlı sohbet widget'ı desteklenmektedir.",
+        "TITLE_NEXT": "Kurulumu Tamamlayın",
+        "TITLE_FINISH": "Tamamlandı!",
         "CHANNEL": {
           "WEBSITE": {
-            "TITLE": "Website",
-            "DESCRIPTION": "Canlı sohbet widget'ı oluşturun"
+            "TITLE": "Web Sitesi",
+            "DESCRIPTION": "Web sitenize canlı sohbet widget'ı ekleyin"
           },
           "FACEBOOK": {
-            "TITLE": "Facebook\n",
-            "DESCRIPTION": "Connect your Facebook page"
+            "TITLE": "Facebook",
+            "DESCRIPTION": "Facebook sayfanızı bağlayın"
           },
           "WHATSAPP": {
             "TITLE": "WhatsApp",
-            "DESCRIPTION": "Support your customers on WhatsApp"
+            "DESCRIPTION": "WhatsApp üzerinden müşteri desteği sağlayın"
           },
           "EMAIL": {
             "TITLE": "E-Posta",
-            "DESCRIPTION": "Connect with Gmail, Outlook, or other providers"
+            "DESCRIPTION": "Gmail, Outlook veya diğer sağlayıcıları bağlayın"
           },
           "SMS": {
             "TITLE": "SMS",
-            "DESCRIPTION": "Integrate SMS channel with Twilio or bandwidth"
+            "DESCRIPTION": "Twilio veya Bandwidth ile SMS entegrasyonu"
           },
           "API": {
             "TITLE": "API",
-            "DESCRIPTION": "Make a custom channel using our API"
+            "DESCRIPTION": "API kullanarak özel kanal oluşturun"
           },
           "TELEGRAM": {
             "TITLE": "Telegram",
-            "DESCRIPTION": "Configure Telegram channel using Bot token"
+            "DESCRIPTION": "Bot token ile Telegram kanalı yapılandırın"
           },
           "LINE": {
             "TITLE": "Line",
-            "DESCRIPTION": "Integrate your Line channel"
+            "DESCRIPTION": "Line kanalınızı entegre edin"
           },
           "INSTAGRAM": {
             "TITLE": "Instagram",
-            "DESCRIPTION": "Connect your instagram account"
+            "DESCRIPTION": "Instagram hesabınızı bağlayın"
           },
           "VOICE": {
-            "TITLE": "Ses",
-            "DESCRIPTION": "Integrate with Twilio Voice"
+            "TITLE": "Sesli Arama",
+            "DESCRIPTION": "Twilio Voice ile sesli arama entegrasyonu"
           }
         }
       },

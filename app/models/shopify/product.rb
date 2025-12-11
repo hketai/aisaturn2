@@ -39,6 +39,12 @@ module Shopify
   class Product < Shopify::ApplicationRecord
     self.table_name = 'shopify_products'
 
+    # Manuel attribute tanımları (schema cache sorunu için)
+    attribute :source, :string, default: 'shopify'
+    attribute :external_id, :string
+    attribute :content_hash, :string
+    attribute :image_hash, :string
+
     # Kaynak türleri
     SOURCES = {
       shopify: 'shopify',

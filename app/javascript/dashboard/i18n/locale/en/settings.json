@@ -373,13 +373,16 @@
         "SYNC_ERROR": "Failed to start product sync",
         "SYNC_STATUS": "Sync Status",
         "STATUS_PENDING": "Pending",
-        "STATUS_SYNCING": "Syncing...",
-        "STATUS_STARTING": "Starting product sync...",
+        "STATUS_SYNCING": "Importing products...",
+        "STATUS_STARTING": "Starting product import...",
         "STATUS_COMPLETED": "Completed",
         "STATUS_FAILED": "Failed",
         "STATUS_READY": "Ready ({count} products)",
-        "STATUS_NO_PRODUCTS": "No products synced yet",
-        "SYNC_PROGRESS": "{synced}/{total} products synced (%{percentage}%)",
+        "STATUS_NO_PRODUCTS": "No products imported yet",
+        "STATUS_PREPARING_AI": "Preparing for AI ({current}/{total})",
+        "STATUS_AI_READY": "Ready ({count} products, AI active)",
+        "SYNC_PROGRESS": "{synced}/{total} products imported (%{percentage}%)",
+        "AI_PROGRESS": "Preparing for AI: {count} products queued",
         "PRODUCTS": "products",
         "RESYNC_PRODUCTS": "Resync Products",
         "LAST_SYNC": "Last sync",
@@ -396,13 +399,13 @@
         },
         "PRODUCT_QUERY": {
           "TITLE": "Product Query",
-          "DESCRIPTION": "AI assistant can search and recommend products",
+          "DESCRIPTION": "AI assistant can search and recommend products (includes basic image search)",
           "ENABLED": "Product query enabled",
           "DISABLED": "Product query disabled"
         },
         "IMAGE_SEARCH": {
-          "TITLE": "Image Search",
-          "DESCRIPTION": "Find products by customer images using AI visual search",
+          "TITLE": "Advanced Image Search",
+          "DESCRIPTION": "Finds and recommends similar products even if the exact product in the customer's image is not in your store",
           "ACTIVE": "Image search is active",
           "DIALOG_TITLE": "Image Search Feature",
           "DIALOG_MESSAGE": "To activate Image Search, please contact your account administrator.",
@@ -414,7 +417,11 @@
           "CONTACT_INFO": "Contact support to enable this feature for your account",
           "ENABLED_SUCCESS": "Image search enabled",
           "DISABLED_SUCCESS": "Image search disabled",
-          "UPDATE_ERROR": "Failed to update image search setting"
+          "UPDATE_ERROR": "Failed to update image search setting",
+          "PREPARING": "Preparing images for AI...",
+          "READY": "Image search ready ({count} products)",
+          "ESTIMATED_TIME": "Estimated time: {time}",
+          "COMPLETED": "Image search ready! {count} products processed."
         }
       },
       "TEST_ORDER": {

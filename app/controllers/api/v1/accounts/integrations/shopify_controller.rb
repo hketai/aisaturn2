@@ -166,9 +166,14 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     hook_id = @hook.id
     account_id = Current.account.id
     
-    # Önce ürünleri sil (async olarak büyük veri setleri için)
-    deleted_products_count = Shopify::Product.where(account_id: account_id, hook_id: hook_id).count
-    Shopify::Product.where(account_id: account_id, hook_id: hook_id).delete_all
+    # Önce embedding'leri sil (foreign key constraint)
+    product_ids = Shopify::Product.where(account_id: account_id, hook_id: hook_id).pluck(:id)
+    Shopify::ProductEmbedding.where(shopify_product_id: product_ids).delete_all
+    Shopify::ProductImageEmbedding.where(shopify_product_id: product_ids).delete_all
+    
+    # Sonra ürünleri sil
+    deleted_products_count = product_ids.count
+    Shopify::Product.where(id: product_ids).delete_all
     
     # Sync status kayıtlarını sil
     Shopify::SyncStatus.where(account_id: account_id, hook_id: hook_id).delete_all
@@ -240,26 +245,43 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     # Get total synced products count
     total_synced_products = Shopify::Product.for_account(Current.account.id).count
     
+    # Get embedding counts
+    total_embeddings = Shopify::ProductEmbedding.where(account_id: Current.account.id).count
+    embedding_in_progress = total_synced_products > 0 && total_embeddings < total_synced_products
+    
+    # Get image embedding counts - sadece gerçek görseli olan ürünleri say (image_hash olanlar)
+    total_image_embeddings = Shopify::ProductImageEmbedding.where(account_id: Current.account.id).count
+    products_with_images = Shopify::Product.where(account_id: Current.account.id).where.not(image_hash: nil).count
+    image_embedding_in_progress = Current.account.settings&.dig('image_search_enabled') && 
+                                  products_with_images > 0 && 
+                                  total_image_embeddings < products_with_images
+    
+    response_data = {
+      total_synced_products: total_synced_products,
+      total_embeddings: total_embeddings,
+      embedding_in_progress: embedding_in_progress,
+      total_image_embeddings: total_image_embeddings,
+      products_with_images: products_with_images,
+      image_embedding_in_progress: image_embedding_in_progress,
+      image_search_approved: Current.account.image_search_approved
+    }
+    
     if sync_status
-      render json: {
-        sync_status: {
-          id: sync_status.id,
-          status: sync_status.status,
-          synced_products: sync_status.synced_products,
-          total_products: sync_status.total_products,
-          progress_percentage: sync_status.progress_percentage,
-          started_at: sync_status.started_at,
-          completed_at: sync_status.completed_at,
-          error_message: sync_status.error_message
-        },
-        total_synced_products: total_synced_products
+      response_data[:sync_status] = {
+        id: sync_status.id,
+        status: sync_status.status,
+        synced_products: sync_status.synced_products,
+        total_products: sync_status.total_products,
+        progress_percentage: sync_status.progress_percentage,
+        started_at: sync_status.started_at,
+        completed_at: sync_status.completed_at,
+        error_message: sync_status.error_message
       }
     else
-      render json: { 
-        sync_status: nil,
-        total_synced_products: total_synced_products
-      }
+      response_data[:sync_status] = nil
     end
+    
+    render json: response_data
   end
 
   def update_settings
@@ -268,11 +290,26 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
 
     settings = params[:settings] || {}
     
+    # Gelişmiş Görsel Arama için onay kontrolü
+    if settings[:image_search_enabled] == true && !Current.account.image_search_approved
+      return render json: { 
+        error: 'not_approved',
+        message: 'Gelişmiş Görsel Arama özelliği için onay gereklidir. Satış temsilciniz ile iletişime geçin.'
+      }, status: :forbidden
+    end
+    
     # Mevcut settings'i al ve yeni değerlerle birleştir
     current_settings = hook.settings || {}
+    was_image_search_enabled = current_settings['image_search_enabled']
     new_settings = current_settings.merge(settings.to_unsafe_h)
     
     hook.update!(settings: new_settings)
+    
+    # Gelişmiş Görsel Arama yeni aktif edildiyse image embedding job'larını başlat
+    if settings[:image_search_enabled] == true && !was_image_search_enabled
+      Shopify::StartImageEmbeddingJob.perform_later(Current.account.id, hook.id)
+      Rails.logger.info "[Shopify] Image embedding job started for account #{Current.account.id}"
+    end
     
     render json: { 
       success: true, 

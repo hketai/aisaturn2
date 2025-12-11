@@ -179,6 +179,15 @@
   display_title: 'Embedding Model (optional)'
   description: 'The embedding model configured for use in Saturn AI. Default: text-embedding-3-small'
   locked: false
+- name: CLIP_API_KEY
+  display_title: 'CLIP API Key'
+  description: 'Gelişmiş Görsel Arama için Self-hosted CLIP API anahtarı.'
+  locked: false
+  type: secret
+- name: CLIP_API_URL
+  display_title: 'CLIP API URL'
+  description: 'Self-hosted CLIP API endpoint URL. Örn: http://209.38.193.3:5000/v1/embeddings'
+  locked: false
 # ------- Saturn AI Config ------- #
 - name: SATURN_ENABLED
   value: true
@@ -204,6 +213,17 @@
   description: 'Maximum number of responses allowed per Saturn assistant'
   locked: false
   type: number
+- name: CLIP_API_KEY
+  value:
+  display_title: 'CLIP API Key'
+  description: 'API key for self-hosted CLIP service (image embedding)'
+  locked: false
+  type: secret
+- name: CLIP_API_URL
+  value: 'http://209.38.193.3:5000/v1/embeddings'
+  display_title: 'CLIP API URL'
+  description: 'URL for self-hosted CLIP service endpoint'
+  locked: false
 # ------- End of Saturn AI Config ------- #
 
 # ------- Chatwoot Internal Config for Cloud ----#

@@ -15,7 +15,11 @@ module Shopify
 
       # Content hash yoksa hesapla
       if product.content_hash.blank?
-        product.update_column(:content_hash, product.calculate_content_hash)
+        new_hash = product.calculate_content_hash
+        ActiveRecord::Base.connection.execute(
+          "UPDATE shopify_products SET content_hash = '#{new_hash}' WHERE id = #{product.id}"
+        )
+        product.content_hash = new_hash
       end
 
       # Zaten bu hash için embedding varsa skip

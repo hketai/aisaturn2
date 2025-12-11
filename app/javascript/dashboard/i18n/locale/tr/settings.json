@@ -373,13 +373,16 @@
         "SYNC_ERROR": "Ürün senkronizasyonu başlatılamadı",
         "SYNC_STATUS": "Senkronizasyon Durumu",
         "STATUS_PENDING": "Bekliyor",
-        "STATUS_SYNCING": "Senkronize ediliyor...",
+        "STATUS_SYNCING": "Ürünler aktarılıyor...",
         "STATUS_STARTING": "Ürün aktarım süreci başlatılıyor...",
         "STATUS_COMPLETED": "Tamamlandı",
         "STATUS_FAILED": "Başarısız",
         "STATUS_READY": "Hazır ({count} ürün)",
-        "STATUS_NO_PRODUCTS": "Henüz ürün senkronize edilmedi",
-        "SYNC_PROGRESS": "{synced}/{total} ürün senkronize edildi (%{percentage}%)",
+        "STATUS_NO_PRODUCTS": "Henüz ürün aktarılmadı",
+        "STATUS_PREPARING_AI": "Yapay zekaya aktarılıyor ({current}/{total})",
+        "STATUS_AI_READY": "Hazır ({count} ürün, AI aktif)",
+        "SYNC_PROGRESS": "{synced}/{total} ürün aktarıldı (%{percentage}%)",
+        "AI_PROGRESS": "Yapay zekaya aktarılıyor: {count} ürün kuyruğa eklendi",
         "PRODUCTS": "ürün",
         "RESYNC_PRODUCTS": "Ürünleri Yeniden Senkronize Et",
         "LAST_SYNC": "Son senkronizasyon",
@@ -396,13 +399,13 @@
         },
         "PRODUCT_QUERY": {
           "TITLE": "Ürün Sorgulama",
-          "DESCRIPTION": "AI asistan ürün arayabilir ve öneride bulunabilir",
+          "DESCRIPTION": "AI asistan ürün arayabilir ve öneride bulunabilir (basit görsel arama içerir)",
           "ENABLED": "Ürün sorgulama aktif edildi",
           "DISABLED": "Ürün sorgulama devre dışı bırakıldı"
         },
         "IMAGE_SEARCH": {
-          "TITLE": "Görsel ile Arama",
-          "DESCRIPTION": "Yapay zeka görsel arama ile müşteri resimlerinden ürün bul",
+          "TITLE": "Gelişmiş Görsel Arama",
+          "DESCRIPTION": "Müşterinin gönderdiği görseldeki ürün mağazanızda yoksa bile benzer ürünleri bulur ve önerir",
           "ACTIVE": "Görsel arama aktif",
           "DIALOG_TITLE": "Görsel ile Arama Özelliği",
           "DIALOG_MESSAGE": "Görsel ile Arama özelliğini aktifleştirmek için hesap yöneticiniz ile iletişime geçin.",
@@ -414,7 +417,11 @@
           "CONTACT_INFO": "Bu özelliği hesabınız için etkinleştirmek için destek ile iletişime geçin",
           "ENABLED_SUCCESS": "Görsel arama aktifleştirildi",
           "DISABLED_SUCCESS": "Görsel arama devre dışı bırakıldı",
-          "UPDATE_ERROR": "Görsel arama ayarı güncellenemedi"
+          "UPDATE_ERROR": "Görsel arama ayarı güncellenemedi",
+          "PREPARING": "Görseller yapay zekaya aktarılıyor...",
+          "READY": "Görsel arama hazır ({count} ürün)",
+          "ESTIMATED_TIME": "Tahmini süre: {time}",
+          "COMPLETED": "Görsel arama hazır! {count} ürün işlendi."
         }
       },
       "TEST_ORDER": {

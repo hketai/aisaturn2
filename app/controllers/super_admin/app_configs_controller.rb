@@ -59,6 +59,8 @@ class SuperAdmin::AppConfigsController < SuperAdmin::ApplicationController
       SATURN_MAX_ASSISTANTS
       SATURN_MAX_DOCUMENTS
       SATURN_MAX_RESPONSES
+      CLIP_API_KEY
+      CLIP_API_URL
     ]
   end
 end
