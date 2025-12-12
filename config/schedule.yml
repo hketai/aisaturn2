@@ -53,3 +53,31 @@ bulk_auto_assignment_job:
   cron: '*/15 * * * *'
   class: 'Inboxes::BulkAutoAssignmentJob'
   queue: scheduled_jobs
+
+# WhatsApp Web client recovery - executed every 10 minutes
+# Checks all WhatsApp Web channels and restarts disconnected clients
+whatsapp_web_recovery_job:
+  cron: '*/10 * * * *'
+  class: 'WhatsappWeb::RecoveryJob'
+  queue: scheduled_jobs
+
+# Shopify product sync - executed daily at 03:00 UTC
+# Syncs products for all connected Shopify stores
+shopify_daily_incremental_sync_job:
+  cron: '0 3 * * *'
+  class: 'Shopify::DailyIncrementalSyncJob'
+  queue: scheduled_jobs
+
+# Nightly text embedding update - executed daily at 04:00 UTC
+# Updates embeddings for products with changed content (content_hash based)
+shopify_nightly_embedding_update_job:
+  cron: '0 4 * * *'
+  class: 'Shopify::NightlyEmbeddingUpdateJob'
+  queue: scheduled_jobs
+
+# Nightly image embedding update - executed daily at 05:00 UTC
+# Updates image embeddings for accounts with image_search enabled (image_hash based)
+shopify_nightly_image_embedding_job:
+  cron: '0 5 * * *'
+  class: 'Shopify::NightlyImageEmbeddingJob'
+  queue: scheduled_jobs

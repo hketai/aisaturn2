@@ -1,6 +1,6 @@
 <script setup>
 /* eslint-disable vue/no-bare-strings-in-template, @intlify/vue-i18n/no-raw-text */
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import subscriptionPlansAPI from 'dashboard/api/subscriptionPlans';
 import subscriptionsAPI from 'dashboard/api/subscriptions';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -114,6 +114,19 @@ const getUsagePercentage = limitData => {
   const percentage = (limitData.current / limitData.limit) * 100;
   return Math.min(percentage, 100); // Cap at 100%
 };
+
+// Eğer mevcut aboneliğin planı aktif planlar listesinde yoksa (gizli plan),
+// onu da görüntüleme için ekle
+const displayPlans = computed(() => {
+  const currentPlan = currentSubscription.value?.plan;
+  if (!currentPlan) return plans.value;
+
+  const planExists = plans.value.some(p => p.id === currentPlan.id);
+  if (planExists) return plans.value;
+
+  // Gizli planı listeye ekle (isHidden flag'i ile)
+  return [...plans.value, { ...currentPlan, isHidden: true }];
+});
 
 onMounted(async () => {
   loading.value = true;
@@ -338,11 +351,11 @@ onMounted(async () => {
           Mevcut Planlar
         </h2>
         <div
-          v-if="plans.length > 0"
+          v-if="displayPlans.length > 0"
           class="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
           <div
-            v-for="plan in plans"
+            v-for="plan in displayPlans"
             :key="plan.id"
             class="p-6 rounded-lg border shadow-sm hover:shadow-md transition-all relative"
             :class="{
@@ -358,6 +371,12 @@ onMounted(async () => {
             >
               Seçili Paket
             </div>
+            <div
+              v-if="plan.isHidden"
+              class="absolute bottom-4 right-4 px-3 py-1 bg-n-amber-9 text-n-amber-1 text-xs font-semibold rounded-full"
+            >
+              Özel Plan
+            </div>
             <h3 class="text-xl font-bold mb-2 text-n-slate-12">
               {{ plan.name }}
             </h3>
@@ -366,35 +385,35 @@ onMounted(async () => {
               <span class="text-3xl font-bold text-n-slate-12">{{
                 formatPrice(plan.price)
               }}</span>
-              <span
-v-if="plan.billing_cycle" class="text-n-slate-11"
-                >/ {{ plan.billing_cycle === 'monthly' ? 'ay' : 'yıl' }}</span
-              >
+              <span v-if="plan.billing_cycle" class="text-n-slate-11">
+              / {{ plan.billing_cycle === 'monthly' ? 'ay' : 'yıl' }}
+            </span>
             </div>
             <ul class="mb-6 space-y-2">
               <li class="flex items-center">
-                <span class="text-sm text-n-slate-12"
-                  >Mesaj: {{ formatLimit(plan.message_limit) }}</span
-                >
+                <span class="text-sm text-n-slate-12">
+                  Mesaj: {{ formatLimit(plan.message_limit) }}
+                </span>
               </li>
               <li class="flex items-center">
-                <span class="text-sm text-n-slate-12"
-                  >Konuşma: {{ formatLimit(plan.conversation_limit) }}</span
-                >
+                <span class="text-sm text-n-slate-12">
+                  Konuşma: {{ formatLimit(plan.conversation_limit) }}
+                </span>
               </li>
               <li class="flex items-center">
-                <span class="text-sm text-n-slate-12"
-                  >Ajan: {{ formatLimit(plan.agent_limit || 0) }}</span
-                >
+                <span class="text-sm text-n-slate-12">
+                  Ajan: {{ formatLimit(plan.agent_limit || 0) }}
+                </span>
               </li>
               <li class="flex items-center">
-                <span class="text-sm text-n-slate-12"
-                  >Inbox: {{ formatLimit(plan.inbox_limit || 0) }}</span
-                >
+                <span class="text-sm text-n-slate-12">
+                  Inbox: {{ formatLimit(plan.inbox_limit || 0) }}
+                </span>
               </li>
             </ul>
+            <!-- Gizli plan ise buton gösterme -->
             <Button
-              v-if="currentSubscription?.plan?.id !== plan.id"
+              v-if="currentSubscription?.plan?.id !== plan.id && !plan.isHidden"
               :label="currentSubscription ? 'Plan Değiştir' : 'Abone Ol'"
               :is-loading="loading"
               @click="
@@ -403,7 +422,10 @@ v-if="plan.billing_cycle" class="text-n-slate-11"
                   : subscribeToPlan(plan.id)
               "
             />
-            <div v-else class="text-center text-n-teal-11 font-semibold">
+            <div
+              v-else-if="currentSubscription?.plan?.id === plan.id"
+              class="text-center text-n-teal-11 font-semibold"
+            >
               Aktif Plan
             </div>
           </div>

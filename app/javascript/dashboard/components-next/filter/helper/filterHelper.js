@@ -15,6 +15,7 @@ export const CONVERSATION_ATTRIBUTES = {
   REFERER: 'referer',
   CREATED_AT: 'created_at',
   LAST_ACTIVITY_AT: 'last_activity_at',
+  AI_HANDOFF_REQUIRED: 'ai_handoff_required',
 };
 
 export const CONTACT_ATTRIBUTES = {

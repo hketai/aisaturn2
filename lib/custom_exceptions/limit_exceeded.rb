@@ -1,4 +1,4 @@
-module Exceptions
+module CustomExceptions
   class LimitExceeded < StandardError
     attr_reader :limit_type, :current_count, :limit
 

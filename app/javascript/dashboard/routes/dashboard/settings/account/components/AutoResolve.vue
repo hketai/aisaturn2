@@ -59,9 +59,9 @@ watch(
     // find the correct label option from the list
     // the single select component expects the full label object
     // in our case, the label id and name are both the same
-    labelToApply.value = labelOptions.value.find(
-      option => option.name === auto_resolve_label
-    );
+    labelToApply.value =
+      labelOptions.value.find(option => option.name === auto_resolve_label) ||
+      {};
 
     // Set unit based on duration and its divisibility
     if (duration.value) {
@@ -141,21 +141,24 @@ const toggleAutoResolve = async () => {
       <WithLabel
         :label="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.DURATION.LABEL')"
         :help-message="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.DURATION.HELP')"
+        name="auto_resolve_duration"
       >
         <div class="gap-2 w-full grid grid-cols-[3fr_1fr]">
           <!-- allow 10 mins to 999 days -->
-          <DurationInput
-            v-model="duration"
-            v-model:unit="unit"
-            min="0"
-            max="1438560"
-            class="w-full"
-          />
+          <div class="flex w-full">
+            <DurationInput
+              v-model="duration"
+              v-model:unit="unit"
+              :min="0"
+              :max="1438560"
+            />
+          </div>
         </div>
       </WithLabel>
       <WithLabel
         :label="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.MESSAGE.LABEL')"
         :help-message="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.MESSAGE.HELP')"
+        name="auto_resolve_message"
       >
         <TextArea
           v-model="message"
@@ -165,7 +168,10 @@ const toggleAutoResolve = async () => {
           "
         />
       </WithLabel>
-      <WithLabel :label="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.PREFERENCES')">
+      <WithLabel
+        :label="t('GENERAL_SETTINGS.FORM.AUTO_RESOLVE.PREFERENCES')"
+        name="auto_resolve_preferences"
+      >
         <div
           class="rounded-xl border border-n-weak bg-n-solid-1 w-full text-sm text-n-slate-12 divide-y divide-n-weak"
         >

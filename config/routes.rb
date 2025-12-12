@@ -81,6 +81,11 @@ Rails.application.routes.draw do
               resources :scenarios
               resources :responses, only: [:index, :create]
               resources :documents, only: [:index, :show, :create, :update, :destroy]
+              resources :assistant_integrations, only: [:index, :create, :update, :destroy] do
+                collection do
+                  post :toggle
+                end
+              end
             end
             resources :responses, only: [:index, :show, :update, :destroy], param: :id
             resources :documents, only: [:index], param: :id
@@ -316,10 +321,16 @@ Rails.application.routes.draw do
                 post :add_participant_to_meeting
               end
             end
-            resource :shopify, controller: 'shopify', only: [:destroy] do
+            resource :shopify, controller: 'shopify', only: [:show, :destroy] do
               collection do
                 post :auth
+                post :connect
+                post :test_credentials
                 get :orders
+                get :test
+                post :sync_products
+                get :sync_status
+                patch :update_settings
               end
             end
             resource :linear, controller: 'linear', only: [] do
@@ -634,6 +645,9 @@ Rails.application.routes.draw do
       resource :settings, only: [:show] do
         get :refresh, on: :collection
       end
+
+      # Saturn Analytics - Token & Cost Tracking
+      resources :saturn_analytics, only: [:index]
 
       # resources that doesn't appear in primary navigation in super admin
       resources :account_users, only: [:new, :create, :show, :destroy]

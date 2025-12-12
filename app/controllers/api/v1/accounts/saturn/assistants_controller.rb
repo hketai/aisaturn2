@@ -104,12 +104,13 @@ class Api::V1::Accounts::Saturn::AssistantsController < Api::V1::Accounts::BaseC
   def generate_playground_response
     user_input = params[:message_content]
     history = params[:message_history] || []
+    image_base64 = params[:image_base64]
 
     Rails.logger.debug do
-      "Saturn playground params: message_content=#{user_input.present?}, message_history=#{history.class}, assistant_id=#{@assistant&.id}"
+      "Saturn playground params: message_content=#{user_input.present?}, message_history=#{history.class}, assistant_id=#{@assistant&.id}, has_image=#{image_base64.present?}"
     end
 
-    return render json: { error: 'message_content is required' }, status: :bad_request if user_input.blank?
+    return render json: { error: 'message_content is required' }, status: :bad_request if user_input.blank? && image_base64.blank?
 
     # Normalize message history format
     normalized_history = normalize_message_history(history)
@@ -117,8 +118,9 @@ class Api::V1::Accounts::Saturn::AssistantsController < Api::V1::Accounts::BaseC
     chat_service = Saturn::Llm::AssistantChatService.new(assistant: @assistant)
 
     ai_response = chat_service.create_ai_response(
-      user_message: user_input,
-      conversation_history: normalized_history
+      user_message: user_input.presence || 'Bu resmi analiz et',
+      conversation_history: normalized_history,
+      image_base64: image_base64
     )
 
     render json: { message: ai_response }
@@ -164,6 +166,6 @@ class Api::V1::Accounts::Saturn::AssistantsController < Api::V1::Accounts::BaseC
   end
 
   def permitted_assistant_params
-    params.require(:assistant).permit(:name, :description, config: {}, response_guidelines: [], guardrails: [])
+    params.require(:assistant).permit(:name, :description, :sector, config: {})
   end
 end

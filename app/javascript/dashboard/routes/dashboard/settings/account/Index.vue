@@ -155,7 +155,10 @@ export default {
 
 <template>
   <div class="flex flex-col max-w-2xl mx-auto w-full">
-    <BaseSettingsHeader :title="$t('GENERAL_SETTINGS.TITLE')" />
+    <BaseSettingsHeader
+      :title="$t('GENERAL_SETTINGS.TITLE')"
+      :description="$t('GENERAL_SETTINGS.DESCRIPTION')"
+    />
     <div class="flex-grow flex-shrink min-w-0 mt-3">
       <SectionLayout
         :title="$t('GENERAL_SETTINGS.FORM.GENERAL_SECTION.TITLE')"
@@ -170,6 +173,7 @@ export default {
             :has-error="v$.name.$error"
             :label="$t('GENERAL_SETTINGS.FORM.NAME.LABEL')"
             :error-message="$t('GENERAL_SETTINGS.FORM.NAME.ERROR')"
+            name="account_name"
           >
             <NextInput
               v-model="name"
@@ -183,6 +187,7 @@ export default {
             :has-error="v$.locale.$error"
             :label="$t('GENERAL_SETTINGS.FORM.LANGUAGE.LABEL')"
             :error-message="$t('GENERAL_SETTINGS.FORM.LANGUAGE.ERROR')"
+            name="account_locale"
           >
             <select v-model="locale" class="!mb-0 text-sm">
               <option
@@ -197,6 +202,7 @@ export default {
           <WithLabel
             v-if="featureCustomReplyDomainEnabled"
             :label="$t('GENERAL_SETTINGS.FORM.DOMAIN.LABEL')"
+            name="account_domain"
           >
             <NextInput
               v-model="domain"
@@ -219,6 +225,7 @@ export default {
           <WithLabel
             v-if="featureCustomReplyEmailEnabled"
             :label="$t('GENERAL_SETTINGS.FORM.SUPPORT_EMAIL.LABEL')"
+            name="support_email"
           >
             <NextInput
               v-model="supportEmail"

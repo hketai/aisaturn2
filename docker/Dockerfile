@@ -1,6 +1,6 @@
 # pre-build stage
 FROM node:23-alpine as node
-FROM ruby:3.4.4-alpine3.21 AS pre-builder
+FROM ruby:3.4.7-alpine3.21 AS pre-builder
 
 ARG NODE_VERSION="23.7.0"
 ARG PNPM_VERSION="10.2.0"
@@ -10,7 +10,13 @@ ENV PNPM_VERSION=${PNPM_VERSION}
 # ARG default to production settings
 # For development docker-compose file overrides ARGS
 ARG BUNDLE_WITHOUT="development:test"
+ARG BUNDLE_RETRY=5
+ARG BUNDLE_TIMEOUT=120
+ARG BUNDLE_MIRROR=""
 ENV BUNDLE_WITHOUT ${BUNDLE_WITHOUT}
+ENV BUNDLE_RETRY ${BUNDLE_RETRY}
+ENV BUNDLE_TIMEOUT ${BUNDLE_TIMEOUT}
+ENV BUNDLE_MIRROR ${BUNDLE_MIRROR}
 ENV BUNDLER_VERSION=2.5.11
 
 ARG RAILS_SERVE_STATIC_FILES=true
@@ -35,7 +41,7 @@ RUN apk update && apk add --no-cache \
   curl \
   xz \
   && mkdir -p /var/app \
-  && gem install bundler
+  && gem install bundler -v "${BUNDLER_VERSION}"
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
@@ -62,13 +68,33 @@ COPY Gemfile Gemfile.lock ./
 # https://github.com/googleapis/google-cloud-ruby/issues/13306
 # adding xz as nokogiri was failing to build libxml
 # https://github.com/chatwoot/chatwoot/issues/4045
-RUN apk update && apk add --no-cache build-base musl ruby-full ruby-dev gcc make musl-dev openssl openssl-dev g++ linux-headers xz vips
-RUN bundle config set --local force_ruby_platform true
+RUN apk update && apk add --no-cache \
+  build-base \
+  musl \
+  ruby-full \
+  ruby-dev \
+  gcc \
+  make \
+  musl-dev \
+  openssl \
+  openssl-dev \
+  g++ \
+  linux-headers \
+  xz \
+  vips \
+  yaml-dev \
+  rust \
+  cargo \
+  clang-dev \
+  llvm-dev
+RUN bundle config set --local force_ruby_platform true \
+  && bundle config set timeout ${BUNDLE_TIMEOUT} \
+  && if [ -n "${BUNDLE_MIRROR}" ]; then bundle config set mirror.https://rubygems.org "${BUNDLE_MIRROR}"; fi
 
 # Do not install development or test gems in production
 RUN if [ "$RAILS_ENV" = "production" ]; then \
-  bundle config set without 'development test'; bundle install -j 4 -r 3; \
-  else bundle install -j 4 -r 3; \
+  bundle config set without 'development test'; bundle install -j 4 --retry ${BUNDLE_RETRY}; \
+  else bundle install -j 4 --retry ${BUNDLE_RETRY}; \
   fi
 
 COPY package.json pnpm-lock.yaml ./
@@ -86,8 +112,8 @@ RUN if [ "$RAILS_ENV" = "production" ]; then \
   && rm -rf spec node_modules tmp/cache; \
   fi
 
-# Generate .git_sha file with current commit hash
-RUN git rev-parse HEAD > /app/.git_sha
+# Generate .git_sha file with current commit hash (or use placeholder if not in git repo)
+RUN git rev-parse HEAD > /app/.git_sha 2>/dev/null || echo "production" > /app/.git_sha
 
 # Remove unnecessary files
 RUN rm -rf /gems/ruby/3.4.0/cache/*.gem \
@@ -96,7 +122,7 @@ RUN rm -rf /gems/ruby/3.4.0/cache/*.gem \
   && rm .gitignore
 
 # final build stage
-FROM ruby:3.4.4-alpine3.21
+FROM ruby:3.4.7-alpine3.21
 
 ARG NODE_VERSION="23.7.0"
 ARG PNPM_VERSION="10.2.0"
@@ -104,7 +130,11 @@ ENV NODE_VERSION=${NODE_VERSION}
 ENV PNPM_VERSION=${PNPM_VERSION}
 
 ARG BUNDLE_WITHOUT="development:test"
+ARG BUNDLE_RETRY=5
+ARG BUNDLE_TIMEOUT=120
 ENV BUNDLE_WITHOUT ${BUNDLE_WITHOUT}
+ENV BUNDLE_RETRY ${BUNDLE_RETRY}
+ENV BUNDLE_TIMEOUT ${BUNDLE_TIMEOUT}
 ENV BUNDLER_VERSION=2.5.11
 
 ARG EXECJS_RUNTIME="Disabled"
@@ -128,7 +158,7 @@ RUN apk update && apk add --no-cache \
   imagemagick \
   git \
   vips \
-  && gem install bundler
+  && gem install bundler -v "${BUNDLER_VERSION}"
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules

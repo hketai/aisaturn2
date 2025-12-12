@@ -7,6 +7,7 @@
       "NON_ADMIN": "Tüm özellikleri kullanmaya devam etmek için lütfen yöneticinizle iletişime geçin ve planı yükseltin."
     },
     "TITLE": "Hesap Ayarları",
+    "DESCRIPTION": "Hesap tercihlerinizi ve ayarlarınızı yönetin",
     "SUBMIT": "Ayarları Güncelle",
     "BACK": "Geri",
     "DISMISS": "Kapat",
@@ -165,16 +166,16 @@
       "assigned_conversation_new_message": "Yeni Mesaj",
       "participating_conversation_new_message": "Yeni Mesaj",
       "conversation_mention": "Bahset",
-      "sla_missed_first_response": "SLA Missed",
-      "sla_missed_next_response": "SLA Missed",
-      "sla_missed_resolution": "SLA Missed"
+      "sla_missed_first_response": "SLA Kaçırıldı",
+      "sla_missed_next_response": "SLA Kaçırıldı",
+      "sla_missed_resolution": "SLA Kaçırıldı"
     }
   },
   "NETWORK": {
     "NOTIFICATION": {
       "OFFLINE": "Çevrimdışı",
-      "RECONNECTING": "Reconnecting...",
-      "RECONNECT_SUCCESS": "Reconnected"
+      "RECONNECTING": "Yeniden bağlanıyor...",
+      "RECONNECT_SUCCESS": "Yeniden bağlandı"
     },
     "BUTTON": {
       "REFRESH": "Yenile"
@@ -186,7 +187,7 @@
       "GENERAL": "Genel",
       "REPORTS": "Raporlar",
       "CONVERSATION": "Konuşma",
-      "BULK_ACTIONS": "Bulk Actions",
+      "BULK_ACTIONS": "Toplu İşlemler",
       "CHANGE_ASSIGNEE": "Atananı Değiştir",
       "CHANGE_PRIORITY": "Önceliği Değiştir",
       "CHANGE_TEAM": "Takım Değiştir",

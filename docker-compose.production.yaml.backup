@@ -1,0 +1,81 @@
+services:
+  base: &base
+    image: aisaturn:production
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    env_file: .env
+    volumes:
+      - storage_data:/app/storage
+      - ./public/brand-assets:/app/public/brand-assets
+      - ./config:/app/config
+      - ./app:/app/app:ro
+      - ./lib:/app/lib:ro
+
+  rails:
+    <<: *base
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+    restart: always
+
+  sidekiq:
+    <<: *base
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+    restart: always
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: always
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=chatwoot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=chatwoot_db_password_2024
+
+  redis:
+    image: redis:alpine
+    restart: always
+    command: ['sh', '-c', 'redis-server --requirepass "$REDIS_PASSWORD"']
+    env_file: .env
+    volumes:
+      - redis_data:/data
+
+  whatsapp-web:
+    image: whatsapp-web-service:production
+    build:
+      context: ./whatsapp-web-service
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '127.0.0.1:3001:3001'
+    volumes:
+      - whatsapp_sessions:/app/sessions
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    env_file: .env
+
+volumes:
+  storage_data:
+  postgres_data:
+  redis_data:
+  whatsapp_sessions:

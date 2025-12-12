@@ -1,7 +1,7 @@
 <script>
 import { defineAsyncComponent, ref } from 'vue';
 
-import NextSidebar from 'next/sidebar/Sidebar.vue';
+import NextHeader from 'next/header/Header.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -19,18 +19,15 @@ const CommandBar = defineAsyncComponent(
 import CopilotLauncher from 'dashboard/components-next/copilot/CopilotLauncher.vue';
 import CopilotContainer from 'dashboard/components/copilot/CopilotContainer.vue';
 
-import MobileSidebarLauncher from 'dashboard/components-next/sidebar/MobileSidebarLauncher.vue';
-
 export default {
   components: {
-    NextSidebar,
+    NextHeader,
     CommandBar,
     WootKeyShortcutModal,
     AddAccountModal,
     UpgradePage,
     CopilotLauncher,
     CopilotContainer,
-    MobileSidebarLauncher,
   },
   setup() {
     const upgradePageRef = ref(null);
@@ -51,7 +48,6 @@ export default {
       showAccountModal: false,
       showCreateAccountModal: false,
       showShortcutModal: false,
-      isMobileSidebarOpen: false,
     };
   },
   computed: {
@@ -94,12 +90,6 @@ export default {
     },
   },
   methods: {
-    toggleMobileSidebar() {
-      this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
-    },
-    closeMobileSidebar() {
-      this.isMobileSidebarOpen = false;
-    },
     openCreateAccountModal() {
       this.showAccountModal = false;
       this.showCreateAccountModal = true;
@@ -121,14 +111,12 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-grow overflow-hidden text-n-slate-12">
-    <NextSidebar
-      :is-mobile-sidebar-open="isMobileSidebarOpen"
+  <div class="flex flex-col flex-grow overflow-hidden text-n-slate-12 h-screen">
+    <NextHeader
       @toggle-account-modal="toggleAccountModal"
       @open-key-shortcut-modal="toggleKeyShortcutModal"
       @close-key-shortcut-modal="closeKeyShortcutModal"
       @show-create-account-modal="openCreateAccountModal"
-      @close-mobile-sidebar="closeMobileSidebar"
     />
 
     <main class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden">
@@ -136,20 +124,11 @@ export default {
         v-show="showUpgradePage"
         ref="upgradePageRef"
         :bypass-upgrade-page="bypassUpgradePage"
-      >
-        <MobileSidebarLauncher
-          :is-mobile-sidebar-open="isMobileSidebarOpen"
-          @toggle="toggleMobileSidebar"
-        />
-      </UpgradePage>
+      />
       <template v-if="!showUpgradePage">
         <router-view />
         <CommandBar />
         <CopilotLauncher />
-        <MobileSidebarLauncher
-          :is-mobile-sidebar-open="isMobileSidebarOpen"
-          @toggle="toggleMobileSidebar"
-        />
         <CopilotContainer />
       </template>
       <AddAccountModal

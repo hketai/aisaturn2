@@ -18,6 +18,8 @@ class Webhooks::WhatsappWebController < ActionController::API
       process_auth_failure(channel)
     when 'message_ack'
       process_message_ack(channel, params[:message_id], params[:status])
+    when 'reaction'
+      process_reaction(channel, params[:reaction_data])
     end
 
     head :ok
@@ -125,5 +127,41 @@ class Webhooks::WhatsappWebController < ActionController::API
     # Update message status
     Messages::StatusUpdateService.new(message, status).perform
     Rails.logger.info "[WHATSAPP_WEB] Message #{message.id} status updated to #{status} (source_id: #{message_id})"
+  end
+
+  def process_reaction(channel, reaction_data)
+    return unless channel.inbox.present?
+    return unless reaction_data.present?
+
+    message_id = reaction_data[:message_id]
+    return unless message_id.present?
+
+    # Find message by source_id
+    message = channel.inbox.messages.find_by(source_id: message_id)
+    return unless message
+
+    emoji = reaction_data[:reaction]
+    sender_id = reaction_data[:sender_id]
+
+    Rails.logger.info "[WHATSAPP_WEB] Reaction received: #{emoji} on message #{message.id} from #{sender_id}"
+
+    # Store reaction in content_attributes
+    reactions = message.content_attributes['reactions'] || []
+
+    if emoji.present?
+      # Add or update reaction
+      existing_idx = reactions.find_index { |r| r['sender_id'] == sender_id }
+      if existing_idx
+        reactions[existing_idx] = { 'emoji' => emoji, 'sender_id' => sender_id, 'timestamp' => reaction_data[:timestamp] }
+      else
+        reactions << { 'emoji' => emoji, 'sender_id' => sender_id, 'timestamp' => reaction_data[:timestamp] }
+      end
+    else
+      # Remove reaction (empty emoji means removal)
+      reactions.reject! { |r| r['sender_id'] == sender_id }
+    end
+
+    message.update!(content_attributes: message.content_attributes.merge('reactions' => reactions))
+    Rails.logger.info "[WHATSAPP_WEB] Message #{message.id} reactions updated: #{reactions.size} reactions"
   end
 end

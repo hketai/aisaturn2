@@ -47,6 +47,20 @@ class AccountBuilder
     account_locale = @locale || 'tr'
     @account = Account.create!(name: account_name, locale: account_locale)
     Current.account = @account
+    assign_free_plan
+    @account
+  end
+
+  def assign_free_plan
+    free_plan = SubscriptionPlan.free.first
+    return unless free_plan
+
+    Subscriptions::CreateSubscriptionService.new(
+      account: @account,
+      subscription_plan: free_plan
+    ).perform
+  rescue StandardError => e
+    Rails.logger.warn "Could not assign free plan to account #{@account.id}: #{e.message}"
   end
 
   def create_and_link_user

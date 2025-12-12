@@ -4,12 +4,17 @@ const props = defineProps({
     type: String,
     default: 'size-4',
   },
+  style: {
+    type: Object,
+    default: null,
+  },
 });
 </script>
 
 <template>
   <svg
     :class="props.class"
+    :style="props.style"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"

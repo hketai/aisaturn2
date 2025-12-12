@@ -73,7 +73,10 @@ const emitNewAccount = () => {
         />
       </button>
     </template>
-    <DropdownBody v-if="showAccountSwitcher" class="min-w-80 z-50">
+    <DropdownBody
+      v-if="showAccountSwitcher"
+      class="min-w-80 z-50 bottom-full mb-2"
+    >
       <DropdownSection :title="t('SIDEBAR_ITEMS.SWITCH_ACCOUNT')">
         <DropdownItem
           v-for="account in sortedCurrentUserAccounts"

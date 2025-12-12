@@ -48,6 +48,10 @@ const props = defineProps({
     type: String,
     default: 'blue',
   },
+  icon: {
+    type: String,
+    default: 'i-lucide-activity',
+  },
 });
 
 const store = useStore();
@@ -202,38 +206,39 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-row flex-wrap max-w-full">
-    <MetricCard :header="title">
-      <template #control>
+  <MetricCard :header="title" :icon="icon">
+    <template #control>
+      <div class="flex items-center gap-2">
         <div
           v-on-clickaway="() => toggleDropdown(false)"
-          class="relative flex items-center group"
+          class="relative flex items-center"
         >
           <Button
             sm
             slate
             faded
             :label="selectedDayFilter.label"
-            class="rounded-md group-hover:bg-n-alpha-2"
+            icon="i-lucide-calendar"
             @click="toggleDropdown()"
           />
           <DropdownMenu
             v-if="showDropdown"
             :menu-items="menuItems"
-            class="mt-1 ltr:right-0 rtl:left-0 xl:ltr:right-0 xl:rtl:left-0 top-full"
+            class="mt-1 ltr:right-0 rtl:left-0 top-full min-w-[10rem]"
             @action="handleAction($event)"
           />
         </div>
         <div
           v-on-clickaway="() => toggleInboxDropdown(false)"
-          class="relative flex items-center group"
+          class="relative flex items-center"
         >
           <Button
             sm
             slate
             faded
             :label="selectedInboxFilter.label"
-            class="rounded-md group-hover:bg-n-alpha-2 max-w-[200px]"
+            icon="i-lucide-inbox"
+            class="max-w-[180px]"
             @click="toggleInboxDropdown()"
           />
           <DropdownMenu
@@ -241,7 +246,7 @@ onMounted(() => {
             :menu-items="inboxMenuItems"
             show-search
             :search-placeholder="t('INBOX_REPORTS.SEARCH_INBOX')"
-            class="mt-1 ltr:right-0 rtl:left-0 xl:ltr:right-0 xl:rtl:left-0 top-full min-w-[200px]"
+            class="mt-1 ltr:right-0 rtl:left-0 top-full min-w-[200px]"
             @action="handleInboxAction($event)"
           />
         </div>
@@ -249,17 +254,19 @@ onMounted(() => {
           sm
           slate
           faded
-          :label="t('OVERVIEW_REPORTS.CONVERSATION_HEATMAP.DOWNLOAD_REPORT')"
-          class="rounded-md group-hover:bg-n-alpha-2"
+          icon="i-lucide-download"
+          :title="t('OVERVIEW_REPORTS.CONVERSATION_HEATMAP.DOWNLOAD_REPORT')"
           @click="downloadHeatmapData"
         />
-      </template>
+      </div>
+    </template>
+    <div class="w-full">
       <BaseHeatmap
         :heatmap-data="heatmapData"
         :number-of-rows="selectedDays + 1"
         :is-loading="isLoading"
         :color-scheme="colorScheme"
       />
-    </MetricCard>
-  </div>
+    </div>
+  </MetricCard>
 </template>

@@ -17,7 +17,8 @@
     "ASSIGNEE_TYPE_TABS": {
       "me": "Benim",
       "unassigned": "Atanmamış",
-      "all": "Hepsi"
+      "all": "Hepsi",
+      "ai_handoff": "AI Devir"
     },
     "CHAT_STATUS_FILTER_ITEMS": {
       "open": {

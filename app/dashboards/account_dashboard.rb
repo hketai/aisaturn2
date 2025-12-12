@@ -36,8 +36,14 @@ class AccountDashboard < Administrate::BaseDashboard
     account_users: Field::HasMany,
     custom_attributes: Field::String,
     openai_api_key: Field::String.with_options(secret: true),
+    image_search_approved: Field::Boolean,
     subscription_plan_id: Field::Select.with_options(
-      collection: proc { SubscriptionPlan.active.ordered.map { |p| [p.name, p.id] } }
+      collection: proc {
+        SubscriptionPlan.ordered.map do |p|
+          label = p.is_active ? p.name : "#{p.name} (Gizli)"
+          [label, p.id]
+        end
+      }
     ),
     account_subscriptions: Field::HasMany
   }.merge(enterprise_attribute_types).freeze
@@ -77,6 +83,7 @@ class AccountDashboard < Administrate::BaseDashboard
     account_users
     account_subscriptions
     openai_api_key
+    image_search_approved
   ] + enterprise_show_page_attributes).freeze
 
   # FORM_ATTRIBUTES
@@ -96,6 +103,7 @@ class AccountDashboard < Administrate::BaseDashboard
     status
     subscription_plan_id
     openai_api_key
+    image_search_approved
   ] + enterprise_form_attributes).freeze
 
   # COLLECTION_FILTERS
@@ -126,7 +134,7 @@ class AccountDashboard < Administrate::BaseDashboard
   # to prevent an error from being raised (wrong number of arguments)
   # Reference: https://github.com/thoughtbot/administrate/pull/2356/files#diff-4e220b661b88f9a19ac527c50d6f1577ef6ab7b0bed2bfdf048e22e6bfa74a05R204
   def permitted_attributes(action)
-    attrs = super + [{ limits: {} }, :subscription_plan_id]
+    attrs = super + [{ limits: {} }, :subscription_plan_id, :image_search_approved]
 
     # Add manually_managed_features to permitted attributes only for Chatwoot Cloud
     attrs << { manually_managed_features: [] } if ChatwootApp.chatwoot_cloud?

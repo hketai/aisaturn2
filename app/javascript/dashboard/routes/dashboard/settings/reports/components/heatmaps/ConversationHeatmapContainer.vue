@@ -14,5 +14,6 @@ const { t } = useI18n();
     store-action="fetchAccountConversationHeatmap"
     download-action="downloadAccountConversationHeatmap"
     ui-flag-key="isFetchingAccountConversationsHeatmap"
+    icon="i-lucide-message-square"
   />
 </template>

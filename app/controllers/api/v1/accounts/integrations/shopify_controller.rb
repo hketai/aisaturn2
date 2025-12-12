@@ -1,8 +1,70 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::BaseController
   include Shopify::IntegrationHelper
-  before_action :setup_shopify_context, only: [:orders]
-  before_action :fetch_hook, except: [:auth]
+  before_action :setup_shopify_context, only: [:orders, :test]
+  before_action :fetch_hook, except: [:auth, :connect, :show, :test, :test_credentials]
   before_action :validate_contact, only: [:orders]
+
+  def show
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    if hook
+      render json: {
+        hook: {
+          id: hook.id,
+          reference_id: hook.reference_id,
+          enabled: hook.enabled?,
+          settings: hook.settings || {}
+        }
+      }
+    else
+      render json: { hook: nil }, status: :not_found
+    end
+  end
+
+  def connect
+    shop_domain = params[:shop_domain]
+    access_token = params[:access_token]
+
+    return render json: { error: 'Shop domain is required' }, status: :unprocessable_entity if shop_domain.blank?
+    return render json: { error: 'Access token is required' }, status: :unprocessable_entity if access_token.blank?
+
+    # Validate shop domain format
+    unless shop_domain.match?(/\A[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com\z/)
+      return render json: { error: 'Invalid shop domain format' }, status: :unprocessable_entity
+    end
+
+    # Test the access token and get shop info
+    shop_info = nil
+    begin
+      api_version = '2024-10'
+      test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session, api_version: api_version)
+      response = test_client.get(path: 'shop.json')
+      shop_info = response.body['shop']
+    rescue StandardError => e
+      return render json: { error: "Invalid access token: #{e.message}" }, status: :unprocessable_entity
+    end
+
+    # Create or update the hook
+    hook = Integrations::Hook.find_or_initialize_by(
+      account: Current.account,
+      app_id: 'shopify'
+    )
+    hook.reference_id = shop_domain
+    hook.access_token = access_token
+    hook.status = :enabled
+
+    # Shop'un custom domain'ini settings'e kaydet
+    if shop_info.present?
+      custom_domain = shop_info['domain'] # Custom domain (örn: www.ovio.com.tr)
+      hook.settings ||= {}
+      hook.settings['custom_domain'] = custom_domain if custom_domain.present?
+      hook.settings['shop_name'] = shop_info['name']
+    end
+
+    hook.save!
+
+    render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
+  end
 
   def auth
     shop_domain = params[:shop_domain]
@@ -21,6 +83,75 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     render json: { redirect_url: auth_url }
   end
 
+  def test
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+
+    # Test connection by fetching shop info
+    session = ShopifyAPI::Auth::Session.new(shop: hook.reference_id, access_token: hook.access_token)
+    client = ShopifyAPI::Clients::Rest::Admin.new(session: session)
+    shop_info = client.get(path: 'shop.json')
+
+    render json: { success: true, shop: shop_info.body['shop'] }
+  rescue StandardError => e
+    render json: { error: e.message, success: false }, status: :unprocessable_entity
+  end
+
+  # Kaydetmeden önce credentials'ı test et
+  def test_credentials
+    shop_domain = params[:shop_domain]
+    access_token = params[:access_token]
+
+    return render json: { error: 'Mağaza adresi gerekli', success: false }, status: :unprocessable_entity if shop_domain.blank?
+    return render json: { error: 'Erişim anahtarı gerekli', success: false }, status: :unprocessable_entity if access_token.blank?
+
+    # Validate shop domain format
+    unless shop_domain.match?(/\A[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com\z/)
+      return render json: { error: 'Geçersiz mağaza adresi formatı', success: false }, status: :unprocessable_entity
+    end
+
+    # Test the access token by fetching shop info
+    begin
+      Rails.logger.info "[Shopify] Testing credentials for shop: #{shop_domain}"
+      
+      # API versiyonunu ayarla
+      api_version = '2024-10'
+      test_session = ShopifyAPI::Auth::Session.new(
+        shop: shop_domain, 
+        access_token: access_token
+      )
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(
+        session: test_session,
+        api_version: api_version
+      )
+      response = test_client.get(path: 'shop.json')
+      shop_info = response.body['shop']
+
+      Rails.logger.info "[Shopify] Successfully connected to shop: #{shop_info['name']}"
+      render json: { 
+        success: true, 
+        shop: {
+          name: shop_info['name'],
+          domain: shop_info['domain'],
+          email: shop_info['email']
+        }
+      }
+    rescue ShopifyAPI::Errors::HttpResponseError => e
+      Rails.logger.error "[Shopify] HTTP Error: code=#{e.response&.code}, message=#{e.message}, body=#{e.response&.body}"
+      error_message = if e.response&.code == 401
+                        'Erişim anahtarı geçersiz veya süresi dolmuş'
+                      elsif e.response&.code == 404
+                        'Mağaza bulunamadı veya API erişimi yok'
+                      else
+                        "Bağlantı hatası (#{e.response&.code}): #{e.message}"
+                      end
+      render json: { error: error_message, success: false }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "[Shopify] Error: #{e.class} - #{e.message}"
+      render json: { error: "Bağlantı hatası: #{e.message}", success: false }, status: :unprocessable_entity
+    end
+  end
+
   def orders
     customers = fetch_customers
     return render json: { orders: [] } if customers.empty?
@@ -32,9 +163,160 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
   end
 
   def destroy
+    hook_id = @hook.id
+    account_id = Current.account.id
+    
+    # Önce embedding'leri sil (foreign key constraint)
+    product_ids = Shopify::Product.where(account_id: account_id, hook_id: hook_id).pluck(:id)
+    Shopify::ProductEmbedding.where(shopify_product_id: product_ids).delete_all
+    Shopify::ProductImageEmbedding.where(shopify_product_id: product_ids).delete_all
+    
+    # Sonra ürünleri sil
+    deleted_products_count = product_ids.count
+    Shopify::Product.where(id: product_ids).delete_all
+    
+    # Sync status kayıtlarını sil
+    Shopify::SyncStatus.where(account_id: account_id, hook_id: hook_id).delete_all
+    
+    # Hook'u sil
     @hook.destroy!
-    head :ok
+    
+    Rails.logger.info "[Shopify] Integration disconnected for account #{account_id}. Deleted #{deleted_products_count} products."
+    
+    render json: { 
+      success: true, 
+      message: "Shopify entegrasyonu kaldırıldı ve #{deleted_products_count} ürün silindi." 
+    }
   rescue StandardError => e
+    Rails.logger.error "[Shopify] Error destroying integration: #{e.message}"
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def sync_products
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+    
+    # Mevcut aktif sync var mı?
+    active_sync = Shopify::SyncStatus.active.find_by(
+      account_id: Current.account.id,
+      hook_id: hook.id
+    )
+    
+    if active_sync
+      render json: {
+        message: 'Sync already in progress',
+        sync_status: {
+          id: active_sync.id,
+          status: active_sync.status,
+          synced_products: active_sync.synced_products,
+          total_products: active_sync.total_products,
+          progress_percentage: active_sync.progress_percentage
+        }
+      }
+      return
+    end
+    
+    # Incremental sync mi?
+    incremental = params[:incremental] == true || params[:incremental] == 'true'
+    
+    # Yeni sync başlat
+    Shopify::SyncProductsMasterJob.perform_later(Current.account.id, hook.id, incremental: incremental)
+    
+    sync_type = incremental ? 'incremental' : 'full'
+    render json: { 
+      message: "Product #{sync_type} sync started",
+      status: 'pending',
+      sync_type: sync_type
+    }
+  rescue StandardError => e
+    Rails.logger.error "Sync products failed: #{e.message}"
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def sync_status
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+    
+    sync_status = Shopify::SyncStatus.recent.find_by(
+      account_id: Current.account.id,
+      hook_id: hook.id
+    )
+    
+    # Get total synced products count
+    total_synced_products = Shopify::Product.for_account(Current.account.id).count
+    
+    # Get embedding counts
+    total_embeddings = Shopify::ProductEmbedding.where(account_id: Current.account.id).count
+    embedding_in_progress = total_synced_products > 0 && total_embeddings < total_synced_products
+    
+    # Get image embedding counts - sadece gerçek görseli olan ürünleri say (image_hash olanlar)
+    total_image_embeddings = Shopify::ProductImageEmbedding.where(account_id: Current.account.id).count
+    products_with_images = Shopify::Product.where(account_id: Current.account.id).where.not(image_hash: nil).count
+    image_embedding_in_progress = Current.account.settings&.dig('image_search_enabled') && 
+                                  products_with_images > 0 && 
+                                  total_image_embeddings < products_with_images
+    
+    response_data = {
+      total_synced_products: total_synced_products,
+      total_embeddings: total_embeddings,
+      embedding_in_progress: embedding_in_progress,
+      total_image_embeddings: total_image_embeddings,
+      products_with_images: products_with_images,
+      image_embedding_in_progress: image_embedding_in_progress,
+      image_search_approved: Current.account.image_search_approved
+    }
+    
+    if sync_status
+      response_data[:sync_status] = {
+        id: sync_status.id,
+        status: sync_status.status,
+        synced_products: sync_status.synced_products,
+        total_products: sync_status.total_products,
+        progress_percentage: sync_status.progress_percentage,
+        started_at: sync_status.started_at,
+        completed_at: sync_status.completed_at,
+        error_message: sync_status.error_message
+      }
+    else
+      response_data[:sync_status] = nil
+    end
+    
+    render json: response_data
+  end
+
+  def update_settings
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+
+    settings = params[:settings] || {}
+    
+    # Gelişmiş Görsel Arama için onay kontrolü
+    if settings[:image_search_enabled] == true && !Current.account.image_search_approved
+      return render json: { 
+        error: 'not_approved',
+        message: 'Gelişmiş Görsel Arama özelliği için onay gereklidir. Satış temsilciniz ile iletişime geçin.'
+      }, status: :forbidden
+    end
+    
+    # Mevcut settings'i al ve yeni değerlerle birleştir
+    current_settings = hook.settings || {}
+    was_image_search_enabled = current_settings['image_search_enabled']
+    new_settings = current_settings.merge(settings.to_unsafe_h)
+    
+    hook.update!(settings: new_settings)
+    
+    # Gelişmiş Görsel Arama yeni aktif edildiyse image embedding job'larını başlat
+    if settings[:image_search_enabled] == true && !was_image_search_enabled
+      Shopify::StartImageEmbeddingJob.perform_later(Current.account.id, hook.id)
+      Rails.logger.info "[Shopify] Image embedding job started for account #{Current.account.id}"
+    end
+    
+    render json: { 
+      success: true, 
+      settings: new_settings 
+    }
+  rescue StandardError => e
+    Rails.logger.error "[Shopify] Error updating settings: #{e.message}"
     render json: { error: e.message }, status: :unprocessable_entity
   end
 

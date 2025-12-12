@@ -17,6 +17,9 @@ const conversationMessages = ref([]);
 const userInput = ref('');
 const isProcessing = ref(false);
 const errorMessage = ref('');
+const selectedImage = ref(null);
+const imagePreview = ref(null);
+const fileInputRef = ref(null);
 
 const prepareMessageHistory = () => {
   // Convert sender to OpenAI role format
@@ -32,27 +35,64 @@ const prepareMessageHistory = () => {
 const clearConversation = () => {
   conversationMessages.value = [];
   userInput.value = '';
+  clearImage();
+};
+
+const handleImageSelect = event => {
+  const file = event.target.files[0];
+  if (file) {
+    if (!file.type.startsWith('image/')) {
+      errorMessage.value = 'Sadece resim dosyaları yüklenebilir';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      errorMessage.value = 'Resim boyutu 10MB\'dan küçük olmalı';
+      return;
+    }
+    selectedImage.value = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      imagePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const clearImage = () => {
+  selectedImage.value = null;
+  imagePreview.value = null;
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
+  }
+};
+
+const triggerFileInput = () => {
+  fileInputRef.value?.click();
 };
 
 const processUserMessage = async () => {
-  if (!userInput.value.trim() || isProcessing.value) return;
+  if ((!userInput.value.trim() && !selectedImage.value) || isProcessing.value) return;
 
   const userMsg = {
-    content: userInput.value,
+    content: userInput.value || (selectedImage.value ? '[Resim gönderildi]' : ''),
     sender: 'user',
     timestamp: new Date().toISOString(),
+    image: imagePreview.value,
   };
   conversationMessages.value.push(userMsg);
   const currentInput = userInput.value;
+  const currentImage = imagePreview.value;
   userInput.value = '';
+  clearImage();
 
   try {
     isProcessing.value = true;
     errorMessage.value = '';
     const { data } = await saturnAssistantAPI.playground({
       assistantId: props.assistantId,
-      messageContent: currentInput,
+      messageContent: currentInput || 'Bu resmi analiz et',
       messageHistory: prepareMessageHistory(),
+      imageBase64: currentImage,
     });
 
     if (data?.message) {
@@ -109,9 +149,48 @@ const processUserMessage = async () => {
       :is-loading="isProcessing"
     />
 
+    <!-- Image Preview -->
     <div
-      class="flex items-center bg-n-solid-1 outline outline-n-container rounded-lg p-3"
+      v-if="imagePreview"
+      class="mb-2 p-2 bg-n-slate-2 rounded-lg border border-n-slate-4"
     >
+      <div class="flex items-start gap-2">
+        <img
+          :src="imagePreview"
+          alt="Preview"
+          class="w-20 h-20 object-cover rounded-lg"
+        />
+        <button
+          class="p-1 hover:bg-n-slate-4 rounded-full transition-colors"
+          @click="clearImage"
+        >
+          <i class="i-lucide-x size-4 text-n-slate-11" />
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="flex items-center gap-2 bg-n-solid-1 outline outline-n-container rounded-lg p-3"
+    >
+      <!-- Hidden file input -->
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="handleImageSelect"
+      />
+      
+      <!-- Image upload button -->
+      <button
+        type="button"
+        class="p-2 hover:bg-n-slate-3 rounded-lg transition-colors"
+        title="Resim ekle"
+        @click="triggerFileInput"
+      >
+        <i class="i-lucide-image size-5 text-n-slate-11" />
+      </button>
+
       <input
         v-model="userInput"
         class="flex-1 bg-transparent border-none focus:outline-none text-sm mb-0"
@@ -121,7 +200,7 @@ const processUserMessage = async () => {
       <Button
         variant="ghost"
         size="sm"
-        :disabled="!userInput.trim()"
+        :disabled="!userInput.trim() && !selectedImage"
         icon="i-lucide-send"
         @click="processUserMessage"
       />

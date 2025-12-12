@@ -62,7 +62,12 @@
       "CUSTOM_ATTRIBUTE_LINK": "Link",
       "CUSTOM_ATTRIBUTE_CHECKBOX": "Checkbox",
       "CREATED_AT": "Created at",
-      "LAST_ACTIVITY": "Last activity"
+      "LAST_ACTIVITY": "Last activity",
+      "AI_HANDOFF_REQUIRED": "AI Handoff Required",
+      "AI_HANDOFF_VALUES": {
+        "YES": "AI Cannot Answer",
+        "NO": "AI Answered"
+      }
     },
     "ERRORS": {
       "VALUE_REQUIRED": "Value is required",

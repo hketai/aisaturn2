@@ -96,8 +96,13 @@ onMounted(setCommandBarData);
 <style lang="scss">
 ninja-keys {
   --ninja-accent-color: rgba(39, 129, 246, 1);
-  --ninja-font-family: 'Inter';
+  --ninja-font-family: 'Montserrat';
   z-index: 9999;
+
+  // Hide English footer hints
+  &::part(ninja-footer) {
+    display: none !important;
+  }
 }
 
 // Wrapped with body.dark to avoid overriding the default theme

@@ -8,6 +8,7 @@ const {
 } = require('@egoist/tailwindcss-icons');
 
 const defaultSansFonts = [
+  'Montserrat',
   '-apple-system',
   'system-ui',
   'BlinkMacSystemFont',

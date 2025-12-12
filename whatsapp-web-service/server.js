@@ -264,6 +264,33 @@ async function initializeClient(channelId, authData, cacheData) {
       }
     });
 
+    // Reaction event (emoji reactions to messages)
+    client.on('message_reaction', async (reaction) => {
+      console.log(`[Channel ${channelIdStr}] ===== REACTION EVENT =====`);
+      console.log(`[Channel ${channelIdStr}] Reaction:`, {
+        msgId: reaction.msgId?._serialized,
+        senderId: reaction.senderId,
+        reaction: reaction.reaction,
+        timestamp: reaction.timestamp
+      });
+      
+      try {
+        await axios.post(`${RAILS_API_URL}/webhooks/whatsapp_web`, {
+          channel_id: channelIdStr,
+          event_type: 'reaction',
+          reaction_data: {
+            message_id: reaction.msgId?._serialized,
+            sender_id: reaction.senderId,
+            reaction: reaction.reaction, // emoji or empty string for removal
+            timestamp: reaction.timestamp
+          }
+        });
+        console.log(`[Channel ${channelIdStr}] ✅ Reaction sent to Rails`);
+      } catch (error) {
+        console.error(`[Channel ${channelIdStr}] Failed to send reaction:`, error.message);
+      }
+    });
+
     // Disconnected event
     client.on('disconnected', async (reason) => {
       console.log(`[Channel ${channelIdStr}] Client disconnected:`, reason);
@@ -319,6 +346,57 @@ async function initializeClient(channelId, authData, cacheData) {
 }
 
 /**
+ * Parse vCard format to extract contact information
+ */
+function parseVCard(vcardString) {
+  const contact = {
+    name: null,
+    phone: null,
+    email: null,
+    organization: null,
+    raw: vcardString
+  };
+  
+  if (!vcardString) return contact;
+  
+  const lines = vcardString.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Parse FN (Full Name)
+    if (trimmedLine.startsWith('FN:')) {
+      contact.name = trimmedLine.substring(3).trim();
+    }
+    // Parse N (Name components)
+    else if (trimmedLine.startsWith('N:') && !contact.name) {
+      const nameParts = trimmedLine.substring(2).split(';');
+      contact.name = nameParts.filter(p => p).reverse().join(' ').trim();
+    }
+    // Parse TEL (Phone)
+    else if (trimmedLine.includes('TEL')) {
+      const phoneMatch = trimmedLine.match(/:([\d\s\+\-\(\)]+)/);
+      if (phoneMatch) {
+        contact.phone = phoneMatch[1].replace(/\s/g, '').trim();
+      }
+    }
+    // Parse EMAIL
+    else if (trimmedLine.includes('EMAIL')) {
+      const emailMatch = trimmedLine.match(/:(.+)/);
+      if (emailMatch) {
+        contact.email = emailMatch[1].trim();
+      }
+    }
+    // Parse ORG (Organization)
+    else if (trimmedLine.startsWith('ORG:')) {
+      contact.organization = trimmedLine.substring(4).trim();
+    }
+  }
+  
+  return contact;
+}
+
+/**
  * Process incoming message and send to Rails
  */
 /**
@@ -356,8 +434,10 @@ function shouldIgnoreMessage(message) {
   }
   
   // 5. Empty messages that are not media (likely system messages)
-  // BUT: Allow media messages even if body is empty
-  if (!message.body && !message.hasMedia && !message.isGroupMsg) {
+  // BUT: Allow media messages, stickers, and contact cards even if body is empty
+  const isSticker = message.type === 'sticker';
+  const isContactCard = message.type === 'vcard' || message.type === 'multi_vcard';
+  if (!message.body && !message.hasMedia && !isSticker && !isContactCard && !message.isGroupMsg) {
     console.log(`[FILTER] Ignoring empty message: body=${message.body}, hasMedia=${message.hasMedia}`);
     return true;
   }
@@ -406,8 +486,46 @@ async function processIncomingMessage(channelId, message) {
       fromMe: messageData.fromMe
     });
 
-    // Handle media attachments with error handling
-    if (message.hasMedia) {
+    // Handle sticker messages
+    if (message.type === 'sticker') {
+      console.log(`[Channel ${channelId}] 🎨 Processing sticker message`);
+      messageData.is_sticker = true;
+      try {
+        const media = await message.downloadMedia();
+        messageData.attachments = [{
+          mimetype: media.mimetype || 'image/webp',
+          data: media.data,
+          filename: 'sticker.webp',
+          is_sticker: true
+        }];
+        console.log(`[Channel ${channelId}] ✅ Sticker downloaded successfully`);
+      } catch (error) {
+        console.error(`[Channel ${channelId}] Failed to download sticker:`, error.message);
+      }
+    }
+    // Handle contact card messages (vCard)
+    else if (message.type === 'vcard' || message.type === 'multi_vcard') {
+      console.log(`[Channel ${channelId}] 👤 Processing contact card message`);
+      messageData.is_contact_card = true;
+      
+      try {
+        // Get vCard data
+        const vCards = message.vCards || [];
+        if (vCards.length > 0) {
+          messageData.contact_cards = vCards.map(vcard => parseVCard(vcard));
+          console.log(`[Channel ${channelId}] ✅ Parsed ${messageData.contact_cards.length} contact cards`);
+        } else if (message.body) {
+          // Sometimes vCard data is in the body
+          messageData.contact_cards = [parseVCard(message.body)];
+          console.log(`[Channel ${channelId}] ✅ Parsed contact card from body`);
+        }
+      } catch (error) {
+        console.error(`[Channel ${channelId}] Failed to parse contact card:`, error.message);
+        messageData.contact_cards = [];
+      }
+    }
+    // Handle regular media attachments
+    else if (message.hasMedia) {
       try {
         const media = await message.downloadMedia();
         messageData.attachments = [{
@@ -498,6 +616,51 @@ async function saveAuthData(channelId, client) {
 }
 
 /**
+ * Resolve the correct WhatsApp chat ID for a phone number
+ * WhatsApp now uses LID (Linked ID) format for some users
+ */
+async function resolveWhatsAppChatId(client, channelId, phoneNumber) {
+  console.log(`[Channel ${channelId}] Resolving chat ID for: ${phoneNumber}`);
+  
+  // Extract just the phone number digits
+  const cleanNumber = phoneNumber.replace(/@.*$/, '').replace(/[^\d]/g, '');
+  console.log(`[Channel ${channelId}] Clean number: ${cleanNumber}`);
+  
+  // Method 1: Try getNumberId first (returns the correct format)
+  try {
+    const numberId = await client.getNumberId(cleanNumber);
+    if (numberId && numberId._serialized) {
+      console.log(`[Channel ${channelId}] ✅ getNumberId resolved: ${numberId._serialized}`);
+      return numberId._serialized;
+    }
+  } catch (error) {
+    console.log(`[Channel ${channelId}] getNumberId failed: ${error.message}`);
+  }
+  
+  // Method 2: Try to find the chat by iterating through recent chats
+  try {
+    const chats = await client.getChats();
+    const matchingChat = chats.find(chat => {
+      if (chat.isGroup) return false;
+      const chatNumber = chat.id.user || '';
+      return chatNumber === cleanNumber || chatNumber.endsWith(cleanNumber) || cleanNumber.endsWith(chatNumber);
+    });
+    
+    if (matchingChat) {
+      console.log(`[Channel ${channelId}] ✅ Found matching chat: ${matchingChat.id._serialized}`);
+      return matchingChat.id._serialized;
+    }
+  } catch (error) {
+    console.log(`[Channel ${channelId}] Chat search failed: ${error.message}`);
+  }
+  
+  // Method 3: Try @c.us format as fallback
+  const cusFormat = `${cleanNumber}@c.us`;
+  console.log(`[Channel ${channelId}] ⚠️ Using fallback @c.us format: ${cusFormat}`);
+  return cusFormat;
+}
+
+/**
  * Send message via WhatsApp
  */
 async function sendMessage(channelId, phoneNumber, messageContent, attachments = []) {
@@ -507,28 +670,94 @@ async function sendMessage(channelId, phoneNumber, messageContent, attachments =
   }
 
   try {
-    let messageId;
+    // Resolve the correct chat ID (handles LID format)
+    const chatId = await resolveWhatsAppChatId(client, channelId, phoneNumber);
+    console.log(`[Channel ${channelId}] Sending message to resolved chatId: ${chatId}`);
+    
+    let messageId = null;
+    const attachmentList = Array.isArray(attachments) ? attachments : [];
 
-    if (attachments.length > 0) {
-      // Send with media
-      const attachment = attachments[0];
-      const media = MessageMedia.fromFilePath(attachment.url);
-      if (attachment.caption) {
-        media.caption = attachment.caption;
+    if (attachmentList.length > 0) {
+      for (let index = 0; index < attachmentList.length; index += 1) {
+        const attachment = attachmentList[index];
+        const media = await prepareMediaFromAttachment(channelId, attachment);
+
+        if (!media) {
+          throw new Error('Attachment could not be processed');
+        }
+
+        const caption = (attachment && attachment.caption) ? attachment.caption : (index === 0 ? messageContent : null);
+        const options = caption ? { caption } : undefined;
+        const message = await client.sendMessage(chatId, media, options);
+        messageId = message.id._serialized;
       }
-      const message = await client.sendMessage(phoneNumber, media);
-      messageId = message.id._serialized;
-    } else {
-      // Send text message
-      const message = await client.sendMessage(phoneNumber, messageContent);
-      messageId = message.id._serialized;
+
+      if (messageId) {
+        return { success: true, message_id: messageId };
+      }
     }
 
-    return { success: true, message_id: messageId };
+    if (messageContent) {
+      const message = await client.sendMessage(chatId, messageContent);
+      return { success: true, message_id: message.id._serialized };
+    }
+
+    throw new Error('Message content or attachments required');
   } catch (error) {
     console.error(`[Channel ${channelId}] Send message error:`, error.message);
     return { success: false, error: error.message };
   }
+}
+
+async function prepareMediaFromAttachment(channelId, attachment) {
+  if (!attachment) {
+    return null;
+  }
+
+  try {
+    if (attachment.path || attachment.local_path) {
+      return MessageMedia.fromFilePath(attachment.path || attachment.local_path);
+    }
+
+    if (attachment.data) {
+      const payload = sanitizeBase64Payload(attachment.data);
+      const contentType = attachment.mimetype || 'application/octet-stream';
+      const filename = attachment.filename || defaultAttachmentFilename(contentType);
+      return new MessageMedia(contentType, payload, filename);
+    }
+
+    if (attachment.url) {
+      const response = await axios.get(attachment.url, { responseType: 'arraybuffer' });
+      const contentType = attachment.mimetype || response.headers['content-type'] || 'application/octet-stream';
+      const filename = attachment.filename || defaultAttachmentFilename(contentType);
+      const base64 = Buffer.from(response.data, 'binary').toString('base64');
+      return new MessageMedia(contentType, base64, filename);
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`[Channel ${channelId}] Failed to prepare attachment:`, error.message);
+    throw error;
+  }
+}
+
+function sanitizeBase64Payload(data) {
+  if (!data) {
+    return data;
+  }
+
+  const payload = typeof data === 'string' ? data : data.toString();
+  return payload.includes(',') ? payload.split(',').pop() : payload;
+}
+
+function defaultAttachmentFilename(mimetype) {
+  if (!mimetype) {
+    return 'attachment.bin';
+  }
+
+  const parts = mimetype.split('/');
+  const extension = parts[1] || 'bin';
+  return `attachment.${extension}`;
 }
 
 // API Routes

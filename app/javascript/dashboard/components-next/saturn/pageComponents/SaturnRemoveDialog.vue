@@ -34,7 +34,9 @@ const emit = defineEmits(['deleteSuccess']);
 const { t } = useI18n();
 const dialogRef = ref(null);
 const translationKey = computed(() => {
-  return props.i18nPrefix || props.entityType.toUpperCase();
+  if (props.i18nPrefix) return props.i18nPrefix;
+  if (props.entityType) return props.entityType.toUpperCase();
+  return 'ASSISTANTS'; // Fallback
 });
 
 const getDeleteAPI = () => {
@@ -97,9 +99,9 @@ defineExpose({ dialogRef });
   <Dialog
     ref="dialogRef"
     type="alert"
-    :title="t(`SATURN.${translationKey.value}.REMOVE.TITLE`)"
-    :description="t(`SATURN.${translationKey.value}.REMOVE.DESCRIPTION`)"
-    :confirm-button-label="t(`SATURN.${translationKey.value}.REMOVE.CONFIRM`)"
+    :title="t(`SATURN.${translationKey}.REMOVE.TITLE`, 'Kaldır')"
+    :description="t(`SATURN.${translationKey}.REMOVE.DESCRIPTION`, 'Bu öğeyi kaldırmak istediğinizden emin misiniz?')"
+    :confirm-button-label="t(`SATURN.${translationKey}.REMOVE.CONFIRM`, 'Evet, kaldır')"
     @confirm="handleConfirmRemoval"
   />
 </template>

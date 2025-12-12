@@ -1,4 +1,7 @@
 class Twitter::TweetParserService < Twitter::WebhooksBaseService
+
+  RESOLVED_THRESHOLD = 24.hours
+  UNRESOLVED_THRESHOLD = 7.days
   pattr_initialize [:payload]
 
   def perform
@@ -62,14 +65,46 @@ class Twitter::TweetParserService < Twitter::WebhooksBaseService
   end
 
   def set_conversation
+
+    # Tweet ID'ye göre conversation'ları filtrele
     tweet_conversations = @contact_inbox.conversations.where("additional_attributes ->> 'tweet_id' = ?", parent_tweet_id)
-    @conversation = tweet_conversations.first
-    return if @conversation
 
+    # Önce resolved olmayan conversation'ları kontrol et
+    unresolved = tweet_conversations.where.not(status: :resolved).order(created_at: :desc).first
+
+    if unresolved
+      # Resolved olmayan conversation var
+      # Son aktiviteden 48 saat geçmişse yeni aç, değilse mevcut olanı kullan
+      if unresolved.last_activity_at < UNRESOLVED_THRESHOLD.ago
+        @conversation = nil # Yeni conversation açılacak
+      else
+        @conversation = unresolved
+        return
+      end
+    else
+      # Resolved olmayan conversation yok, resolved conversation'ları kontrol et
+      resolved = tweet_conversations.resolved.order(created_at: :desc).first
+
+      if resolved
+        # Son aktiviteden 24 saat geçmişse yeni aç, değilse mevcut olanı aç
+        if resolved.last_activity_at < RESOLVED_THRESHOLD.ago
+          @conversation = nil # Yeni conversation açılacak
+        else
+          resolved.open! # Resolved'dan open'a çevir
+          @conversation = resolved
+          return
+        end
+      end
+    end
+
+    # Tweet ID'ye göre conversation bulunamadı, parent tweet'in conversation'ını kontrol et
     tweet_message = @inbox.messages.find_by(source_id: parent_tweet_id)
-    @conversation = tweet_message.conversation if tweet_message
-    return if @conversation
+    if tweet_message && tweet_message.conversation
+      @conversation = tweet_message.conversation
+      return
+    end
 
+    # Yeni conversation aç
     @conversation = ::Conversation.create!(conversation_params)
   end
 

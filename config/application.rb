@@ -58,6 +58,10 @@ module Chatwoot
     config.generators.javascripts = false
     config.generators.stylesheets = false
 
+    # Default locale is Turkish
+    config.i18n.default_locale = :tr
+    config.i18n.available_locales = [:tr, :en, :de, :fr, :es, :pt, :pt_BR, :ru, :ar, :zh_CN, :zh_TW, :ja, :ko]
+
     # Custom chatwoot configurations
     config.x = config_for(:app).with_indifferent_access
 

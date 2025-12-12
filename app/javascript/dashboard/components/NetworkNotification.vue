@@ -30,10 +30,42 @@ const bannerText = computed(() => {
   return t('NETWORK.NOTIFICATION.OFFLINE');
 });
 
-const iconName = computed(() => (isReconnected.value ? 'wifi' : 'wifi-off'));
+const iconName = computed(() => {
+  if (isReconnected.value) return 'i-lucide-wifi';
+  if (isReconnecting.value) return 'i-lucide-loader-2';
+  return 'i-lucide-wifi-off';
+});
+
 const canRefresh = computed(
   () => !isReconnecting.value && !isReconnected.value
 );
+
+// Dynamic styling based on status
+const statusStyles = computed(() => {
+  if (isReconnected.value) {
+    return {
+      container: 'bg-n-teal-3 border-n-teal-6',
+      icon: 'text-n-teal-11',
+      text: 'text-n-teal-11',
+      iconBg: 'bg-n-teal-4',
+    };
+  }
+  if (isReconnecting.value) {
+    return {
+      container: 'bg-n-amber-3 border-n-amber-6',
+      icon: 'text-n-amber-11 animate-spin',
+      text: 'text-n-amber-11',
+      iconBg: 'bg-n-amber-4',
+    };
+  }
+  // Offline
+  return {
+    container: 'bg-n-ruby-3 border-n-ruby-6',
+    icon: 'text-n-ruby-11',
+    text: 'text-n-ruby-11',
+    iconBg: 'bg-n-ruby-4',
+  };
+});
 
 const refreshPage = () => {
   window.location.reload();
@@ -77,15 +109,6 @@ const handleReconnecting = () => {
 };
 
 const updateOnlineStatus = event => {
-  // Case: Websocket is not disconnected
-  // If the app goes offline, show the notification
-  // If the app goes online, close the notification
-
-  // Case: Websocket is disconnected
-  // If the app goes offline, show the notification
-  // If the app goes online but the websocket is disconnected, don't close the notification
-  // If the app goes online and the websocket is not disconnected, close the notification
-
   if (event.type === 'offline') {
     showNotification.value = true;
   } else if (event.type === 'online' && !isDisconnected.value) {
@@ -108,35 +131,69 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <transition name="network-notification-fade" tag="div">
-    <div v-show="showNotification" class="fixed z-50 top-2 left-2 group">
+  <transition name="network-notification-slide" tag="div">
+    <div
+      v-show="showNotification"
+      class="fixed z-50 bottom-6 right-6"
+    >
       <div
-        class="relative flex items-center justify-between w-full px-2 py-1 bg-n-amber-4 dark:bg-n-amber-8 rounded-lg shadow-lg"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm"
+        :class="statusStyles.container"
       >
-        <fluent-icon :icon="iconName" class="text-n-amber-12" size="18" />
-        <span class="px-2 text-xs font-medium tracking-wide text-n-amber-12">
+        <!-- Status Icon -->
+        <div
+          class="w-8 h-8 rounded-lg flex items-center justify-center"
+          :class="statusStyles.iconBg"
+        >
+          <i
+            :class="[iconName, statusStyles.icon]"
+            class="text-lg"
+          />
+        </div>
+
+        <!-- Text -->
+        <span
+          class="text-sm font-medium"
+          :class="statusStyles.text"
+        >
           {{ bannerText }}
         </span>
-        <Button
-          v-if="canRefresh"
-          ghost
-          sm
-          amber
-          icon="i-lucide-refresh-ccw"
-          :title="$t('NETWORK.BUTTON.REFRESH')"
-          class="!text-n-amber-12 dark:!text-n-amber-9"
-          @click="refreshPage"
-        />
 
-        <Button
-          ghost
-          sm
-          amber
-          icon="i-lucide-x"
-          class="!text-n-amber-12 dark:!text-n-amber-9"
-          @click="closeNotification"
-        />
+        <!-- Actions -->
+        <div class="flex items-center gap-1 ml-2">
+          <Button
+            v-if="canRefresh"
+            ghost
+            xs
+            slate
+            icon="i-lucide-refresh-ccw"
+            :title="$t('NETWORK.BUTTON.REFRESH')"
+            :class="statusStyles.text"
+            @click="refreshPage"
+          />
+          <Button
+            ghost
+            xs
+            slate
+            icon="i-lucide-x"
+            :class="statusStyles.text"
+            @click="closeNotification"
+          />
+        </div>
       </div>
     </div>
   </transition>
 </template>
+
+<style scoped>
+.network-notification-slide-enter-active,
+.network-notification-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.network-notification-slide-enter-from,
+.network-notification-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+</style>

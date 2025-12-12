@@ -346,17 +346,17 @@
     "HEADER_KNOW_MORE": "Know more",
     "COPILOT": {
       "TITLE": "Copilot",
-      "TRY_THESE_PROMPTS": "Try these prompts",
+      "TRY_THESE_PROMPTS": "Bu komutları deneyin",
       "PANEL_TITLE": "Copilot ile başlayın",
       "KICK_OFF_MESSAGE": "Hızlı bir özet mi lazım, geçmiş sohbetleri mi kontrol etmek istiyorsunuz ya da daha iyi bir yanıt mı yazmak istiyorsunuz? Copilot işleri hızlandırmak için burada.",
       "SEND_MESSAGE": "Mesajı Gönder...",
       "EMPTY_MESSAGE": "Yanıt oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
-      "LOADER": "Captain is thinking",
+      "LOADER": "Captain düşünüyor",
       "YOU": "Sen",
-      "USE": "Use this",
-      "RESET": "Reset",
+      "USE": "Bunu kullan",
+      "RESET": "Sıfırla",
       "SHOW_STEPS": "Adımları göster",
-      "SELECT_ASSISTANT": "Select Assistant",
+      "SELECT_ASSISTANT": "Asistan Seç",
       "PROMPTS": {
         "SUMMARIZE": {
           "LABEL": "Bu sohbeti özetle",
@@ -382,26 +382,26 @@
     },
     "PLAYGROUND": {
       "USER": "Sen",
-      "ASSISTANT": "Assistant",
+      "ASSISTANT": "Asistan",
       "MESSAGE_PLACEHOLDER": "Mesajınız...",
       "HEADER": "Oyun Alanı",
       "DESCRIPTION": "Bu oyun alanını asistanınıza mesaj göndermek ve yanıtlarının doğru, hızlı ve beklediğiniz tonda olup olmadığını kontrol etmek için kullanın.",
       "CREDIT_NOTE": "Buradan gönderilen mesajlar Captain kredilerinize sayılacaktır."
     },
     "PAYWALL": {
-      "TITLE": "Upgrade to use Captain AI",
-      "AVAILABLE_ON": "Captain is not available on the free plan.",
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to our assistants, copilot and more.",
-      "UPGRADE_NOW": "Upgrade now",
-      "CANCEL_ANYTIME": "You can change or cancel your plan anytime"
+      "TITLE": "Captain AI kullanmak için yükseltin",
+      "AVAILABLE_ON": "Captain ücretsiz planda kullanılamaz.",
+      "UPGRADE_PROMPT": "Asistanlara, copilot'a ve daha fazlasına erişmek için planınızı yükseltin.",
+      "UPGRADE_NOW": "Şimdi yükselt",
+      "CANCEL_ANYTIME": "Planınızı istediğiniz zaman değiştirebilir veya iptal edebilirsiniz"
     },
     "ENTERPRISE_PAYWALL": {
-      "UPGRADE_PROMPT": "Upgrade your plan to get access to our assistants, copilot and more.",
-      "ASK_ADMIN": "Please reach out to your administrator for the upgrade."
+      "UPGRADE_PROMPT": "Asistanlara, copilot'a ve daha fazlasına erişmek için planınızı yükseltin.",
+      "ASK_ADMIN": "Yükseltme için lütfen yöneticinize başvurun."
     },
     "BANNER": {
-      "RESPONSES": "You've used over 80% of your response limit. To continue using Captain AI, please upgrade.",
-      "DOCUMENTS": "Document limit reached. Upgrade to continue using Captain AI."
+      "RESPONSES": "Yanıt limitinizin %80'inden fazlasını kullandınız. Captain AI kullanmaya devam etmek için lütfen yükseltin.",
+      "DOCUMENTS": "Belge limitine ulaşıldı. Captain AI kullanmaya devam etmek için yükseltin."
     },
     "FORM": {
       "CANCEL": "İptal Et",
@@ -409,21 +409,21 @@
       "EDIT": "Güncelleme"
     },
     "ASSISTANTS": {
-      "HEADER": "Assistants",
+      "HEADER": "Asistanlar",
       "NO_ASSISTANTS_AVAILABLE": "Hesabınızda kullanılabilir asistan yok.",
-      "ADD_NEW": "Create a new assistant",
+      "ADD_NEW": "Yeni asistan oluştur",
       "DELETE": {
-        "TITLE": "Are you sure to delete the assistant?",
-        "DESCRIPTION": "This action is permanent. Deleting this assistant will remove it from all connected inboxes and permanently erase all generated knowledge.",
+        "TITLE": "Asistanı silmek istediğinizden emin misiniz?",
+        "DESCRIPTION": "Bu işlem kalıcıdır. Bu asistanı silmek, bağlı tüm gelen kutularından kaldırılmasına ve oluşturulan tüm bilgilerin kalıcı olarak silinmesine neden olacaktır.",
         "CONFIRM": "Evet, sil",
-        "SUCCESS_MESSAGE": "The assistant has been successfully deleted",
-        "ERROR_MESSAGE": "There was an error deleting the assistant, please try again."
+        "SUCCESS_MESSAGE": "Asistan başarıyla silindi",
+        "ERROR_MESSAGE": "Asistan silinirken bir hata oluştu, lütfen tekrar deneyin."
       },
-      "FORM_DESCRIPTION": "Fill out the details below to name your assistant, describe its purpose, and specify the product it will support.",
+      "FORM_DESCRIPTION": "Asistanınıza isim vermek, amacını tanımlamak ve destekleyeceği ürünü belirtmek için aşağıdaki detayları doldurun.",
       "CREATE": {
-        "TITLE": "Create an assistant",
-        "SUCCESS_MESSAGE": "The assistant has been successfully created",
-        "ERROR_MESSAGE": "There was an error creating the assistant, please try again."
+        "TITLE": "Asistan oluştur",
+        "SUCCESS_MESSAGE": "Asistan başarıyla oluşturuldu",
+        "ERROR_MESSAGE": "Asistan oluşturulurken bir hata oluştu, lütfen tekrar deneyin."
       },
       "FORM": {
         "UPDATE": "Güncelleme",
@@ -449,9 +449,9 @@
           "ERROR": "Açıklama gereklidir"
         },
         "PRODUCT_NAME": {
-          "LABEL": "Product Name",
+          "LABEL": "Ürün Adı",
           "PLACEHOLDER": "Ürün adını girin",
-          "ERROR": "The product name is required"
+          "ERROR": "Ürün adı gereklidir"
         },
         "WELCOME_MESSAGE": {
           "LABEL": "Karşılama Mesajı",
@@ -470,10 +470,10 @@
           "PLACEHOLDER": "Asistan için talimatları girin"
         },
         "FEATURES": {
-          "TITLE": "Özellikleri",
-          "ALLOW_CONVERSATION_FAQS": "Generate FAQs from resolved conversations",
-          "ALLOW_MEMORIES": "Capture key details as memories from customer interactions.",
-          "ALLOW_CITATIONS": "Include source citations in responses"
+          "TITLE": "Özellikler",
+          "ALLOW_CONVERSATION_FAQS": "Çözülen konuşmalardan SSS oluştur",
+          "ALLOW_MEMORIES": "Müşteri etkileşimlerinden önemli detayları hatıra olarak kaydet.",
+          "ALLOW_CITATIONS": "Yanıtlara kaynak atıfları ekle"
         }
       },
       "EDIT": {
@@ -983,6 +983,8 @@
     "ASSISTANTS": {
       "HEADER": "Asistanlar",
       "ADD_NEW": "Yeni Asistan",
+      "ACTIVE": "aktif",
+      "NO_CHANNEL_WARNING": "Asistan herhangi bir kanala bağlı değil. Mesaj yanıtlarını etkinleştirmek için bir kanal bağlayın.",
       "STATUS": {
         "ACTIVE": "Aktif"
       },
@@ -1246,6 +1248,55 @@
         "CONFIRM": "Evet, kaldır",
         "SUCCESS_MESSAGE": "SSS başarıyla kaldırıldı",
         "ERROR_MESSAGE": "SSS kaldırılamadı"
+      }
+    },
+    "PRODUCTS": {
+      "HEADER": "Ürünler",
+      "ADD_NEW": "Ürün Ekle",
+      "FETCH_ERROR": "Ürünler yüklenemedi",
+      "TITLE_REQUIRED": "Ürün adı gerekli",
+      "CREATE_SUCCESS": "Ürün başarıyla oluşturuldu",
+      "CREATE_ERROR": "Ürün oluşturulamadı",
+      "UPDATE_SUCCESS": "Ürün başarıyla güncellendi",
+      "UPDATE_ERROR": "Ürün güncellenemedi",
+      "DELETE_SUCCESS": "Ürün başarıyla silindi",
+      "DELETE_ERROR": "Ürün silinemedi",
+      "EMPTY_TITLE": "Henüz ürün yok",
+      "EMPTY_DESCRIPTION": "Manuel ürün ekleyin veya e-ticaret platformunuzdan senkronize edin.",
+      "ADD_FIRST": "İlk Ürünü Ekle",
+      "SEARCH_PLACEHOLDER": "Ürün ara...",
+      "SEARCH": "Ara",
+      "READONLY": "Salt okunur",
+      "TOTAL_COUNT": "{count} ürün",
+      "PREV": "Önceki",
+      "NEXT": "Sonraki",
+      "CREATE_TITLE": "Yeni Ürün Ekle",
+      "EDIT_TITLE": "Ürün Düzenle",
+      "DELETE_TITLE": "Ürün Sil",
+      "DELETE_CONFIRM": "\"{title}\" ürününü silmek istediğinizden emin misiniz?",
+      "CANCEL": "İptal",
+      "CREATE": "Oluştur",
+      "SAVE": "Kaydet",
+      "DELETE": "Sil",
+      "TABLE": {
+        "TITLE": "Ürün",
+        "PRICE": "Fiyat",
+        "INVENTORY": "Stok",
+        "SOURCE": "Kaynak",
+        "ACTIONS": "İşlemler"
+      },
+      "FORM": {
+        "TITLE": "Başlık",
+        "TITLE_PLACEHOLDER": "Ürün adını girin",
+        "DESCRIPTION": "Açıklama",
+        "DESCRIPTION_PLACEHOLDER": "Ürün açıklamasını girin",
+        "MIN_PRICE": "Min Fiyat",
+        "MAX_PRICE": "Max Fiyat",
+        "INVENTORY": "Stok",
+        "VENDOR": "Marka",
+        "VENDOR_PLACEHOLDER": "Marka adı",
+        "CATEGORY": "Kategori",
+        "CATEGORY_PLACEHOLDER": "Ürün kategorisi"
       }
     },
     "TOOLS": {

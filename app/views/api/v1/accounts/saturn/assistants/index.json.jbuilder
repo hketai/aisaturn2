@@ -2,6 +2,7 @@ json.array! @assistants do |assistant|
   json.id assistant.id
   json.name assistant.name
   json.description assistant.description
+  json.sector assistant.sector
   json.created_at assistant.created_at.to_i
   json.updated_at assistant.updated_at.to_i
   json.documents_count assistant.documents.count
@@ -10,10 +11,10 @@ json.array! @assistants do |assistant|
     json.array! assistant.inboxes do |inbox|
       json.id inbox.id
       json.name inbox.name
+      json.channel_type inbox.channel_type
+      json.medium inbox.channel.try(:medium)
     end
   end
+  json.enabled_integrations assistant.enabled_integrations
   json.config assistant.config || {}
-  json.response_guidelines assistant.response_guidelines || []
-  json.guardrails assistant.guardrails || []
 end
-

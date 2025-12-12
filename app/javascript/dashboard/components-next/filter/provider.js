@@ -259,6 +259,20 @@ export function useConversationFilterContext() {
       filterOperators: dateOperators.value,
       attributeModel: 'standard',
     },
+    {
+      attributeKey: CONVERSATION_ATTRIBUTES.AI_HANDOFF_REQUIRED,
+      value: CONVERSATION_ATTRIBUTES.AI_HANDOFF_REQUIRED,
+      attributeName: t('FILTER.ATTRIBUTES.AI_HANDOFF_REQUIRED'),
+      label: t('FILTER.ATTRIBUTES.AI_HANDOFF_REQUIRED'),
+      inputType: 'booleanSelect',
+      options: [
+        { id: 'true', name: t('FILTER.ATTRIBUTES.AI_HANDOFF_VALUES.YES') },
+        { id: 'false', name: t('FILTER.ATTRIBUTES.AI_HANDOFF_VALUES.NO') },
+      ],
+      dataType: 'text',
+      filterOperators: equalityOperators.value,
+      attributeModel: 'additional',
+    },
     ...customFilterTypes.value,
   ]);
 

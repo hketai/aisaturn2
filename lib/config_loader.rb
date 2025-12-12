@@ -46,10 +46,46 @@ class ConfigLoader
   end
 
   def save_general_config(existing, latest)
+    # Branding config'leri her zaman güncellensin (Chatwoot -> AISATURN dönüşümünü önlemek için)
+    # AISATURN logoları: logo.png (açık tema - aisaturnkoyu.png), logo_dark.png (koyu tema - beyaz.png)
+    branding_configs = ['INSTALLATION_NAME', 'BRAND_NAME', 'BRAND_URL', 'WIDGET_BRAND_URL', 'LOGO', 'LOGO_DARK', 'LOGO_THUMBNAIL']
+    
     if existing
-      # save config only if reconcile flag is false and existing configs value does not match default value
-      save_as_new_config(latest) if !@reconcile_only_new && compare_values(existing, latest)
+      if branding_configs.include?(latest[:name])
+        # Branding config'leri her zaman güncelle (reconcile_only_new flag'ine bakmadan)
+        # Bu sayede migration veya restart sonrası Chatwoot logoları geri gelmez
+        # AISATURN değerlerini zorla uygula
+        aisaturn_values = {
+          'INSTALLATION_NAME' => 'AISATURN',
+          'BRAND_NAME' => '',
+          'BRAND_URL' => 'https://aisaturn.co',
+          'WIDGET_BRAND_URL' => 'https://aisaturn.co',
+          'LOGO' => '/brand-assets/logo.png',
+          'LOGO_DARK' => '/brand-assets/logo_dark.png',
+          'LOGO_THUMBNAIL' => '/brand-assets/logo.png'
+        }
+        
+        # AISATURN değerini zorla kullan
+        latest[:value] = aisaturn_values[latest[:name]] if aisaturn_values.key?(latest[:name])
+        save_as_new_config(latest)
+      elsif !@reconcile_only_new && compare_values(existing, latest)
+        # Diğer config'ler için normal mantık
+        save_as_new_config(latest)
+      end
     else
+      # Yeni config oluşturulurken de AISATURN değerlerini kullan
+      if branding_configs.include?(latest[:name])
+        aisaturn_values = {
+          'INSTALLATION_NAME' => 'AISATURN',
+          'BRAND_NAME' => '',
+          'BRAND_URL' => 'https://aisaturn.co',
+          'WIDGET_BRAND_URL' => 'https://aisaturn.co',
+          'LOGO' => '/brand-assets/logo.png',
+          'LOGO_DARK' => '/brand-assets/logo_dark.png',
+          'LOGO_THUMBNAIL' => '/brand-assets/logo.png'
+        }
+        latest[:value] = aisaturn_values[latest[:name]] if aisaturn_values.key?(latest[:name])
+      end
       save_as_new_config(latest)
     end
   end

@@ -5,6 +5,13 @@ const emit = defineEmits(['change']);
 
 const { t } = useI18n();
 
+defineProps({
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const modelValue = defineModel({
   type: Boolean,
   default: false,
@@ -20,10 +27,14 @@ const updateValue = () => {
   <button
     type="button"
     class="relative h-4 transition-colors duration-200 ease-in-out rounded-full w-7 focus:outline-none focus:ring-1 focus:ring-n-brand focus:ring-offset-n-slate-2 focus:ring-offset-2 flex-shrink-0"
-    :class="modelValue ? 'bg-n-brand' : 'bg-n-slate-6 disabled:bg-n-slate-6/60'"
+    :class="[
+      modelValue ? 'bg-n-brand' : 'bg-n-slate-6',
+      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+    ]"
     role="switch"
     :aria-checked="modelValue"
-    @click="updateValue"
+    :disabled="disabled"
+    @click="!disabled && updateValue()"
   >
     <span class="sr-only">{{ t('SWITCH.TOGGLE') }}</span>
     <span

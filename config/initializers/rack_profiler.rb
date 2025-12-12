@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 if Rails.env.development? && ENV['DISABLE_MINI_PROFILER'].blank?
+  require 'rack/files'
   require 'rack-mini-profiler'
 
   # initialization is skipped so trigger it

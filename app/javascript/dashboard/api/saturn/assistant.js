@@ -34,10 +34,11 @@ class SaturnAssistant extends ApiClient {
     return axios.delete(`${this.url}/${id}`);
   }
 
-  playground({ assistantId, messageContent, messageHistory }) {
+  playground({ assistantId, messageContent, messageHistory, imageBase64 }) {
     return axios.post(`${this.url}/${assistantId}/playground`, {
       message_content: messageContent,
       message_history: messageHistory,
+      image_base64: imageBase64,
     });
   }
 

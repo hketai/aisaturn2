@@ -14,5 +14,6 @@ const { t } = useI18n();
     store-action="fetchAccountResolutionHeatmap"
     ui-flag-key="isFetchingAccountResolutionsHeatmap"
     color-scheme="green"
+    icon="i-lucide-check-circle"
   />
 </template>
