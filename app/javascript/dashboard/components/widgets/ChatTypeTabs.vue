@@ -50,7 +50,7 @@ useKeyboardEvents(keyboardEvents);
     <button
       v-for="(item, index) in items"
       :key="item.key"
-      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-n-brand/50"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-n-brand/50"
       :class="[
         activeTabIndex === index
           ? 'bg-n-brand text-white shadow-sm'

@@ -32,6 +32,16 @@ const handleDelete = () => {
   deleteAssistantDialog.value.dialogRef.open();
 };
 
+const handleDeleteSuccess = () => {
+  // Silinen asistanı listeden kaldır
+  if (selectedAssistant.value) {
+    assistants.value = assistants.value.filter(
+      a => a.id !== selectedAssistant.value.id
+    );
+    selectedAssistant.value = null;
+  }
+};
+
 const handleCreate = () => {
   dialogType.value = 'create';
   nextTick(() => {
@@ -175,8 +185,8 @@ onMounted(() => {
     </template>
 
     <template #contentArea>
-      <div class="w-full max-w-[60rem] mx-auto py-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="w-full max-w-5xl mx-auto py-4 px-4">
+        <div class="flex flex-col gap-4">
           <SaturnAssistantItem
             v-for="assistant in assistants"
             :key="assistant.id"
@@ -207,6 +217,7 @@ onMounted(() => {
       :target-entity="selectedAssistant"
       entity-type="Assistants"
       i18n-prefix="ASSISTANTS"
+      @delete-success="handleDeleteSuccess"
     />
 
     <SaturnCreateDialog

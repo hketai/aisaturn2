@@ -383,14 +383,14 @@ const menuItems = computed(() => {
           to: accountScopedRoute('saturn_assistants_index'),
         },
         {
-          name: 'Documents',
-          label: t('SIDEBAR.SATURN_DOCUMENTS'),
-          to: accountScopedRoute('saturn_documents_index'),
-        },
-        {
           name: 'Responses',
           label: t('SIDEBAR.SATURN_RESPONSES'),
           to: accountScopedRoute('saturn_responses_index'),
+        },
+        {
+          name: 'Documents',
+          label: t('SIDEBAR.SATURN_DOCUMENTS'),
+          to: accountScopedRoute('saturn_documents_index'),
         },
         {
           name: 'Integrations',

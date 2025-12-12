@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { formatNumber } from '@chatwoot/utils';
 
-import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
@@ -135,11 +134,6 @@ const formattedAllCount = computed(() => formatNumber(allCount.value));
           :class="{ 'ltr:right-0 rtl:left-0': isOnExpandedLayout }"
         />
       </div>
-      <ConversationBasicFilter
-        v-if="!hasAppliedFiltersOrActiveFolders"
-        :is-on-expanded-layout="isOnExpandedLayout"
-        @change-filter="onBasicFilterChange"
-      />
     </div>
   </div>
 </template>

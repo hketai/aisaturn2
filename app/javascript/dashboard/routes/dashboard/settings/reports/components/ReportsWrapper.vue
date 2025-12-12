@@ -1,6 +1,6 @@
 <template>
-  <div class="reports--wrapper overflow-auto bg-n-background w-full px-6">
-    <div class="max-w-[60rem] mx-auto pb-12">
+  <div class="reports--wrapper overflow-auto bg-n-background w-full p-6 sm:py-8 lg:px-16">
+    <div class="max-w-6xl mx-auto pb-12">
       <router-view />
     </div>
   </div>

@@ -24,13 +24,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-row flex-wrap max-w-full">
-    <MetricCard :header="$t('OVERVIEW_REPORTS.AGENT_CONVERSATIONS.HEADER')">
+  <MetricCard
+    :header="$t('OVERVIEW_REPORTS.AGENT_CONVERSATIONS.HEADER')"
+    icon="i-lucide-user"
+  >
+    <div class="w-full">
       <AgentTable
         :agents="agents"
         :agent-metrics="agentConversationMetric"
         :is-loading="uiFlags.isFetchingAgentConversationMetric"
       />
-    </MetricCard>
-  </div>
+    </div>
+  </MetricCard>
 </template>

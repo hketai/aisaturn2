@@ -203,14 +203,14 @@ const mainMenuItems = computed(() => [
         to: accountScopedRoute('saturn_assistants_index'),
       },
       {
-        name: 'Documents',
-        label: t('SIDEBAR.SATURN_DOCUMENTS'),
-        to: accountScopedRoute('saturn_documents_index'),
-      },
-      {
         name: 'Responses',
         label: t('SIDEBAR.SATURN_RESPONSES'),
         to: accountScopedRoute('saturn_responses_index'),
+      },
+      {
+        name: 'Documents',
+        label: t('SIDEBAR.SATURN_DOCUMENTS'),
+        to: accountScopedRoute('saturn_documents_index'),
       },
       {
         name: 'Integrations',
@@ -478,13 +478,11 @@ const logout = () => {
 
       <!-- Subscription Button -->
       <button
-        class="flex flex-col items-center px-3 py-1 rounded-lg text-sm font-medium transition-colors hover:bg-n-alpha-2"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-n-blue-3/50 hover:bg-n-blue-3 text-n-blue-11 border border-n-blue-6/30"
         @click="goToSubscriptionPage"
       >
-        <span class="i-lucide-crown size-4 text-n-amber-9" />
-        <span class="text-[10px] text-n-slate-11 mt-0.5">{{
-          subscriptionPlanName
-        }}</span>
+        <span>Plan:</span>
+        <span class="font-semibold">{{ subscriptionPlanName }}</span>
       </button>
 
       <!-- Profile Dropdown -->

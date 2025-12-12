@@ -78,168 +78,161 @@ const handleHandoffSettings = () => {
 
 <template>
   <div
-    class="group relative bg-n-solid-2 border border-n-weak rounded-xl p-5 hover:border-n-slate-7 hover:shadow-md transition-all duration-200"
+    class="bg-n-slate-1 border border-n-slate-4 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
   >
-    <!-- Card Header -->
-    <div class="flex items-start gap-4">
-      <div
-        class="size-14 flex justify-center items-center bg-n-blue-9 rounded-xl ring-1 ring-n-weak"
-      >
-        <SaturnIcon class="size-7 text-white" />
-      </div>
-      <div class="flex-1 min-w-0">
-        <h3 class="font-semibold text-n-slate-12 truncate">
-          {{ assistantName }}
-        </h3>
-        <p class="text-sm text-n-slate-11 line-clamp-2 mt-1">
-          {{ assistantDescription }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="mt-4 flex gap-4">
-      <div class="flex items-center gap-2">
-        <i class="i-lucide-file-text size-4 text-n-slate-11" />
-        <span class="text-sm text-n-slate-11">
-          {{ props.documentsCount }} {{ $t('SATURN.ASSISTANTS.DOCUMENTS') }}
-        </span>
-      </div>
-      <div class="flex items-center gap-2">
-        <i class="i-lucide-message-circle size-4 text-n-slate-11" />
-        <span class="text-sm text-n-slate-11">
-          {{ props.responsesCount }} {{ $t('SATURN.ASSISTANTS.RESPONSES') }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Channel Status -->
-    <div class="mt-3">
-      <!-- Connected Channels -->
-      <div
-        v-if="props.connectedInboxes.length > 0"
-        class="flex flex-wrap gap-1.5"
-      >
-        <span
-          v-for="inbox in props.connectedInboxes"
-          :key="inbox.id"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-g-success-subtle text-g-success"
+    <!-- Main Content Row -->
+    <div class="flex flex-col lg:flex-row">
+      <!-- Left Section - Avatar & Info -->
+      <div class="flex-1 p-5 flex items-start gap-4">
+        <div
+          class="size-14 flex-shrink-0 flex justify-center items-center bg-gradient-to-br from-n-blue-9 to-n-violet-9 rounded-xl shadow-lg"
         >
-          <Icon
-            :icon="getInboxIconByType(inbox.channel_type, inbox.medium)"
-            class="size-3"
-          />
-          {{ inbox.name }}
-        </span>
-      </div>
-      <!-- No Channel Connected - Warning Alert -->
-      <div
-        v-else
-        class="flex flex-col gap-2 p-3 rounded-lg bg-n-amber-3 border border-n-amber-6"
-      >
-        <div class="flex items-center gap-2">
-          <i
-            class="i-lucide-alert-triangle size-4 text-n-amber-11 flex-shrink-0"
-          />
-          <p class="text-xs font-medium text-n-amber-11">
-            {{ $t('SATURN.ASSISTANTS.NO_CHANNEL_WARNING') }}
-          </p>
+          <SaturnIcon class="size-7 text-white" />
         </div>
-        <Button
-          icon="i-lucide-plug"
-          xs
-          class="w-full bg-n-amber-9 hover:bg-n-amber-10 text-white border-0"
-          @click="handleManageInboxes"
-        >
-          {{ $t('SATURN.ASSISTANTS.OPTIONS.CONNECT_CHANNEL') }}
-        </Button>
-      </div>
-    </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-semibold text-n-slate-12 truncate">
+              {{ assistantName }}
+            </h3>
+            <span
+              v-if="props.connectedInboxes.length > 0"
+              class="px-2 py-0.5 text-xs font-medium rounded-full bg-n-teal-3 text-n-teal-11"
+            >
+              Aktif
+            </span>
+          </div>
+          <p class="text-sm text-n-slate-11 mt-1 line-clamp-2">
+            {{ assistantDescription }}
+          </p>
 
-    <!-- Integrations Status -->
-    <div class="mt-3">
-      <!-- Connected Integrations -->
-      <div
-        v-if="props.connectedIntegrations.length > 0"
-        class="flex flex-wrap gap-1.5"
-      >
-        <span
-          v-for="integration in props.connectedIntegrations"
-          :key="integration.id"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-n-iris-3 text-n-iris-11"
-        >
-          <Icon :icon="integration.icon || 'i-lucide-puzzle'" class="size-3" />
-          {{ integration.name }}
-        </span>
+          <!-- Stats Row -->
+          <div class="flex items-center gap-4 mt-3">
+            <div class="flex items-center gap-1.5 text-n-slate-10">
+              <i class="i-lucide-file-text size-4" />
+              <span class="text-sm font-medium">{{ props.documentsCount }}</span>
+              <span class="text-xs">Belgeler</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-n-slate-10">
+              <i class="i-lucide-message-circle size-4" />
+              <span class="text-sm font-medium">{{ props.responsesCount }}</span>
+              <span class="text-xs">SSS</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <!-- No Integration - Add Button -->
-      <button
-        v-else
-        class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-n-slate-11 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors border border-dashed border-n-slate-6"
-        @click="handleManageIntegrations"
-      >
-        <i class="i-lucide-puzzle size-4" />
-        Entegrasyon Bağla
-      </button>
-    </div>
 
-    <!-- Card Actions -->
-    <div
-      class="mt-4 pt-4 border-t border-n-weak flex items-center justify-between"
-    >
-      <div class="flex gap-2">
-        <Button
-          v-if="props.connectedInboxes.length > 0"
-          icon="i-lucide-inbox"
-          xs
-          slate
-          faded
-          title="Kanalları Yönet"
-          @click="handleManageInboxes"
-        />
-        <Button
-          v-if="props.connectedIntegrations.length > 0"
-          icon="i-lucide-puzzle"
-          xs
-          slate
-          faded
-          title="Entegrasyonları Yönet"
-          @click="handleManageIntegrations"
-        />
-        <Button
-          icon="i-lucide-clock"
-          xs
-          slate
-          faded
-          title="Çalışma Saatleri"
-          @click="handleWorkingHours"
-        />
-        <Button
-          icon="i-lucide-user-cog"
-          xs
-          slate
-          faded
-          title="Devir Ayarları"
-          @click="handleHandoffSettings"
-        />
+      <!-- Center Section - Channels & Integrations -->
+      <div class="flex-1 p-5 border-t lg:border-t-0 lg:border-l border-n-slate-4 bg-n-slate-2/50">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+          <!-- Channels -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <i class="i-lucide-inbox size-4 text-n-slate-10" />
+              <span class="text-xs font-medium text-n-slate-11 uppercase tracking-wide">Kanallar</span>
+              <button
+                v-if="props.connectedInboxes.length > 0"
+                class="text-xs text-n-blue-11 hover:text-n-blue-12 hover:underline ml-1"
+                @click="handleManageInboxes"
+              >
+                Yönet
+              </button>
+            </div>
+            <div v-if="props.connectedInboxes.length > 0" class="flex flex-wrap gap-1.5">
+              <span
+                v-for="inbox in props.connectedInboxes"
+                :key="inbox.id"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-n-teal-3 text-n-teal-11 border border-n-teal-6"
+              >
+                <Icon
+                  :icon="getInboxIconByType(inbox.channel_type, inbox.medium)"
+                  class="size-3"
+                />
+                {{ inbox.name }}
+              </span>
+            </div>
+            <div
+              v-else
+              class="p-3 rounded-lg bg-n-amber-2 border border-n-amber-6"
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <i class="i-lucide-alert-triangle size-4 text-n-amber-11" />
+                <p class="text-xs font-medium text-n-amber-11">Kanal bağlı değil</p>
+              </div>
+              <button
+                class="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-n-amber-9 hover:bg-n-amber-10 text-white rounded-lg transition-colors"
+                @click="handleManageInboxes"
+              >
+                <i class="i-lucide-plug size-3" />
+                Kanala Bağla
+              </button>
+            </div>
+          </div>
+
+          <!-- Integrations -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <i class="i-lucide-puzzle size-4 text-n-slate-10" />
+              <span class="text-xs font-medium text-n-slate-11 uppercase tracking-wide">Entegrasyonlar</span>
+              <button
+                v-if="props.connectedIntegrations.length > 0"
+                class="text-xs text-n-blue-11 hover:text-n-blue-12 hover:underline ml-1"
+                @click="handleManageIntegrations"
+              >
+                Yönet
+              </button>
+            </div>
+            <div v-if="props.connectedIntegrations.length > 0" class="flex flex-wrap gap-1.5">
+              <span
+                v-for="integration in props.connectedIntegrations"
+                :key="integration.id"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-n-iris-3 text-n-iris-11 border border-n-iris-6"
+              >
+                <Icon :icon="integration.icon || 'i-lucide-puzzle'" class="size-3" />
+                {{ integration.name }}
+              </span>
+            </div>
+            <button
+              v-else
+              class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-n-slate-11 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors border border-dashed border-n-slate-6"
+              @click="handleManageIntegrations"
+            >
+              <i class="i-lucide-plus size-4" />
+              Entegrasyon Ekle
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <Button
-          icon="i-lucide-pencil"
-          xs
-          slate
-          faded
-          title="Düzenle"
+
+      <!-- Right Section - Actions -->
+      <div class="p-5 border-t lg:border-t-0 lg:border-l border-n-slate-4 flex lg:flex-col items-center justify-center gap-2 bg-n-slate-2/30">
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-n-slate-12 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors"
           @click="handleEdit"
-        />
-        <Button
-          icon="i-lucide-trash-2"
-          xs
-          ruby
-          faded
-          title="Sil"
+        >
+          <i class="i-lucide-pencil size-4" />
+          Düzenle
+        </button>
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-n-slate-12 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors"
+          @click="handleWorkingHours"
+        >
+          <i class="i-lucide-clock size-4" />
+          Çalışma Saatleri
+        </button>
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-n-slate-12 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors"
+          @click="handleHandoffSettings"
+        >
+          <i class="i-lucide-user-cog size-4" />
+          Devir Ayarları
+        </button>
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-n-ruby-11 bg-n-ruby-3 hover:bg-n-ruby-4 rounded-lg transition-colors"
           @click="handleDelete"
-        />
+        >
+          <i class="i-lucide-trash-2 size-4" />
+          Sil
+        </button>
       </div>
     </div>
   </div>

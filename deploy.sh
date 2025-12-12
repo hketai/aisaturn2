@@ -5,8 +5,8 @@
 
 set -e
 
-SERVER="root@167.71.72.107"
-PASSWORD="74a5cf511f2Ecdf70e"
+SERVER="root@185.87.120.201"
+PASSWORD="219zHm3d!"
 REMOTE_PATH="/root/cwais"
 LOCAL_PATH="/Users/harun/Desktop/PROJECTS/cwais"
 

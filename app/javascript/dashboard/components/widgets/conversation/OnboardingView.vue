@@ -20,7 +20,7 @@ const navigateToInbox = () => {
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-n-slate-2 via-n-slate-1 to-n-blue-2"
+    class="min-h-screen flex items-center justify-center p-8 bg-n-slate-1"
   >
     <div
       class="max-w-xl w-full text-center space-y-8"
@@ -28,7 +28,7 @@ const navigateToInbox = () => {
       <!-- Icon -->
       <div class="flex justify-center">
         <div
-          class="w-24 h-24 rounded-2xl bg-gradient-to-br from-n-blue-9 to-n-violet-9 flex items-center justify-center shadow-lg"
+          class="w-24 h-24 rounded-2xl bg-n-brand flex items-center justify-center shadow-lg"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +98,7 @@ const navigateToInbox = () => {
 
       <!-- CTA Button -->
       <button
-        class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-n-blue-9 to-n-violet-9 hover:from-n-blue-10 hover:to-n-violet-10 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-n-brand hover:bg-n-brand/90 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
         @click="navigateToInbox"
       >
         <svg

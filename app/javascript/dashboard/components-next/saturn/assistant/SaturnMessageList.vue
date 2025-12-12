@@ -60,7 +60,13 @@ const messageGroups = computed(() => {
           class="text-sm"
           :class="msgIndex > 0 ? 'mt-2' : ''"
         >
-          {{ message.content }}
+          <img
+            v-if="message.image"
+            :src="message.image"
+            alt="Sent image"
+            class="max-w-full max-h-48 rounded-lg mb-2"
+          />
+          <span v-if="message.content">{{ message.content }}</span>
         </div>
       </div>
     </div>

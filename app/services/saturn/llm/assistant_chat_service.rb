@@ -37,10 +37,11 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     self.tracking_account = assistant&.account
   end
 
-  def create_ai_response(user_message: nil, conversation_history: [], message_role: 'user')
+  def create_ai_response(user_message: nil, conversation_history: [], message_role: 'user', image_base64: nil)
     # User message'ı güncelle (eğer parametre olarak geldiyse)
     @user_message = user_message if user_message.present?
     @conversation_history = conversation_history if conversation_history.present?
+    @image_base64 = image_base64
     
     # Bağlam içeren arama sorgusu oluştur
     @context_aware_query = build_context_aware_query
@@ -49,7 +50,7 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     initialize_message_history
     
     append_conversation_history(@conversation_history)
-    append_user_message(@user_message, message_role) if @user_message.present?
+    append_user_message(@user_message, message_role, @image_base64) if @user_message.present? || @image_base64.present?
 
     # TÜM Shopify tool'larını ekle (ürün arama + sipariş sorgulama)
     # LLM kendisi karar verir hangi tool'u kullanacağına
@@ -350,9 +351,20 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     @messages += recent_history
   end
 
-  def append_user_message(message, role)
+  def append_user_message(message, role, image_base64 = nil)
     # Message can be a string or an array (for multi-part messages with images)
-    @messages << { role: role, content: message }
+    if image_base64.present?
+      # OpenAI Vision API format - multi-part message with text and image
+      content = []
+      content << { type: 'text', text: message } if message.present?
+      content << {
+        type: 'image_url',
+        image_url: { url: image_base64 }
+      }
+      @messages << { role: role, content: content }
+    else
+      @messages << { role: role, content: message }
+    end
   end
 
   # Konuşma bağlamını içeren arama sorgusu oluştur
