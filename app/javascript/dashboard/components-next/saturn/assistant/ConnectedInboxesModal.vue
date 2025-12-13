@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
@@ -8,6 +9,8 @@ import saturnAssistantAPI from 'dashboard/api/saturn/assistant';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+
+const router = useRouter();
 
 const props = defineProps({
   assistantId: {
@@ -26,7 +29,8 @@ const emit = defineEmits(['close', 'updated']);
 const translations = {
   TITLE: 'Kanal Yönetimi',
   DESCRIPTION: 'Asistana bağlanacak kanalları yönetin',
-  NO_INBOXES: 'Henüz kanal oluşturulmamış. Önce bir kanal oluşturun.',
+  NO_INBOXES: 'Henüz kanal oluşturulmamış.',
+  ADD_CHANNEL: 'Kanal Ekle',
   SELECT_HINT: 'Asistana bağlamak istediğiniz kanalları seçin',
   CONNECTED: 'Bağlı',
   CONNECTED_TO: 'Bağlı:',
@@ -218,9 +222,14 @@ defineExpose({ dialogRef });
         class="flex flex-col items-center justify-center py-8 text-center"
       >
         <i class="i-lucide-inbox size-12 text-n-slate-9 mb-3" />
-        <p class="text-sm text-n-slate-11">
+        <p class="text-sm text-n-slate-11 mb-4">
           {{ translations.NO_INBOXES }}
         </p>
+        <Button
+          icon="i-lucide-plus"
+          :label="translations.ADD_CHANNEL"
+          @click="router.push({ name: 'settings_inbox_new' }); dialogRef.close();"
+        />
       </div>
 
       <!-- Inbox List -->

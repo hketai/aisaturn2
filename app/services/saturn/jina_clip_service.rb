@@ -25,6 +25,27 @@ class Saturn::JinaClipService
     nil
   end
 
+  # Base64 formatında resimden embedding oluştur
+  # Desteklenen formatlar: data:image/jpeg;base64,... veya data:image/png;base64,...
+  def embed_image_base64(base64_data)
+    return nil if base64_data.blank? || @api_key.blank?
+
+    # Base64 data URI formatını kontrol et
+    unless base64_data.start_with?('data:image/')
+      Rails.logger.error '[CLIP] Invalid base64 format - must start with data:image/'
+      return nil
+    end
+
+    response = make_request(
+      input: [{ image: base64_data }]
+    )
+
+    extract_embedding(response)
+  rescue StandardError => e
+    Rails.logger.error "[CLIP] Base64 image embedding error: #{e.message}"
+    nil
+  end
+
   # Metin için embedding oluştur (aynı space'de)
   def embed_text(text)
     return nil if text.blank? || @api_key.blank?

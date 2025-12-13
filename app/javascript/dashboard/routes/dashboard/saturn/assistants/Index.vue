@@ -185,7 +185,7 @@ onMounted(() => {
     </template>
 
     <template #contentArea>
-      <div class="w-full max-w-5xl mx-auto py-4 px-4">
+      <div class="w-full">
         <div class="flex flex-col gap-4">
           <SaturnAssistantItem
             v-for="assistant in assistants"

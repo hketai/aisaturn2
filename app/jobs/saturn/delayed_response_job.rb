@@ -121,11 +121,34 @@ class Saturn::DelayedResponseJob < ApplicationJob
 
     user_message_content = build_combined_message_content(pending_messages)
     formatted_history = format_message_history
+    
+    # Görsel URL'lerini CLIP için çıkar
+    image_url = extract_image_url_for_clip(pending_messages)
 
     @chat_service.create_ai_response(
       user_message: user_message_content,
-      conversation_history: formatted_history
+      conversation_history: formatted_history,
+      image_base64: image_url # URL formatında da çalışır (JinaClipService embed_image kullanır)
     )
+  end
+  
+  # Pending mesajlardan ilk görsel URL'ini çıkar (CLIP için)
+  def extract_image_url_for_clip(messages)
+    messages.each do |msg|
+      next unless msg.attachments.present?
+      
+      image_attachment = msg.attachments.find { |a| a.file_type.to_s == 'image' }
+      next unless image_attachment
+      
+      # URL'yi al
+      url = image_attachment.download_url.presence || 
+            image_attachment.external_url.presence ||
+            (image_attachment.file.attached? ? image_attachment.file_url : nil)
+      
+      return url if url.present?
+    end
+    
+    nil
   end
 
   # Handoff işlemi

@@ -150,22 +150,14 @@ const handleHandoffSettings = () => {
                 {{ inbox.name }}
               </span>
             </div>
-            <div
+            <button
               v-else
-              class="p-3 rounded-lg bg-n-amber-2 border border-n-amber-6"
+              class="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium text-n-slate-11 bg-n-slate-3 hover:bg-n-slate-4 rounded-lg transition-colors border border-dashed border-n-slate-6"
+              @click="handleManageInboxes"
             >
-              <div class="flex items-center gap-2 mb-2">
-                <i class="i-lucide-alert-triangle size-4 text-n-amber-11" />
-                <p class="text-xs font-medium text-n-amber-11">Kanal bağlı değil</p>
-              </div>
-              <button
-                class="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-n-amber-9 hover:bg-n-amber-10 text-white rounded-lg transition-colors"
-                @click="handleManageInboxes"
-              >
-                <i class="i-lucide-plug size-3" />
-                Kanala Bağla
-              </button>
-            </div>
+              <i class="i-lucide-plus size-4" />
+              Kanal Ekle
+            </button>
           </div>
 
           <!-- Integrations -->

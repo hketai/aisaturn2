@@ -42,6 +42,13 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     @user_message = user_message if user_message.present?
     @conversation_history = conversation_history if conversation_history.present?
     @image_base64 = image_base64
+    @image_search_products = [] # CLIP ile bulunan ürünler
+    
+    # Görsel varsa ve image_search aktifse, önce CLIP ile ürün ara
+    if @image_base64.present? && image_search_enabled?
+      @image_search_products = search_products_by_image_clip(@image_base64)
+      Rails.logger.info "[IMAGE SEARCH] CLIP found #{@image_search_products.size} products"
+    end
     
     # Bağlam içeren arama sorgusu oluştur
     @context_aware_query = build_context_aware_query
@@ -174,6 +181,7 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     template_parts << build_description_section
     template_parts << build_faqs_section if feature_faq_enabled?
     template_parts << build_documents_section if feature_citation_enabled?
+    template_parts << build_image_search_context if @image_search_products.present?
     template_parts << build_shopify_tools_instructions if shopify_enabled?
     template_parts.compact.join("\n\n")
   end
@@ -440,6 +448,119 @@ class Saturn::Llm::AssistantChatService < Saturn::Llm::BaseOpenAiService
     return false unless @assistant.present?
 
     @assistant.shopify_enabled?
+  end
+
+  # ===== GELİŞMİŞ GÖRSEL ARAMA (CLIP) =====
+
+  # Gelişmiş görsel arama aktif mi?
+  def image_search_enabled?
+    return false unless @assistant.present?
+    return false unless shopify_enabled?
+
+    hook = Integrations::Hook.find_by(account: @assistant.account, app_id: 'shopify')
+    hook&.settings&.dig('image_search_enabled') == true
+  end
+
+  # Görsel ile CLIP araması yap (URL veya base64 formatında)
+  def search_products_by_image_clip(image_data)
+    return [] if image_data.blank?
+
+    clip_service = Saturn::JinaClipService.new
+    return [] unless clip_service.api_key_present?
+
+    # URL mi yoksa base64 mi?
+    query_embedding = if image_data.start_with?('data:image/')
+                        # Base64 formatı
+                        clip_service.embed_image_base64(image_data)
+                      elsif image_data.start_with?('http')
+                        # URL formatı
+                        clip_service.embed_image(image_data)
+                      else
+                        Rails.logger.warn "[IMAGE SEARCH] Unknown image format: #{image_data.first(50)}"
+                        nil
+                      end
+
+    return [] if query_embedding.blank?
+
+    Rails.logger.info "[IMAGE SEARCH] CLIP embedding created (#{query_embedding.size} dims)"
+
+    # ProductImageEmbedding tablosunda benzer ürünleri bul
+    results = Shopify::ProductImageEmbedding
+              .for_account(@assistant.account.id)
+              .with_embedding
+              .nearest_neighbors(:embedding, query_embedding, distance: :cosine)
+              .limit(5)
+              .includes(:shopify_product)
+
+    products = results.map(&:shopify_product).compact
+
+    # Stokta olanları filtrele
+    in_stock = products.select { |p| p.total_inventory.to_i.positive? }
+
+    Rails.logger.info "[IMAGE SEARCH] Found #{products.size} products, #{in_stock.size} in stock"
+
+    # found_products'a da ekle (WhatsApp carousel için)
+    @found_products = in_stock.first(3) if in_stock.present?
+
+    in_stock.first(3)
+  rescue StandardError => e
+    Rails.logger.error "[IMAGE SEARCH] CLIP search error: #{e.message}"
+    []
+  end
+
+  # CLIP ile bulunan ürünleri context olarak ekle
+  def build_image_search_context
+    return nil if @image_search_products.blank?
+
+    shop_domain = get_shop_domain
+
+    context = "## 📸 Görsel Arama Sonuçları\n\n"
+    context += "Müşterinin gönderdiği görsele benzer ürünler bulundu. Bu ürünler hakkında bilgi ver:\n\n"
+
+    @image_search_products.each_with_index do |product, index|
+      context += "[GÖRSEL_ÜRÜN_#{index + 1}]\n"
+      context += "Ad: #{product.title}\n"
+
+      # Fiyat
+      if product.min_price.present?
+        if product.min_price == product.max_price || product.max_price.blank?
+          context += "Fiyat: #{product.min_price} TL\n"
+        else
+          context += "Fiyat: #{product.min_price} - #{product.max_price} TL\n"
+        end
+      end
+
+      # Stok
+      if product.total_inventory.present?
+        stock = product.total_inventory.positive? ? "Stokta (#{product.total_inventory} adet)" : 'Stokta Yok'
+        context += "Stok: #{stock}\n"
+      end
+
+      # Link
+      if product.handle.present? && shop_domain.present?
+        context += "Link: https://#{shop_domain}/products/#{product.handle}\n"
+      end
+
+      # Açıklama (kısa)
+      if product.description.present?
+        desc = product.description.gsub(/<[^>]*>/, '').strip.truncate(150)
+        context += "Açıklama: #{desc}\n"
+      end
+
+      context += "\n"
+    end
+
+    context += "ÖNEMLİ: Bu ürünler müşterinin gönderdiği görsele görsel olarak en benzer ürünlerdir. "
+    context += "Müşteriye bu ürünleri öner ve fiyat/stok bilgilerini paylaş.\n"
+
+    context
+  end
+
+  def get_shop_domain
+    hook = Integrations::Hook.find_by(account: @assistant.account, app_id: 'shopify')
+    return nil unless hook
+
+    hook.settings&.dig('custom_domain').presence || hook.reference_id
   end
 
   # Shopify tool kullanım talimatları (ürün arama + sipariş sorgulama)
