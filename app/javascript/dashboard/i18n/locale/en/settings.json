@@ -424,6 +424,26 @@
           "COMPLETED": "Image search ready! {count} products processed."
         }
       },
+      "IKAS": {
+        "CONNECT_TITLE": "Connect Ikas Integration",
+        "CONNECT_DESCRIPTION": "Connect your Ikas store to integrate product and order information with your AI assistant.",
+        "STORE_NAME_LABEL": "Store Name",
+        "STORE_NAME_PLACEHOLDER": "store-name",
+        "STORE_NAME_MESSAGE": "Enter only the store name (without .myikas.com)",
+        "STORE_NAME_REQUIRED": "Store name is required",
+        "INVALID_STORE_NAME": "Enter a valid store name (only letters, numbers and hyphens)",
+        "OAUTH_INFO_TITLE": "Secure OAuth Connection",
+        "OAUTH_INFO_MESSAGE": "You will be redirected to Ikas. After approving the app for your store, you will be automatically redirected back.",
+        "CONNECT_SUCCESS": "Ikas integration connected successfully",
+        "CONNECTION_ERROR": "Connection error occurred",
+        "AUTH_ERROR": "Authorization error occurred",
+        "TEST_SUCCESS": "Connection tested successfully",
+        "TEST_ERROR": "Connection test failed",
+        "DISCONNECT_SUCCESS": "Ikas integration disconnected successfully",
+        "DISCONNECT_ERROR": "Error disconnecting Ikas integration",
+        "SYNC_STARTED": "Product sync started",
+        "SYNC_COMPLETED": "{count} products synced successfully"
+      },
       "TEST_ORDER": {
         "TITLE": "Test Order Query",
         "CONTACT_ID_REQUIRED": "Contact ID is required",

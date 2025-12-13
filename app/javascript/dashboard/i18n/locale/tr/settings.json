@@ -424,6 +424,26 @@
           "COMPLETED": "Görsel arama hazır! {count} ürün işlendi."
         }
       },
+      "IKAS": {
+        "CONNECT_TITLE": "İkas Entegrasyonunu Bağla",
+        "CONNECT_DESCRIPTION": "İkas mağazanızı bağlayarak ürün ve sipariş bilgilerinizi AI asistanınızla entegre edin.",
+        "STORE_NAME_LABEL": "Mağaza Adı",
+        "STORE_NAME_PLACEHOLDER": "magaza-adi",
+        "STORE_NAME_MESSAGE": "Sadece mağaza adını girin (.myikas.com olmadan)",
+        "STORE_NAME_REQUIRED": "Mağaza adı gerekli",
+        "INVALID_STORE_NAME": "Geçerli bir mağaza adı girin (sadece harf, rakam ve tire)",
+        "OAUTH_INFO_TITLE": "Güvenli OAuth Bağlantısı",
+        "OAUTH_INFO_MESSAGE": "İkas'a yönlendirileceksiniz. Mağazanız için uygulamayı onayladıktan sonra otomatik olarak geri yönlendirileceksiniz.",
+        "CONNECT_SUCCESS": "İkas entegrasyonu başarıyla bağlandı",
+        "CONNECTION_ERROR": "Bağlantı hatası oluştu",
+        "AUTH_ERROR": "Yetkilendirme hatası oluştu",
+        "TEST_SUCCESS": "Bağlantı başarıyla test edildi",
+        "TEST_ERROR": "Bağlantı testi başarısız oldu",
+        "DISCONNECT_SUCCESS": "İkas entegrasyonu başarıyla kaldırıldı",
+        "DISCONNECT_ERROR": "İkas entegrasyonu kaldırılırken bir hata oluştu",
+        "SYNC_STARTED": "Ürün senkronizasyonu başladı",
+        "SYNC_COMPLETED": "{count} ürün başarıyla senkronize edildi"
+      },
       "TEST_ORDER": {
         "TITLE": "Sipariş Sorgulamayı Test Et",
         "CONTACT_ID_REQUIRED": "Kişi ID'si gerekli",

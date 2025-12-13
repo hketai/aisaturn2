@@ -22,6 +22,12 @@ class TriggerScheduledItemsJob < ApplicationJob
 
     # Job to clear notifications which are older than 1 month
     Notification::RemoveOldNotificationJob.perform_later
+
+    # Job to recover stale Shopify syncs
+    Shopify::StaleSyncRecoveryJob.perform_later
+
+    # Job to recover stale WhatsApp Web connections
+    WhatsappWeb::RecoveryJob.perform_later
   end
 end
 

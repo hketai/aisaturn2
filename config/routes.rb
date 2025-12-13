@@ -333,6 +333,15 @@ Rails.application.routes.draw do
                 patch :update_settings
               end
             end
+            resource :ikas, controller: 'ikas', only: [:show, :destroy] do
+              collection do
+                post :auth
+                get :test
+                post :sync_products
+                get :sync_status
+                patch :update_settings
+              end
+            end
             resource :linear, controller: 'linear', only: [] do
               collection do
                 delete :destroy
@@ -581,6 +590,10 @@ Rails.application.routes.draw do
   end
 
   namespace :shopify do
+    resource :callback, only: [:show]
+  end
+
+  namespace :ikas do
     resource :callback, only: [:show]
   end
 

@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import SaturnPageLayout from 'dashboard/components-next/saturn/SaturnPageLayout.vue';
 import shopifyAPI from 'dashboard/api/integrations/shopify';
+import ikasAPI from 'dashboard/api/integrations/ikas';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -11,9 +13,11 @@ import Switch from 'dashboard/components-next/switch/Switch.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const route = useRoute();
 const integrations = ref([]);
 const isFetching = ref(false);
 const shopifyHook = ref(null);
+const ikasHook = ref(null);
 
 // Connection test status for each integration
 const connectionTestStatus = ref({});
@@ -39,7 +43,8 @@ const allIntegrations = ref([
     icon: 'i-lucide-store',
     connected: false,
     hook: null,
-    comingSoon: true,
+    comingSoon: false,
+    totalSyncedProducts: 0,
   },
 ]);
 
@@ -49,6 +54,12 @@ const shopifyStoreUrl = ref('');
 const shopifyAccessKey = ref('');
 const isConnectingShopify = ref(false);
 const shopifyError = ref('');
+
+// Ikas connection dialog
+const ikasDialogRef = ref(null);
+const ikasStoreName = ref('');
+const isConnectingIkas = ref(false);
+const ikasError = ref('');
 
 // Shopify disconnect dialog
 const disconnectDialogRef = ref(null);
@@ -162,6 +173,18 @@ const syncStatusText = computed(() => {
 const fetchIntegrations = async () => {
   isFetching.value = true;
   try {
+    // Fetch Shopify integration
+    await fetchShopifyIntegration();
+    
+    // Fetch Ikas integration
+    await fetchIkasIntegration();
+  } finally {
+    isFetching.value = false;
+  }
+};
+
+const fetchShopifyIntegration = async () => {
+  try {
     const response = await shopifyAPI.getHook();
 
     // Handle both direct response and nested data
@@ -175,59 +198,68 @@ const fetchIntegrations = async () => {
         settings: hookData.settings || {},
       };
       // Feature toggle durumlarını güncelle
-      orderQueryEnabled.value = hookData.settings?.order_query_enabled !== false; // varsayılan true
-      productQueryEnabled.value = hookData.settings?.product_query_enabled !== false; // varsayılan true
+      orderQueryEnabled.value = hookData.settings?.order_query_enabled !== false;
+      productQueryEnabled.value = hookData.settings?.product_query_enabled !== false;
       imageSearchEnabled.value = hookData.settings?.image_search_enabled || false;
 
       // Update allIntegrations
-      const shopifyIntegration = allIntegrations.value.find(
-        i => i.id === 'shopify'
-      );
+      const shopifyIntegration = allIntegrations.value.find(i => i.id === 'shopify');
       if (shopifyIntegration) {
         shopifyIntegration.connected = true;
         shopifyIntegration.hook = shopifyHook.value;
       }
-
-      integrations.value = [
-        {
-          id: 'shopify',
-          enabled: shopifyHook.value.enabled,
-          reference_id: shopifyHook.value.reference_id,
-        },
-      ];
     } else {
       shopifyHook.value = null;
-      integrations.value = [];
-
-      // Update allIntegrations
-      const shopifyIntegration = allIntegrations.value.find(
-        i => i.id === 'shopify'
-      );
+      const shopifyIntegration = allIntegrations.value.find(i => i.id === 'shopify');
       if (shopifyIntegration) {
         shopifyIntegration.connected = false;
         shopifyIntegration.hook = null;
       }
     }
   } catch (error) {
-    if (error.response?.status === 404) {
-      // Hook bulunamadı, entegrasyon yok
-      shopifyHook.value = null;
-      integrations.value = [];
-    } else {
-      shopifyHook.value = null;
-      integrations.value = [];
-    }
-
-    // Update allIntegrations
-    const shopifyIntegration = allIntegrations.value.find(
-      i => i.id === 'shopify'
-    );
+    shopifyHook.value = null;
+    const shopifyIntegration = allIntegrations.value.find(i => i.id === 'shopify');
     if (shopifyIntegration) {
       shopifyIntegration.connected = false;
       shopifyIntegration.hook = null;
     }
-  } finally {
-    isFetching.value = false;
+  }
+};
+
+const fetchIkasIntegration = async () => {
+  try {
+    const response = await ikasAPI.getHook();
+    const hookData = response.data?.hook || response.hook;
+
+    if (hookData && (hookData.id || hookData.reference_id)) {
+      ikasHook.value = {
+        id: hookData.id,
+        reference_id: hookData.reference_id,
+        enabled: hookData.enabled !== false,
+        settings: hookData.settings || {},
+      };
+
+      // Update allIntegrations
+      const ikasIntegration = allIntegrations.value.find(i => i.id === 'ikas');
+      if (ikasIntegration) {
+        ikasIntegration.connected = true;
+        ikasIntegration.hook = ikasHook.value;
+      }
+    } else {
+      ikasHook.value = null;
+      const ikasIntegration = allIntegrations.value.find(i => i.id === 'ikas');
+      if (ikasIntegration) {
+        ikasIntegration.connected = false;
+        ikasIntegration.hook = null;
+      }
+    }
+  } catch (error) {
+    ikasHook.value = null;
+    const ikasIntegration = allIntegrations.value.find(i => i.id === 'ikas');
+    if (ikasIntegration) {
+      ikasIntegration.connected = false;
+      ikasIntegration.hook = null;
+    }
   }
 };
 
@@ -237,6 +269,85 @@ const openShopifyDialog = () => {
   shopifyError.value = '';
   if (shopifyDialogRef.value) {
     shopifyDialogRef.value.open();
+  }
+};
+
+const openIkasDialog = () => {
+  ikasStoreName.value = '';
+  ikasError.value = '';
+  if (ikasDialogRef.value) {
+    ikasDialogRef.value.open();
+  }
+};
+
+const handleIkasConnect = async () => {
+  try {
+    ikasError.value = '';
+
+    if (!ikasStoreName.value || ikasStoreName.value.trim().length === 0) {
+      ikasError.value = t('SIDEBAR.INTEGRATIONS.IKAS.STORE_NAME_REQUIRED');
+      return;
+    }
+
+    // Validate store name format (subdomain only)
+    if (!ikasStoreName.value.match(/^[a-zA-Z0-9][a-zA-Z0-9-]*$/)) {
+      ikasError.value = t('SIDEBAR.INTEGRATIONS.IKAS.INVALID_STORE_NAME');
+      return;
+    }
+
+    isConnectingIkas.value = true;
+
+    // Get OAuth URL from backend
+    const response = await ikasAPI.initiateAuth(ikasStoreName.value.trim());
+    
+    if (response.data?.redirect_url) {
+      // Close dialog and redirect to Ikas OAuth page
+      if (ikasDialogRef.value) {
+        ikasDialogRef.value.close();
+      }
+      window.location.href = response.data.redirect_url;
+    } else {
+      ikasError.value = t('SIDEBAR.INTEGRATIONS.IKAS.AUTH_ERROR');
+    }
+  } catch (error) {
+    const errorMessage = error.response?.data?.error || error.message;
+    ikasError.value = errorMessage || t('SIDEBAR.INTEGRATIONS.IKAS.CONNECTION_ERROR');
+  } finally {
+    isConnectingIkas.value = false;
+  }
+};
+
+const handleIkasDisconnect = async () => {
+  try {
+    await ikasAPI.disconnect();
+    await fetchIkasIntegration();
+    useAlert(t('SIDEBAR.INTEGRATIONS.IKAS.DISCONNECT_SUCCESS'), 'success');
+  } catch (error) {
+    useAlert(t('SIDEBAR.INTEGRATIONS.IKAS.DISCONNECT_ERROR'), 'error');
+  }
+};
+
+const testIkasConnection = async integration => {
+  if (!integration.connected) return;
+
+  isTestingConnection.value[integration.id] = true;
+  connectionTestStatus.value[integration.id] = null;
+
+  try {
+    await ikasAPI.testConnection();
+    connectionTestStatus.value[integration.id] = 'success';
+    useAlert(t('SIDEBAR.INTEGRATIONS.IKAS.TEST_SUCCESS'), 'success');
+  } catch (error) {
+    connectionTestStatus.value[integration.id] = 'error';
+    useAlert(
+      `${t('SIDEBAR.INTEGRATIONS.IKAS.TEST_ERROR')}: ${error.response?.data?.error || error.message}`,
+      'error'
+    );
+  } finally {
+    isTestingConnection.value[integration.id] = false;
+    setTimeout(() => {
+      connectionTestStatus.value[integration.id] = null;
+    }, 3000);
   }
 };
 
@@ -271,6 +382,8 @@ const handleIntegrationClick = integration => {
   // Bağlı olmayan entegrasyon için bağlantı dialogunu aç
   if (integration.id === 'shopify') {
     openShopifyDialog();
+  } else if (integration.id === 'ikas') {
+    openIkasDialog();
   }
 };
 
@@ -296,6 +409,8 @@ const handleConfirmDisconnect = async () => {
   try {
     if (disconnectIntegration.value.id === 'shopify') {
       await handleShopifyDisconnect();
+    } else if (disconnectIntegration.value.id === 'ikas') {
+      await handleIkasDisconnect();
     }
     
     // Dialog'u kapat
@@ -319,11 +434,16 @@ const testConnection = async integration => {
       await shopifyAPI.testConnection();
       connectionTestStatus.value[integration.id] = 'success';
       useAlert(t('SIDEBAR.INTEGRATIONS.SHOPIFY.TEST_SUCCESS'), 'success');
+    } else if (integration.id === 'ikas') {
+      await ikasAPI.testConnection();
+      connectionTestStatus.value[integration.id] = 'success';
+      useAlert(t('SIDEBAR.INTEGRATIONS.IKAS.TEST_SUCCESS'), 'success');
     }
   } catch (error) {
     connectionTestStatus.value[integration.id] = 'error';
+    const errorKey = integration.id === 'ikas' ? 'IKAS' : 'SHOPIFY';
     useAlert(
-      `${t('SIDEBAR.INTEGRATIONS.SHOPIFY.TEST_ERROR')}: ${
+      `${t(`SIDEBAR.INTEGRATIONS.${errorKey}.TEST_ERROR`)}: ${
         error.response?.data?.error || error.message
       }`,
       'error'
@@ -805,6 +925,16 @@ const handleImageSearchToggle = async () => {
 onMounted(async () => {
   await fetchIntegrations();
   await fetchSyncStatus();
+  
+  // Check if redirected from Ikas OAuth callback
+  if (route.query.ikas === 'connected') {
+    useAlert(t('SIDEBAR.INTEGRATIONS.IKAS.CONNECT_SUCCESS'), 'success');
+    // Clean up URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } else if (route.query.error === 'true') {
+    useAlert(route.query.message || t('SIDEBAR.INTEGRATIONS.IKAS.CONNECTION_ERROR'), 'error');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
 });
 
 // Component unmount olduğunda interval'i temizle
@@ -1259,6 +1389,58 @@ onUnmounted(() => {
         >
           <Icon icon="i-lucide-alert-circle" class="w-4 h-4 text-n-ruby-9" />
           <span class="text-sm text-n-ruby-11">{{ shopifyError }}</span>
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- Ikas Connect Dialog -->
+    <Dialog
+      ref="ikasDialogRef"
+      :title="$t('SIDEBAR.INTEGRATIONS.IKAS.CONNECT_TITLE')"
+      :is-loading="isConnectingIkas"
+      @confirm="handleIkasConnect"
+      @close="() => { ikasStoreName = ''; ikasError = ''; }"
+    >
+      <div class="space-y-4">
+        <div class="flex items-center justify-center mb-4">
+          <div class="w-16 h-16 bg-n-teal-3 rounded-full flex items-center justify-center">
+            <Icon icon="i-lucide-store" class="w-8 h-8 text-n-teal-11" />
+          </div>
+        </div>
+        <p class="text-center text-n-slate-11 mb-4">
+          {{ $t('SIDEBAR.INTEGRATIONS.IKAS.CONNECT_DESCRIPTION') }}
+        </p>
+        <div>
+          <label class="block text-sm font-medium text-n-slate-12 mb-1">
+            {{ $t('SIDEBAR.INTEGRATIONS.IKAS.STORE_NAME_LABEL') }}
+          </label>
+          <div class="flex items-center">
+            <input
+              v-model="ikasStoreName"
+              type="text"
+              class="flex-1 px-3 py-2 border border-n-weak rounded-l-lg focus:outline-none focus:ring-2 focus:ring-n-brand focus:border-transparent bg-n-alpha-1 text-n-slate-12"
+              :placeholder="$t('SIDEBAR.INTEGRATIONS.IKAS.STORE_NAME_PLACEHOLDER')"
+              @input="ikasError = ''"
+              @keyup.enter="handleIkasConnect"
+            />
+            <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
+            <span class="px-3 py-2 bg-n-alpha-3 border border-l-0 border-n-weak rounded-r-lg text-n-slate-11 text-sm whitespace-nowrap">.myikas.com</span>
+          </div>
+          <p v-if="ikasError" class="mt-1 text-sm text-n-ruby-9">
+            {{ ikasError }}
+          </p>
+          <p v-else class="mt-1 text-sm text-n-slate-11">
+            {{ $t('SIDEBAR.INTEGRATIONS.IKAS.STORE_NAME_MESSAGE') }}
+          </p>
+        </div>
+        <div class="bg-n-blue-2 border border-n-blue-4 p-4 rounded-lg">
+          <div class="flex items-start gap-3">
+            <Icon icon="i-lucide-info" class="w-5 h-5 text-n-blue-11 flex-shrink-0 mt-0.5" />
+            <div class="text-sm text-n-blue-11">
+              <p class="font-medium mb-1">{{ $t('SIDEBAR.INTEGRATIONS.IKAS.OAUTH_INFO_TITLE') }}</p>
+              <p>{{ $t('SIDEBAR.INTEGRATIONS.IKAS.OAUTH_INFO_MESSAGE') }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </Dialog>
