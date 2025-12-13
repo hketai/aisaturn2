@@ -21,12 +21,52 @@ class Integrations::Saturn::ProcessorService < Integrations::BotProcessorService
     return if message.private?
     return unless processable_message?(message)
     return unless conversation.pending? || conversation.open?
+    return unless within_working_hours?
 
     true
   end
 
   def processable_message?(message)
     message.reportable? && !message.outgoing?
+  end
+
+  # Asistanın çalışma saatleri içinde mi kontrol et
+  def within_working_hours?
+    assistant = hook.account.saturn_assistants.find_by(id: hook.settings['assistant_id'])
+    return true unless assistant # Asistan yoksa devam et
+
+    working_hours = assistant.working_hours
+    return true if working_hours.blank? # Çalışma saatleri ayarlanmamışsa 7/24 çalış
+
+    # Hesabın timezone'unu kullan, yoksa UTC
+    timezone = hook.account.timezone.presence || 'UTC'
+    now = Time.current.in_time_zone(timezone)
+    current_day = now.wday # 0 = Pazar, 1 = Pazartesi, ...
+    current_time = now.hour * 60 + now.min # Dakika cinsinden
+
+    # Bugünün çalışma saatini bul
+    today_hours = working_hours.find { |h| h['day_of_week'].to_i == current_day }
+
+    # Bugün için ayar yoksa çalışma
+    return false if today_hours.nil?
+
+    # Tüm gün kapalı mı?
+    return false if today_hours['closed_all_day'] == true
+
+    # Tüm gün açık mı?
+    return true if today_hours['open_all_day'] == true
+
+    # Açılış ve kapanış saatlerini kontrol et
+    open_time = today_hours['open_hour'].to_i * 60 + today_hours['open_minutes'].to_i
+    close_time = today_hours['close_hour'].to_i * 60 + today_hours['close_minutes'].to_i
+
+    is_within = current_time >= open_time && current_time < close_time
+
+    unless is_within
+      Rails.logger.info "[SATURN] Outside working hours - skipping response. Current: #{now.strftime('%H:%M')}, Working: #{today_hours['open_hour']}:#{today_hours['open_minutes']} - #{today_hours['close_hour']}:#{today_hours['close_minutes']}"
+    end
+
+    is_within
   end
 
   def queue_delayed_response(message)
