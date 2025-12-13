@@ -404,6 +404,18 @@
   type: secret
 # ------- End of Shopify Related Config ------- #
 
+# ------- Ikas Integration Config ------- #
+- name: IKAS_CLIENT_ID
+  display_title: 'Ikas Client ID'
+  description: 'The Client ID from your Ikas Partner account (builders.ikas.com)'
+  locked: false
+- name: IKAS_CLIENT_SECRET
+  display_title: 'Ikas Client Secret'
+  description: 'The Client Secret from your Ikas Partner account (builders.ikas.com)'
+  locked: false
+  type: secret
+# ------- End of Ikas Integration Config ------- #
+
 # ------- Instagram Channel Related Config ------- #
 - name: INSTAGRAM_APP_ID
   display_title: 'Instagram App ID'

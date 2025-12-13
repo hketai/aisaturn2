@@ -139,3 +139,9 @@ shopify:
   enabled: true
   icon: 'icon-shopify'
   config_key: 'shopify'
+ikas:
+  name: 'Ikas'
+  description: 'Configuration for setting up Ikas Integration'
+  enabled: true
+  icon: 'icon-store'
+  config_key: 'ikas'
