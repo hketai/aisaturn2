@@ -252,7 +252,8 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     # Get image embedding counts - sadece gerçek görseli olan ürünleri say (image_hash olanlar)
     total_image_embeddings = Shopify::ProductImageEmbedding.where(account_id: Current.account.id).count
     products_with_images = Shopify::Product.where(account_id: Current.account.id).where.not(image_hash: nil).count
-    image_embedding_in_progress = Current.account.settings&.dig('image_search_enabled') && 
+    image_search_enabled = hook.settings['image_search_enabled'] == true
+    image_embedding_in_progress = image_search_enabled && 
                                   products_with_images > 0 && 
                                   total_image_embeddings < products_with_images
     
@@ -263,6 +264,7 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
       total_image_embeddings: total_image_embeddings,
       products_with_images: products_with_images,
       image_embedding_in_progress: image_embedding_in_progress,
+      image_search_enabled: image_search_enabled,
       image_search_approved: Current.account.image_search_approved
     }
     

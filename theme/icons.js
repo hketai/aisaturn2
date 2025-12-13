@@ -1,4 +1,9 @@
 export const icons = {
+  ikas: {
+    body: `<rect width="24" height="24" rx="4" fill="#D4FF00"/><path d="M6 4L6 12L12 12L8 20L18 10L12 10L16 4L6 4Z" fill="#1a1a1a"/>`,
+    width: 24,
+    height: 24,
+  },
   'logic-or': {
     body: `<rect x="14" y="5" width="2" height="13" rx="1" fill="currentColor"/><rect x="8" y="5" width="2" height="13" rx="1" fill="currentColor"/>`,
     width: 24,

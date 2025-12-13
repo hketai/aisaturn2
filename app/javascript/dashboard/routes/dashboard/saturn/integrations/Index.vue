@@ -40,7 +40,7 @@ const allIntegrations = ref([
     id: 'ikas',
     name: 'İkas',
     description: 'İkas mağazanıza bağlanın ve sipariş bilgilerini sorgulayın',
-    icon: 'i-lucide-store',
+    icon: 'i-woot-ikas',
     connected: false,
     hook: null,
     comingSoon: false,
@@ -217,7 +217,7 @@ const fetchShopifyIntegration = async () => {
       }
     }
   } catch (error) {
-    shopifyHook.value = null;
+      shopifyHook.value = null;
     const shopifyIntegration = allIntegrations.value.find(i => i.id === 'shopify');
     if (shopifyIntegration) {
       shopifyIntegration.connected = false;

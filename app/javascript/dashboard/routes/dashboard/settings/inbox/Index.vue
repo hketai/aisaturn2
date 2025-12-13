@@ -5,15 +5,14 @@ import { useAlert } from 'dashboard/composables';
 import Avatar from 'next/avatar/Avatar.vue';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import SettingsLayout from '../SettingsLayout.vue';
-import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import {
   useMapGetter,
   useStoreGetters,
   useStore,
 } from 'dashboard/composables/store';
-import ChannelName from './components/ChannelName.vue';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Icon from 'next/icon/Icon.vue';
 import { useRouter } from 'vue-router';
 
 const getters = useStoreGetters();
@@ -85,26 +84,31 @@ const whatsappWebStatusMeta = status => {
   const map = {
     connected: {
       label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.CONNECTED'),
-      class: 'bg-g-success-subtle text-g-success',
+      class: 'bg-n-teal-3 text-n-teal-11 border-n-teal-6',
+      icon: 'i-lucide-check-circle',
     },
     connecting: {
       label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.CONNECTING'),
-      class: 'bg-n-warning-subtle text-n-warning',
+      class: 'bg-n-amber-3 text-n-amber-11 border-n-amber-6',
+      icon: 'i-lucide-loader',
     },
     disconnected: {
       label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.DISCONNECTED'),
-      class: 'bg-n-ruby-subtle text-n-ruby',
+      class: 'bg-n-ruby-3 text-n-ruby-11 border-n-ruby-6',
+      icon: 'i-lucide-x-circle',
     },
     disconnected_qr_expired: {
       label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.QR_EXPIRED'),
-      class: 'bg-n-ruby-subtle text-n-ruby',
+      class: 'bg-n-ruby-3 text-n-ruby-11 border-n-ruby-6',
+      icon: 'i-lucide-alert-circle',
     },
   };
 
   return (
     map[status] || {
       label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.UNKNOWN'),
-      class: 'bg-n-muted-subtle text-n-slate-11',
+      class: 'bg-n-slate-3 text-n-slate-11 border-n-slate-6',
+      icon: 'i-lucide-help-circle',
     }
   );
 };
@@ -119,6 +123,43 @@ const handleWhatsappWebReconnect = inbox => {
     query: { reconnect: 'whatsapp_web' },
   });
 };
+
+const getChannelColor = channelType => {
+  const colors = {
+    'Channel::WebWidget': 'bg-n-blue-3 text-n-blue-11',
+    'Channel::FacebookPage': 'bg-n-blue-3 text-n-blue-11',
+    'Channel::Whatsapp': 'bg-n-teal-3 text-n-teal-11',
+    'Channel::WhatsappWeb': 'bg-n-teal-3 text-n-teal-11',
+    'Channel::Email': 'bg-n-amber-3 text-n-amber-11',
+    'Channel::Telegram': 'bg-n-blue-3 text-n-blue-11',
+    'Channel::Line': 'bg-n-teal-3 text-n-teal-11',
+    'Channel::Sms': 'bg-n-violet-3 text-n-violet-11',
+    'Channel::Api': 'bg-n-slate-3 text-n-slate-11',
+  };
+  return colors[channelType] || 'bg-n-slate-3 text-n-slate-11';
+};
+
+const getChannelTypeName = channelType => {
+  const names = {
+    'Channel::WebWidget': 'Web Widget',
+    'Channel::FacebookPage': 'Facebook',
+    'Channel::Whatsapp': 'WhatsApp',
+    'Channel::WhatsappWeb': 'WhatsApp Web',
+    'Channel::Email': 'E-posta',
+    'Channel::Telegram': 'Telegram',
+    'Channel::Line': 'Line',
+    'Channel::Sms': 'SMS',
+    'Channel::Api': 'API',
+  };
+  return names[channelType] || channelType;
+};
+
+const goToSettings = inbox => {
+  router.push({
+    name: 'settings_inbox_show',
+    params: { inboxId: inbox.id },
+  });
+};
 </script>
 
 <template>
@@ -128,94 +169,157 @@ const handleWhatsappWebReconnect = inbox => {
     :is-loading="uiFlags.isFetching"
   >
     <template #header>
-      <BaseSettingsHeader
-        :title="$t('INBOX_MGMT.HEADER')"
-        :description="$t('INBOX_MGMT.DESCRIPTION')"
-        :link-text="$t('INBOX_MGMT.LEARN_MORE')"
-        feature-name="inboxes"
-      >
-        <template #actions>
-          <router-link v-if="isAdmin" :to="{ name: 'settings_inbox_new' }">
-            <Button
-              icon="i-lucide-circle-plus"
-              :label="$t('SETTINGS.INBOXES.NEW_INBOX')"
-            />
-          </router-link>
-        </template>
-      </BaseSettingsHeader>
+      <div class="flex items-center justify-between w-full">
+        <div>
+          <h1 class="text-2xl font-semibold text-n-slate-12">
+            {{ $t('INBOX_MGMT.HEADER') }}
+          </h1>
+          <p class="mt-1 text-sm text-n-slate-11">
+            Müşterilerinizle iletişim kurmak için kullandığınız kanalları yönetin
+          </p>
+        </div>
+        <router-link v-if="isAdmin" :to="{ name: 'settings_inbox_new' }">
+          <Button
+            icon="i-lucide-plus"
+            :label="$t('SETTINGS.INBOXES.NEW_INBOX')"
+          />
+        </router-link>
+      </div>
     </template>
+
     <template #body>
-      <table class="min-w-full overflow-x-auto">
-        <tbody class="divide-y divide-n-weak flex-1 text-n-slate-12">
-          <tr v-for="inbox in inboxesList" :key="inbox.id">
-            <td class="py-4 ltr:pr-4 rtl:pl-4">
-              <div class="flex items-center flex-row gap-4">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="p-4 bg-n-solid-1 rounded-xl border border-n-weak">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg bg-n-blue-3 flex items-center justify-center"
+            >
+              <Icon icon="i-lucide-inbox" class="w-5 h-5 text-n-blue-11" />
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-n-slate-12">
+                {{ inboxesList?.length || 0 }}
+              </p>
+              <p class="text-xs text-n-slate-11">Toplam Kanal</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-n-solid-1 rounded-xl border border-n-weak">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg bg-n-teal-3 flex items-center justify-center"
+            >
+              <Icon icon="i-lucide-check-circle" class="w-5 h-5 text-n-teal-11" />
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-n-slate-12">
+                {{
+                  inboxesList?.filter(
+                    i =>
+                      !isWhatsappWeb(i) || i.whatsapp_web_status === 'connected'
+                  ).length || 0
+                }}
+              </p>
+              <p class="text-xs text-n-slate-11">Aktif Kanal</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-n-solid-1 rounded-xl border border-n-weak">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg bg-n-teal-3 flex items-center justify-center"
+            >
+              <Icon icon="i-lucide-message-circle" class="w-5 h-5 text-n-teal-11" />
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-n-slate-12">
+                {{
+                  inboxesList?.filter(
+                    i =>
+                      i.channel_type === 'Channel::Whatsapp' ||
+                      i.channel_type === 'Channel::WhatsappWeb'
+                  ).length || 0
+                }}
+              </p>
+              <p class="text-xs text-n-slate-11">WhatsApp</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-n-solid-1 rounded-xl border border-n-weak">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg bg-n-amber-3 flex items-center justify-center"
+            >
+              <Icon icon="i-lucide-globe" class="w-5 h-5 text-n-amber-11" />
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-n-slate-12">
+                {{
+                  inboxesList?.filter(
+                    i => i.channel_type === 'Channel::WebWidget'
+                  ).length || 0
+                }}
+              </p>
+              <p class="text-xs text-n-slate-11">Web Widget</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inbox Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="inbox in inboxesList"
+          :key="inbox.id"
+          class="group relative bg-n-solid-1 rounded-xl border border-n-weak hover:border-n-brand/50 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer"
+          @click="goToSettings(inbox)"
+        >
+          <!-- Card Header -->
+          <div class="p-5">
+            <div class="flex items-start justify-between gap-3">
+              <!-- Icon & Name -->
+              <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div
                   v-if="inbox.avatar_url"
-                  class="bg-n-alpha-3 rounded-full size-12 p-2 ring ring-n-solid-1 border border-n-strong shadow-sm"
+                  class="w-12 h-12 rounded-xl bg-n-alpha-3 p-1 ring-2 ring-n-solid-1 border border-n-weak shadow-sm flex-shrink-0 overflow-hidden"
                 >
                   <Avatar
                     :src="inbox.avatar_url"
                     :name="inbox.name"
-                    :size="30"
+                    :size="40"
                     rounded-full
                   />
                 </div>
                 <div
                   v-else
-                  class="size-12 flex justify-center items-center bg-n-alpha-3 rounded-full p-2 ring ring-n-solid-1 border border-n-strong shadow-sm"
+                  :class="[
+                    'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
+                    getChannelColor(inbox.channel_type),
+                  ]"
                 >
-                  <ChannelIcon class="size-5 text-n-slate-10" :inbox="inbox" />
+                  <ChannelIcon class="w-6 h-6" :inbox="inbox" />
                 </div>
-                <div>
-                  <span class="block font-medium capitalize">
-                    {{ inbox.name }}
-                  </span>
-                  <ChannelName
-                    :channel-type="inbox.channel_type"
-                    :medium="inbox.medium"
-                  />
-                  <div
-                    v-if="isWhatsappWeb(inbox)"
-                    class="mt-1 flex flex-wrap items-center gap-2"
+                <div class="min-w-0 flex-1">
+                  <h3
+                    class="font-semibold text-n-slate-12 truncate group-hover:text-n-brand transition-colors"
                   >
-                    <span
-                      class="px-2 py-0.5 text-xs font-medium rounded-full"
-                      :class="
-                        whatsappWebStatusMeta(inbox.whatsapp_web_status).class
-                      "
-                    >
-                      {{
-                        whatsappWebStatusMeta(inbox.whatsapp_web_status).label
-                      }}
-                    </span>
-                    <span
-                      v-if="formatPhoneNumber(inbox.whatsapp_web_phone_number)"
-                      class="text-xs text-n-slate-11"
-                    >
-                      {{
-                        t('INBOX_MGMT.WHATSAPP_WEB.CONNECTED_TO', {
-                          phone: formatPhoneNumber(
-                            inbox.whatsapp_web_phone_number
-                          ),
-                        })
-                      }}
-                    </span>
-                    <Button
-                      v-if="shouldShowWhatsappReconnect(inbox) && isAdmin"
-                      icon="i-lucide-qr-code"
-                      xs
-                      slate
-                      :label="$t('INBOX_MGMT.WHATSAPP_WEB.RECONNECT')"
-                      @click="handleWhatsappWebReconnect(inbox)"
-                    />
-                  </div>
+                    {{ inbox.name }}
+                  </h3>
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md mt-1"
+                    :class="getChannelColor(inbox.channel_type)"
+                  >
+                    {{ getChannelTypeName(inbox.channel_type) }}
+                  </span>
                 </div>
               </div>
-            </td>
 
-            <td class="py-4">
-              <div class="flex gap-1 justify-end">
+              <!-- Actions -->
+              <div
+                class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                @click.stop
+              >
                 <router-link
                   :to="{
                     name: 'settings_inbox_show',
@@ -238,13 +342,72 @@ const handleWhatsappWebReconnect = inbox => {
                   xs
                   ruby
                   faded
-                  @click="openDelete(inbox)"
+                  @click.stop="openDelete(inbox)"
                 />
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+
+            <!-- WhatsApp Web Status -->
+            <div v-if="isWhatsappWeb(inbox)" class="mt-4 pt-4 border-t border-n-weak">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border"
+                    :class="whatsappWebStatusMeta(inbox.whatsapp_web_status).class"
+                  >
+                    <Icon
+                      :icon="whatsappWebStatusMeta(inbox.whatsapp_web_status).icon"
+                      class="w-3.5 h-3.5"
+                    />
+                    {{ whatsappWebStatusMeta(inbox.whatsapp_web_status).label }}
+                  </span>
+                </div>
+                <Button
+                  v-if="shouldShowWhatsappReconnect(inbox) && isAdmin"
+                  icon="i-lucide-qr-code"
+                  xs
+                  slate
+                  :label="'Bağlan'"
+                  @click.stop="handleWhatsappWebReconnect(inbox)"
+                />
+              </div>
+              <p
+                v-if="formatPhoneNumber(inbox.whatsapp_web_phone_number)"
+                class="mt-2 text-xs text-n-slate-11 flex items-center gap-1.5"
+              >
+                <Icon icon="i-lucide-phone" class="w-3.5 h-3.5" />
+                {{ formatPhoneNumber(inbox.whatsapp_web_phone_number) }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Hover Indicator -->
+          <div
+            class="absolute bottom-0 left-0 right-0 h-1 bg-n-brand transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
+          />
+        </div>
+
+        <!-- Add New Inbox Card -->
+        <router-link
+          v-if="isAdmin"
+          :to="{ name: 'settings_inbox_new' }"
+          class="group flex flex-col items-center justify-center p-8 bg-n-solid-1 rounded-xl border-2 border-dashed border-n-weak hover:border-n-brand/50 hover:bg-n-alpha-1 transition-all duration-200 min-h-[160px] cursor-pointer"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-n-slate-3 group-hover:bg-n-brand/10 flex items-center justify-center mb-3 transition-colors"
+          >
+            <Icon
+              icon="i-lucide-plus"
+              class="w-7 h-7 text-n-slate-11 group-hover:text-n-brand transition-colors"
+            />
+          </div>
+          <span
+            class="text-sm font-medium text-n-slate-11 group-hover:text-n-brand transition-colors"
+          >
+            Yeni Kanal Ekle
+          </span>
+        </router-link>
+      </div>
     </template>
 
     <woot-confirm-delete-modal

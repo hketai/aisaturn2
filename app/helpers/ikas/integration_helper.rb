@@ -1,7 +1,8 @@
 module Ikas::IntegrationHelper
   IKAS_API_URL = 'https://api.ikas.com/api/v1/admin/graphql'.freeze
   IKAS_TOKEN_URL = 'https://api.ikas.com/api/v1/admin/oauth/token'.freeze
-  IKAS_OAUTH_BASE_URL = 'https://api.ikas.com/api/v1/admin/oauth/authorize'.freeze
+  # OAuth URL is store-specific: https://{store}.myikas.com/admin/oauth/authorize
+  IKAS_OAUTH_DOMAIN = 'myikas.com'.freeze
 
   # OAuth scopes for the application
   OAUTH_SCOPES = %w[
@@ -22,11 +23,11 @@ module Ikas::IntegrationHelper
       redirect_uri: ikas_redirect_uri,
       response_type: 'code',
       scope: OAUTH_SCOPES.join(' '),
-      state: state,
-      store: store_name
+      state: state
     }
 
-    "#{IKAS_OAUTH_BASE_URL}?#{URI.encode_www_form(params)}"
+    # Store-specific OAuth URL
+    "https://#{store_name}.#{IKAS_OAUTH_DOMAIN}/admin/oauth/authorize?#{URI.encode_www_form(params)}"
   end
 
   # Exchanges authorization code for access token

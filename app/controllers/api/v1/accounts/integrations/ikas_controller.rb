@@ -38,7 +38,7 @@ class Api::V1::Accounts::Integrations::IkasController < Api::V1::Accounts::BaseC
       store_name: store_name,
       created_at: Time.current.to_i
     }
-    Redis::Alfred.setex("ikas_oauth_state:#{state}", 600, state_data.to_json)
+    Redis::Alfred.setex("ikas_oauth_state:#{state}", state_data.to_json, 600)
 
     # Generate OAuth URL
     auth_url = ikas_oauth_authorize_url(store_name, state)
